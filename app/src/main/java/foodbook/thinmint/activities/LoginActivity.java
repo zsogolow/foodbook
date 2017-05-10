@@ -23,12 +23,22 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
 
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.util.UUID;
+
+import foodbook.thinmint.api.WebAPIConnect;
+import foodbook.thinmint.api.WebAPIResult;
 import foodbook.thinmint.idsrv.JsonManipulation;
 import foodbook.thinmint.R;
 import foodbook.thinmint.idsrv.Token;
 import foodbook.thinmint.idsrv.TokenHelper;
 import foodbook.thinmint.idsrv.TokenResult;
 import foodbook.thinmint.constants.Constants;
+import foodbook.thinmint.idsrv.UserInfo;
+import foodbook.thinmint.idsrv.UserInfoHelper;
+import foodbook.thinmint.idsrv.UserInfoResult;
 
 /**
  * A login screen that offers login via email/password.
@@ -232,7 +242,28 @@ public class LoginActivity extends AppCompatActivity {
         @Override
         protected TokenResult doInBackground(String... params) {
             publishProgress("Getting access token...");
-            return mToken.getAccessToken(CLIENT_ID, CLIENT_SECRET, mEmail, mPassword, SCOPES);
+            TokenResult tokenResult = mToken.getAccessToken(CLIENT_ID, CLIENT_SECRET, mEmail, mPassword, SCOPES);
+            if (tokenResult.isSuccess()) {
+                Token tempToken = TokenHelper.getTokenFromJson(tokenResult.getTokenResult());
+
+                UserInfoResult userInfoResult = tempToken.getUserInfo();
+                UserInfo userInfo = UserInfoHelper.getUserInfoFromJson(userInfoResult.getUserInfoResult());
+
+                WebAPIResult apiResult = new WebAPIConnect().callService(tempToken.getAccessToken(), "api/users/" + userInfo.getSubject());
+                if (!apiResult.isSuccess()) {
+                    JSONObject jsonObject = new JSONObject();
+                    try {
+                        jsonObject.put("username", mEmail);
+                        jsonObject.put("subject", userInfo.getSubject());
+                        jsonObject.put("uniqueid", UUID.randomUUID());
+                    } catch (JSONException je) {
+                    }
+
+                    WebAPIResult postResult = new WebAPIConnect().postService(tempToken.getAccessToken(), "api/users", jsonObject);
+                }
+            }
+
+            return tokenResult;
         }
 
         @Override

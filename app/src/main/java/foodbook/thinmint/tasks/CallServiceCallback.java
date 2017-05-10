@@ -3,6 +3,7 @@ package foodbook.thinmint.tasks;
 import android.os.AsyncTask;
 
 import foodbook.thinmint.IActivityCallback;
+import foodbook.thinmint.api.WebAPIResult;
 import foodbook.thinmint.idsrv.TokenResult;
 import foodbook.thinmint.models.AbstractAsyncCallback;
 
@@ -10,9 +11,9 @@ import foodbook.thinmint.models.AbstractAsyncCallback;
  * Created by Zachery.Sogolow on 5/9/2017.
  */
 
-public class CallServiceCallback extends AbstractAsyncCallback<String> {
+public class CallServiceCallback extends AbstractAsyncCallback<WebAPIResult> {
 
-    private String mResult;
+    private WebAPIResult mResult;
 
     public CallServiceCallback(IActivityCallback callback) {
         super(callback);
@@ -24,7 +25,7 @@ public class CallServiceCallback extends AbstractAsyncCallback<String> {
     }
 
     @Override
-    public void onCompleted(String result) {
+    public void onCompleted(WebAPIResult result) {
         mResult = result;
         mActivityCallback.callback(this);
     }
@@ -44,7 +45,7 @@ public class CallServiceCallback extends AbstractAsyncCallback<String> {
 
     }
 
-    public String getResult() {
+    public WebAPIResult getResult() {
         return mResult;
     }
 }

@@ -19,6 +19,7 @@ import android.widget.TextView;
 
 import foodbook.thinmint.IActivityCallback;
 import foodbook.thinmint.IAsyncCallback;
+import foodbook.thinmint.api.WebAPIResult;
 import foodbook.thinmint.idsrv.TokenHelper;
 import foodbook.thinmint.tasks.AccessTokenAsyncTask;
 import foodbook.thinmint.tasks.AccessTokenCallback;
@@ -111,7 +112,6 @@ public class MainActivity extends AppCompatActivity implements IActivityCallback
 
     private void refreshTokenIfNeeded() {
         if (TokenHelper.isTokenExpired(mToken)) {
-            showProgress(true);
             new RefreshTokenAsyncTask(MainActivity.this, mRefreshCallback, mToken).execute();
         }
     }
@@ -162,49 +162,12 @@ public class MainActivity extends AppCompatActivity implements IActivityCallback
         } else if (cb.equals(mRefreshCallback)) {
             TokenResult token = mRefreshCallback.getTokenResult();
             mResultTextView.setText(token.getTokenResult());
-            showProgress(false);
         } else if (cb.equals(mAccessCallback)) {
             TokenResult token = mAccessCallback.getTokenResult();
             mResultTextView.setText(token.getTokenResult());
         } else if (cb.equals(mCallServiceCallback)) {
-            String result = mCallServiceCallback.getResult();
-            mResultTextView.setText(result);
-        }
-    }
-
-    /**
-     * Shows the progress UI and hides the login form.
-     */
-    @TargetApi(Build.VERSION_CODES.HONEYCOMB_MR2)
-    private void showProgress(final boolean show) {
-        // On Honeycomb MR2 we have the ViewPropertyAnimator APIs, which allow
-        // for very easy animations. If available, use these APIs to fade-in
-        // the progress spinner.
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB_MR2) {
-            int shortAnimTime = getResources().getInteger(android.R.integer.config_shortAnimTime);
-
-            mMainContentView.setVisibility(show ? View.GONE : View.VISIBLE);
-            mMainContentView.animate().setDuration(shortAnimTime).alpha(
-                    show ? 0 : 1).setListener(new AnimatorListenerAdapter() {
-                @Override
-                public void onAnimationEnd(Animator animation) {
-                    mMainContentView.setVisibility(show ? View.GONE : View.VISIBLE);
-                }
-            });
-
-            mProgressView.setVisibility(show ? View.VISIBLE : View.GONE);
-            mProgressView.animate().setDuration(shortAnimTime).alpha(
-                    show ? 1 : 0).setListener(new AnimatorListenerAdapter() {
-                @Override
-                public void onAnimationEnd(Animator animation) {
-                    mProgressView.setVisibility(show ? View.VISIBLE : View.GONE);
-                }
-            });
-        } else {
-            // The ViewPropertyAnimator APIs are not available, so simply show
-            // and hide the relevant UI components.
-            mProgressView.setVisibility(show ? View.VISIBLE : View.GONE);
-            mMainContentView.setVisibility(show ? View.GONE : View.VISIBLE);
+            WebAPIResult result = mCallServiceCallback.getResult();
+            mResultTextView.setText(result.getResult());
         }
     }
 }

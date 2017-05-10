@@ -1,16 +1,16 @@
 package foodbook.thinmint.tasks;
 
-import android.net.MailTo;
 import android.os.AsyncTask;
 
-import foodbook.thinmint.WebAPIConnect;
+import foodbook.thinmint.api.WebAPIConnect;
+import foodbook.thinmint.api.WebAPIResult;
 import foodbook.thinmint.idsrv.Token;
 
 /**
  * Created by Zachery.Sogolow on 5/9/2017.
  */
 
-public class CallServiceAsyncTask extends AsyncTask<String, String, String> {
+public class CallServiceAsyncTask extends AsyncTask<String, String, WebAPIResult> {
 
     private CallServiceCallback mCallback;
     private Token mToken;
@@ -21,8 +21,8 @@ public class CallServiceAsyncTask extends AsyncTask<String, String, String> {
     }
 
     @Override
-    protected String doInBackground(String... params) { // params[0] is path
-        String result = "";
+    protected WebAPIResult doInBackground(String... params) { // params[0] is path
+        WebAPIResult result = null;
         String path = params[0];
         WebAPIConnect connect = new WebAPIConnect();
 
@@ -39,7 +39,7 @@ public class CallServiceAsyncTask extends AsyncTask<String, String, String> {
     }
 
     @Override
-    protected void onPostExecute(String result) {
+    protected void onPostExecute(WebAPIResult result) {
         mCallback.onCompleted(result);
         mCallback.onPostExecute(this);
     }

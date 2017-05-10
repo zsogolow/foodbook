@@ -38,7 +38,7 @@ public class UserInfoAsyncTask extends AsyncTask<String, String, UserInfoResult>
 
         publishProgress("Getting user info...");
         if (!objTkn.getAccessToken().equals("")) {
-            userInfo = objTkn.getUserInfo(objTkn.getAccessToken());
+            userInfo = objTkn.getUserInfo();
         }
 
         return userInfo;

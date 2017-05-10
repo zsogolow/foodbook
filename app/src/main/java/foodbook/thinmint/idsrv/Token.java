@@ -183,7 +183,7 @@ public class Token {
         }
     }
 
-    public UserInfoResult getUserInfo(String _accessToken) {
+    public UserInfoResult getUserInfo() {
         String result = "";
         UserInfoResult userInfo = new UserInfoResult();
 
@@ -194,7 +194,7 @@ public class Token {
 
             //add reuqest header
             con.setRequestMethod("GET");
-            con.setRequestProperty("Authorization", "Bearer " + _accessToken);
+            con.setRequestProperty("Authorization", "Bearer " + mAccessToken);
 
             // Get response code
             int responseCode = con.getResponseCode();
