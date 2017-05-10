@@ -17,15 +17,27 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
 
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.util.HashMap;
+import java.util.Objects;
+
 import foodbook.thinmint.IActivityCallback;
 import foodbook.thinmint.IAsyncCallback;
 import foodbook.thinmint.api.WebAPIResult;
 import foodbook.thinmint.idsrv.TokenHelper;
+import foodbook.thinmint.models.ObjectFactory;
+import foodbook.thinmint.models.ParseException;
+import foodbook.thinmint.models.domain.Note;
+import foodbook.thinmint.models.domain.User;
 import foodbook.thinmint.tasks.AccessTokenAsyncTask;
 import foodbook.thinmint.tasks.AccessTokenCallback;
 import foodbook.thinmint.R;
 import foodbook.thinmint.tasks.CallServiceAsyncTask;
 import foodbook.thinmint.tasks.CallServiceCallback;
+import foodbook.thinmint.tasks.CreateNoteAsyncTask;
+import foodbook.thinmint.tasks.GetUserAsyncTask;
 import foodbook.thinmint.tasks.RefreshTokenAsyncTask;
 import foodbook.thinmint.tasks.RefreshTokenCallback;
 import foodbook.thinmint.idsrv.Token;
@@ -41,11 +53,12 @@ public class MainActivity extends AppCompatActivity implements IActivityCallback
     private AccessTokenCallback mAccessCallback;
     private UserInfoCallback mUserInfoCallback;
     private CallServiceCallback mCallServiceCallback;
+    private CallServiceCallback mGetUserCallback;
+    private CallServiceCallback mGetNotesCallback;
+    private CallServiceCallback mCreateNoteCallback;
 
     private Token mToken;
-
-    private View mMainContentView;
-    private View mProgressView;
+    private String mUserSubject;
 
     private TextView mResultTextView;
 
@@ -59,24 +72,21 @@ public class MainActivity extends AppCompatActivity implements IActivityCallback
         // TOKEN OBJECT INIT
         mToken = new Token();
 
-        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(MainActivity.this);
         mToken.setAccessToken(prefs.getString(Constants.ACCESS_TOKEN_PREFERENCE_KEY, ""));
         mToken.setRefreshToken(prefs.getString(Constants.REFRESH_TOKEN_PREFERENCE_KEY, ""));
         mToken.setExpiresIn(prefs.getString(Constants.EXPIRES_IN_PREFERENCE_KEY, ""));
         mToken.setLastRetrieved(prefs.getLong(Constants.LAST_RETRIEVED_PREFERENCE_KEY, 0));
 
+        mUserSubject = prefs.getString(Constants.USER_SUBJECT, "");
+
         mRefreshCallback = new RefreshTokenCallback(this);
         mAccessCallback = new AccessTokenCallback(this);
         mUserInfoCallback = new UserInfoCallback(this);
         mCallServiceCallback = new CallServiceCallback(this);
-
-        // TOKEN ACCESS BUTTON EVENT HANDLER
-//        Button _atbtn = (Button) findViewById(R.id.atbtn);
-//        _atbtn.setOnClickListener(new Button.OnClickListener() {
-//            public void onClick(View v) {
-//                new AccessTokenAsyncTask(MainActivity.this, mAccessCallback, mToken).execute("zach", "secret");
-//            }
-//        });
+        mGetUserCallback = new CallServiceCallback(this);
+        mGetNotesCallback = new CallServiceCallback(this);
+        mCreateNoteCallback = new CallServiceCallback(this);
 
         // TOKEN REFRESH BUTTON EVENT HANDLER
         Button _rtbtn = (Button) findViewById(R.id.rtbtn);
@@ -102,12 +112,34 @@ public class MainActivity extends AppCompatActivity implements IActivityCallback
             }
         });
 
-        mMainContentView = findViewById(R.id.main_content);
-        mProgressView = findViewById(R.id.loading_progress);
+
+        // GET USER BUTTON EVENT HANDLER
+        Button _atbtn = (Button) findViewById(R.id.gubtn);
+        _atbtn.setOnClickListener(new Button.OnClickListener() {
+            public void onClick(View v) {
+                new GetUserAsyncTask(mGetUserCallback, mToken).execute(mUserSubject);
+            }
+        });
+
+        // GET MY NOTES BUTTON EVENT HANDLER
+        Button _gnbtn = (Button) findViewById(R.id.gnbtn);
+        _gnbtn.setOnClickListener(new Button.OnClickListener() {
+            public void onClick(View v) {
+                new CallServiceAsyncTask(mGetNotesCallback, mToken).execute("api/users/" + mUserSubject + "/notes");
+            }
+        });
+
+
+        // CREATE NOTE BUTTON EVENT HANDLER
+        Button _cnbtn = (Button) findViewById(R.id.cnbtn);
+        _cnbtn.setOnClickListener(new Button.OnClickListener() {
+            public void onClick(View v) {
+                new CreateNoteAsyncTask(mCreateNoteCallback, mToken, new Note()).execute("api/notes");
+            }
+        });
 
         mResultTextView = (TextView) findViewById(R.id.resulttxt);
         mResultTextView.setText(prefs.getString(Constants.ACCESS_TOKEN_PREFERENCE_KEY, ""));
-
     }
 
     private void refreshTokenIfNeeded() {
@@ -139,7 +171,7 @@ public class MainActivity extends AppCompatActivity implements IActivityCallback
 
             case R.id.action_logout:
                 // User chose the "Settings" item, show the app settings UI...
-                SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+                SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(MainActivity.this);
                 prefs.edit().putString(Constants.ACCESS_TOKEN_PREFERENCE_KEY, "").apply();
                 Intent loginActivity = new Intent(getApplicationContext(), LoginActivity.class);
                 startActivity(loginActivity);
@@ -168,6 +200,23 @@ public class MainActivity extends AppCompatActivity implements IActivityCallback
         } else if (cb.equals(mCallServiceCallback)) {
             WebAPIResult result = mCallServiceCallback.getResult();
             mResultTextView.setText(result.getResult());
+        } else if (cb.equals(mGetUserCallback)) {
+            WebAPIResult result = mGetUserCallback.getResult();
+            String userString = result.getResult();
+            try {
+                User user = new ObjectFactory<User>().Deserialize(new User(), userString);
+                mResultTextView.setText(user.getUsername());
+            } catch (ParseException e) {
+                mResultTextView.setText(e.getMessage());
+            }
+        } else if (cb.equals(mGetNotesCallback)) {
+            WebAPIResult result = mGetNotesCallback.getResult();
+            String noteString = result.getResult();
+            mResultTextView.setText(noteString);
+        } else if (cb.equals(mCreateNoteCallback)) {
+            WebAPIResult result = mCreateNoteCallback.getResult();
+            String noteString = result.getResult();
+            mResultTextView.setText(noteString);
         }
     }
 }

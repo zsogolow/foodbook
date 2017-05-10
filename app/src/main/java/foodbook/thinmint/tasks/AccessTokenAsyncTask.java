@@ -58,7 +58,7 @@ public class AccessTokenAsyncTask extends AsyncTask<String, String, TokenResult>
             Token tempToken = TokenHelper.getTokenFromJson(result.getTokenResult());
             long lastRetrieved = System.currentTimeMillis();
 
-            SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(mContext);
+            SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(mContext.getApplicationContext());
             prefs.edit().putString(Constants.REFRESH_TOKEN_PREFERENCE_KEY, tempToken.getRefreshToken()).apply();
             prefs.edit().putString(Constants.ACCESS_TOKEN_PREFERENCE_KEY, tempToken.getAccessToken()).apply();
             prefs.edit().putString(Constants.EXPIRES_IN_PREFERENCE_KEY, tempToken.getExpiresIn()).apply();

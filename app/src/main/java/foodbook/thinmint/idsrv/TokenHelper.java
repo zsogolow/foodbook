@@ -1,5 +1,7 @@
 package foodbook.thinmint.idsrv;
 
+import android.content.SharedPreferences;
+
 import foodbook.thinmint.constants.Constants;
 
 /**
@@ -26,5 +28,14 @@ public class TokenHelper {
         long expiresInMs = Long.parseLong(token.getExpiresIn()) * 1000;
         long lastRefresh = token.getLastRetrieved();
         return (lastRefresh + expiresInMs) < now;
+    }
+
+    public static Token getToken(SharedPreferences prefs) {
+        Token token = new Token();
+        token.setAccessToken(prefs.getString(Constants.ACCESS_TOKEN_PREFERENCE_KEY, ""));
+        token.setRefreshToken(prefs.getString(Constants.REFRESH_TOKEN_PREFERENCE_KEY, ""));
+        token.setExpiresIn(prefs.getString(Constants.EXPIRES_IN_PREFERENCE_KEY, ""));
+        token.setLastRetrieved(prefs.getLong(Constants.LAST_RETRIEVED_PREFERENCE_KEY, 0));
+        return  token;
     }
 }

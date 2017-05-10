@@ -50,9 +50,8 @@ public class LoginActivity extends AppCompatActivity {
      */
     private UserLoginTask mAuthTask = null;
 
-//    private RefreshTokenAsyncTask mRefreshTask = null;
-
     // UI references.
+    private TextView mLoginErrorView;
     private AutoCompleteTextView mEmailView;
     private EditText mPasswordView;
     private View mProgressView;
@@ -86,41 +85,16 @@ public class LoginActivity extends AppCompatActivity {
             }
         });
 
+        mLoginErrorView = (TextView) findViewById(R.id.error_message);
         mLoginFormView = findViewById(R.id.login_form);
         mProgressView = findViewById(R.id.login_progress);
-
-//        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
-//        if (!prefs.getString(Constants.ACCESS_TOKEN_PREFERENCE_KEY, "").equals("")) {
-//            showProgress(true);
-//            // check if expired
-//            // refresh if necessary and store new stuff
-//            if (isTokenExpired(prefs)) {
-//                Token token = new Token();
-//                token.setAccessToken(prefs.getString(Constants.ACCESS_TOKEN_PREFERENCE_KEY, ""));
-//                token.setRefreshToken(prefs.getString(Constants.REFRESH_TOKEN_PREFERENCE_KEY, ""));
-//
-//                mRefreshTask = new RefreshTokenAsyncTask(token);
-//                mRefreshTask.execute();
-//            } else {
-//                finishLogin();
-//            }
-//
-//            showProgress(false);
-//        }
     }
-
-//    private boolean isTokenExpired(SharedPreferences prefs) {
-//        long now = System.currentTimeMillis();
-//        long expiresInMs = Long.parseLong(prefs.getString(Constants.EXPIRES_IN_PREFERENCE_KEY, "")) * 1000;
-//        long lastRefresh = prefs.getLong(Constants.LAST_RETRIEVED_PREFERENCE_KEY, -1);
-//        return (lastRefresh + expiresInMs) < now;
+//
+//    private void finishLogin() {
+//        Intent mainActivity = new Intent(getApplicationContext(), MainActivity.class);
+//        startActivity(mainActivity);
+//        finish();
 //    }
-
-    private void finishLogin() {
-        Intent mainActivity = new Intent(getApplicationContext(), MainActivity.class);
-        startActivity(mainActivity);
-        finish();
-    }
 
     /**
      * Attempts to sign in or register the account specified by the login form.
@@ -135,6 +109,8 @@ public class LoginActivity extends AppCompatActivity {
         // Reset errors.
         mEmailView.setError(null);
         mPasswordView.setError(null);
+        mLoginErrorView.setError(null);
+        mLoginErrorView.setText(null);
 
         // Store values at the time of the login attempt.
         String email = mEmailView.getText().toString();
@@ -248,6 +224,8 @@ public class LoginActivity extends AppCompatActivity {
 
                 UserInfoResult userInfoResult = tempToken.getUserInfo();
                 UserInfo userInfo = UserInfoHelper.getUserInfoFromJson(userInfoResult.getUserInfoResult());
+                SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+                prefs.edit().putString(Constants.USER_SUBJECT, userInfo.getSubject()).apply();
 
                 WebAPIResult apiResult = new WebAPIConnect().callService(tempToken.getAccessToken(), "api/users/" + userInfo.getSubject());
                 if (!apiResult.isSuccess()) {
@@ -273,7 +251,7 @@ public class LoginActivity extends AppCompatActivity {
                 Token tempToken = TokenHelper.getTokenFromJson(result.getTokenResult());
                 long lastRetrieved = System.currentTimeMillis();
 
-                SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(LoginActivity.this);
+                SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
                 prefs.edit().putString(Constants.REFRESH_TOKEN_PREFERENCE_KEY, tempToken.getRefreshToken()).apply();
                 prefs.edit().putString(Constants.ACCESS_TOKEN_PREFERENCE_KEY, tempToken.getAccessToken()).apply();
                 prefs.edit().putString(Constants.EXPIRES_IN_PREFERENCE_KEY, tempToken.getExpiresIn()).apply();
@@ -284,9 +262,11 @@ public class LoginActivity extends AppCompatActivity {
                 mToken.setExpiresIn(tempToken.getExpiresIn());
                 mToken.setLastRetrieved(lastRetrieved);
 
-                finishLogin();
+                ActivityStarter.finishLogin(LoginActivity.this);
             } else if (!result.isSuccess()) {
-                mPasswordView.setError(getString(R.string.error_incorrect_password));
+                mLoginErrorView.setError("Username or password is incorrect");
+                mLoginErrorView.setText("Username or password is incorrect");
+//                mPasswordView.setError(getString(R.string.error_incorrect_password));
                 mPasswordView.requestFocus();
             }
 
@@ -300,52 +280,5 @@ public class LoginActivity extends AppCompatActivity {
             showProgress(false);
         }
     }
-
-//    private class RefreshTokenAsyncTask extends AsyncTask<String, String, TokenResult> {
-//
-//        private static final String CLIENT_ID = "android";
-//        private static final String CLIENT_SECRET = "secret";
-//
-//        private Token mToken;
-//
-//        RefreshTokenAsyncTask(Token token) {
-//            mToken = token;
-//        }
-//
-//        @Override
-//        protected TokenResult doInBackground(String... params) {
-//            publishProgress("Getting refresh token...");
-//            return mToken.getRefreshToken(CLIENT_ID, CLIENT_SECRET, mToken.getRefreshToken());
-//        }
-//
-//        @Override
-//        protected void onPostExecute(TokenResult result) {
-//            mRefreshTask = null;
-//            showProgress(false);
-//
-//            if (result.isSuccess()) {
-//                String refreshToken = JsonManipulation.getAttrFromJson(result.getTokenResult(), "refresh_token");
-//                String accessToken = JsonManipulation.getAttrFromJson(result.getTokenResult(), "access_token");
-//                String expiresIn = JsonManipulation.getAttrFromJson(result.getTokenResult(), "expires_in");
-//
-//                SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(LoginActivity.this);
-//                prefs.edit().putString(Constants.REFRESH_TOKEN_PREFERENCE_KEY, refreshToken).apply();
-//                prefs.edit().putString(Constants.ACCESS_TOKEN_PREFERENCE_KEY, accessToken).apply();
-//                prefs.edit().putString(Constants.EXPIRES_IN_PREFERENCE_KEY, expiresIn).apply();
-//                prefs.edit().putLong(Constants.LAST_RETRIEVED_PREFERENCE_KEY, System.currentTimeMillis()).apply();
-//
-//                mToken.setRefreshToken(refreshToken);
-//                mToken.setAccessToken(accessToken);
-//
-//                finishLogin();
-//            }
-//        }
-//
-//        @Override
-//        protected void onCancelled() {
-//            mRefreshTask = null;
-//            showProgress(false);
-//        }
-//    }
 }
 

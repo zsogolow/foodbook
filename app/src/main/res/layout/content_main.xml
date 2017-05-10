@@ -92,6 +92,34 @@
                     android:layout_gravity="center_horizontal"
                     android:text="2. User Info" />
 
+                <Button
+                    android:id="@+id/gubtn"
+                    android:layout_width="fill_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center_horizontal"
+                    android:text="4. Get API User" />
+
+            </LinearLayout>
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_weight="0.50"
+                android:orientation="vertical">
+
+                <Button
+                    android:id="@+id/gnbtn"
+                    android:layout_width="fill_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center_horizontal"
+                    android:text="5. Get My Notes" />
+
+                <Button
+                    android:id="@+id/cnbtn"
+                    android:layout_width="fill_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center_horizontal"
+                    android:text="6. Create Note" />
+
             </LinearLayout>
         </LinearLayout>
     </LinearLayout>

@@ -1,4 +1,4 @@
-package foodbook.thinmint.models;
+package foodbook.thinmint.models.domain;
 
 /**
  * Created by Zachery.Sogolow on 5/9/2017.

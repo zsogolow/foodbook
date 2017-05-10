@@ -15,7 +15,7 @@ import foodbook.thinmint.constants.Constants;
  * Created by Zachery.Sogolow on 5/8/2017.
  */
 
-public class WebAPIConnect {
+public class WebAPIConnect<T> {
     private static final String PAGING_HEADER = "X-Pagination";
     private static final String SORTING_HEADER = "X-Sort";
 

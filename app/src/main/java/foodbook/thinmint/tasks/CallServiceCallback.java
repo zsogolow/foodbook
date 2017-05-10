@@ -2,10 +2,9 @@ package foodbook.thinmint.tasks;
 
 import android.os.AsyncTask;
 
+import foodbook.thinmint.AbstractAsyncCallback;
 import foodbook.thinmint.IActivityCallback;
 import foodbook.thinmint.api.WebAPIResult;
-import foodbook.thinmint.idsrv.TokenResult;
-import foodbook.thinmint.models.AbstractAsyncCallback;
 
 /**
  * Created by Zachery.Sogolow on 5/9/2017.

@@ -1,12 +1,20 @@
-package foodbook.thinmint.models;
+package foodbook.thinmint.models.domain;
+
+import foodbook.thinmint.models.JsonField;
 
 /**
  * Created by Zachery.Sogolow on 5/9/2017.
  */
 
 public class User {
+
+    @JsonField(name = "id", jsonGetMethod = "getLong", isAccessible = true)
     private long mId;
+
+    @JsonField(name = "subject", jsonGetMethod = "getString", isAccessible = true)
     private String mSubject;
+
+    @JsonField(name = "userName", jsonGetMethod = "getString", isAccessible = true)
     private String mUsername;
 
     public User() {

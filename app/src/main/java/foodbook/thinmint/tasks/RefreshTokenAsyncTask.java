@@ -10,6 +10,9 @@ import foodbook.thinmint.idsrv.Token;
 import foodbook.thinmint.idsrv.TokenHelper;
 import foodbook.thinmint.idsrv.TokenResult;
 import foodbook.thinmint.constants.Constants;
+import foodbook.thinmint.idsrv.UserInfo;
+import foodbook.thinmint.idsrv.UserInfoHelper;
+import foodbook.thinmint.idsrv.UserInfoResult;
 
 /**
  * Created by Zachery.Sogolow on 5/9/2017.
@@ -42,7 +45,16 @@ public class RefreshTokenAsyncTask extends AsyncTask<String, String, TokenResult
     @Override
     protected TokenResult doInBackground(String... params) {
         publishProgress("Getting refresh token...");
-        return mToken.getRefreshToken(CLIENT_ID, CLIENT_SECRET, mToken.getRefreshToken());
+        TokenResult result = mToken.getRefreshToken(CLIENT_ID, CLIENT_SECRET, mToken.getRefreshToken());
+
+        if (result.isSuccess()) {
+            UserInfoResult userInfoResult = mToken.getUserInfo();
+            UserInfo userInfo = UserInfoHelper.getUserInfoFromJson(userInfoResult.getUserInfoResult());
+            SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(mContext.getApplicationContext());
+            prefs.edit().putString(Constants.USER_SUBJECT, userInfo.getSubject()).apply();
+        }
+
+        return result;
     }
 
 
@@ -58,7 +70,7 @@ public class RefreshTokenAsyncTask extends AsyncTask<String, String, TokenResult
             Token tempToken = TokenHelper.getTokenFromJson(result.getTokenResult());
             long lastRetrieved = System.currentTimeMillis();
 
-            SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(mContext);
+            SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(mContext.getApplicationContext());
             prefs.edit().putString(Constants.REFRESH_TOKEN_PREFERENCE_KEY, tempToken.getRefreshToken()).apply();
             prefs.edit().putString(Constants.ACCESS_TOKEN_PREFERENCE_KEY, tempToken.getAccessToken()).apply();
             prefs.edit().putString(Constants.EXPIRES_IN_PREFERENCE_KEY, tempToken.getExpiresIn()).apply();

@@ -1,4 +1,4 @@
-package foodbook.thinmint.models;
+package foodbook.thinmint;
 
 import foodbook.thinmint.IActivityCallback;
 import foodbook.thinmint.IAsyncCallback;
