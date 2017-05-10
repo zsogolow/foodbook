@@ -56,19 +56,27 @@
                 android:layout_weight="0.50"
                 android:orientation="vertical">
 
-                <Button
-                    android:id="@+id/atbtn"
-                    android:layout_width="fill_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_gravity="center_horizontal"
-                    android:text="1. Access Token" />
+                <!--<Button-->
+                    <!--android:id="@+id/atbtn"-->
+                    <!--android:layout_width="fill_parent"-->
+                    <!--android:layout_height="wrap_content"-->
+                    <!--android:layout_gravity="center_horizontal"-->
+                    <!--android:text="1. Access Token" />-->
 
                 <Button
                     android:id="@+id/rtbtn"
                     android:layout_width="fill_parent"
                     android:layout_height="wrap_content"
                     android:layout_gravity="center_horizontal"
-                    android:text="2. Refresh Token" />
+                    android:text="1. Refresh Token" />
+
+                <Button
+                    android:id="@+id/cabtn"
+                    android:layout_width="fill_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center_horizontal"
+                    android:text="3. Call Service" />
+
             </LinearLayout>
 
             <LinearLayout
@@ -82,14 +90,8 @@
                     android:layout_width="fill_parent"
                     android:layout_height="wrap_content"
                     android:layout_gravity="center_horizontal"
-                    android:text="3. User Info" />
+                    android:text="2. User Info" />
 
-                <Button
-                    android:id="@+id/cabtn"
-                    android:layout_width="fill_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_gravity="center_horizontal"
-                    android:text="4. Call Service" />
             </LinearLayout>
         </LinearLayout>
     </LinearLayout>

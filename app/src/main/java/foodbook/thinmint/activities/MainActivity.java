@@ -71,12 +71,12 @@ public class MainActivity extends AppCompatActivity implements IActivityCallback
         mCallServiceCallback = new CallServiceCallback(this);
 
         // TOKEN ACCESS BUTTON EVENT HANDLER
-        Button _atbtn = (Button) findViewById(R.id.atbtn);
-        _atbtn.setOnClickListener(new Button.OnClickListener() {
-            public void onClick(View v) {
-                new AccessTokenAsyncTask(MainActivity.this, mAccessCallback, mToken).execute("Zach", "secret");
-            }
-        });
+//        Button _atbtn = (Button) findViewById(R.id.atbtn);
+//        _atbtn.setOnClickListener(new Button.OnClickListener() {
+//            public void onClick(View v) {
+//                new AccessTokenAsyncTask(MainActivity.this, mAccessCallback, mToken).execute("zach", "secret");
+//            }
+//        });
 
         // TOKEN REFRESH BUTTON EVENT HANDLER
         Button _rtbtn = (Button) findViewById(R.id.rtbtn);
