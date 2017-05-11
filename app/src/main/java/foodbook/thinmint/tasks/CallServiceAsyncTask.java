@@ -25,7 +25,7 @@ public class CallServiceAsyncTask extends AsyncTask<String, String, WebAPIResult
         WebAPIResult result = null;
         String path = params[0];
         WebAPIConnect connect = new WebAPIConnect();
-
+        publishProgress("Getting user...");
         if (!mToken.getAccessToken().equals("")) {
             result = connect.callService(mToken.getAccessToken(), path);
         }

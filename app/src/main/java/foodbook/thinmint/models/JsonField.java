@@ -15,4 +15,6 @@ public @interface JsonField {
     String name();
     String jsonGetMethod();
     boolean isAccessible();
+    boolean isNav() default false;
+    String objectType() default "";
 }

@@ -4,8 +4,10 @@ import android.content.SharedPreferences;
 import android.preference.PreferenceManager;
 import android.support.v7.app.AppCompatActivity;
 
+import foodbook.thinmint.constants.Constants;
 import foodbook.thinmint.idsrv.Token;
 import foodbook.thinmint.idsrv.TokenHelper;
+import foodbook.thinmint.models.domain.User;
 
 /**
  * Created by Zachery.Sogolow on 5/10/2017.
@@ -13,9 +15,16 @@ import foodbook.thinmint.idsrv.TokenHelper;
 
 public abstract class TokenActivity extends AppCompatActivity {
     protected Token mToken;
+    protected String mUserSubject;
+    protected User mUser;
 
     protected void initToken() {
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
         mToken = TokenHelper.getToken(prefs);
+    }
+
+    protected  void initUser() {
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+        mUserSubject = prefs.getString(Constants.USER_SUBJECT, "");
     }
 }

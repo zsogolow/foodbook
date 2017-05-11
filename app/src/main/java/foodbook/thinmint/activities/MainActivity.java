@@ -117,7 +117,7 @@ public class MainActivity extends AppCompatActivity implements IActivityCallback
         Button _atbtn = (Button) findViewById(R.id.gubtn);
         _atbtn.setOnClickListener(new Button.OnClickListener() {
             public void onClick(View v) {
-                new GetUserAsyncTask(mGetUserCallback, mToken).execute(mUserSubject);
+                new CallServiceAsyncTask(mGetUserCallback, mToken).execute("api/users/" + mUserSubject);
             }
         });
 
@@ -151,7 +151,6 @@ public class MainActivity extends AppCompatActivity implements IActivityCallback
     @Override
     protected void onResume() {
         super.onResume();
-
         refreshTokenIfNeeded();
     }
 
@@ -204,7 +203,7 @@ public class MainActivity extends AppCompatActivity implements IActivityCallback
             WebAPIResult result = mGetUserCallback.getResult();
             String userString = result.getResult();
             try {
-                User user = new ObjectFactory<User>().Deserialize(new User(), userString);
+                User user = (User)new ObjectFactory<User>().Deserialize(new User(), userString);
                 mResultTextView.setText(user.getUsername());
             } catch (ParseException e) {
                 mResultTextView.setText(e.getMessage());
