@@ -16,7 +16,7 @@ public class ActivityStarter {
     }
 
     public static void finishLogin(Activity activity) {
-        Intent feedActivity = new Intent(activity, FeedActivity.class);
+        Intent feedActivity = new Intent(activity, MainActivity.class);
         activity.startActivity(feedActivity);
         activity.finish();
     }

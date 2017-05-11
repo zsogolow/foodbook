@@ -20,9 +20,6 @@ import foodbook.thinmint.idsrv.UserInfoResult;
 
 public class RefreshTokenAsyncTask extends AsyncTask<String, String, TokenResult> {
 
-    private static final String CLIENT_ID = "android";
-    private static final String CLIENT_SECRET = "secret";
-
     private ProgressDialog pd;
 
     private Context mContext;
@@ -39,13 +36,13 @@ public class RefreshTokenAsyncTask extends AsyncTask<String, String, TokenResult
 
     @Override
     protected void onPreExecute() {
-        pd.show();
+        //pd.show();
     }
 
     @Override
     protected TokenResult doInBackground(String... params) {
         publishProgress("Getting refresh token...");
-        TokenResult result = mToken.getRefreshToken(CLIENT_ID, CLIENT_SECRET, mToken.getRefreshToken());
+        TokenResult result = mToken.getRefreshToken(Constants.CLIENT_ID, Constants.CLIENT_SECRET);
 
         if (result.isSuccess()) {
             UserInfoResult userInfoResult = mToken.getUserInfo();
@@ -60,7 +57,7 @@ public class RefreshTokenAsyncTask extends AsyncTask<String, String, TokenResult
 
     @Override
     protected void onProgressUpdate(String... progress) {
-        pd.setMessage(progress[0]);
+        //pd.setMessage(progress[0]);
     }
 
     @Override
@@ -87,7 +84,7 @@ public class RefreshTokenAsyncTask extends AsyncTask<String, String, TokenResult
         }
 
         mCallback.onPostExecute(this);
-        pd.hide();
+//        pd.hide();
     }
 
     @Override

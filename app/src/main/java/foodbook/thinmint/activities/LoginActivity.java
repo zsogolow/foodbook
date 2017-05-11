@@ -28,10 +28,10 @@ import org.json.JSONObject;
 
 import java.util.UUID;
 
+import foodbook.thinmint.R;
 import foodbook.thinmint.api.WebAPIConnect;
 import foodbook.thinmint.api.WebAPIResult;
 import foodbook.thinmint.idsrv.JsonManipulation;
-import foodbook.thinmint.R;
 import foodbook.thinmint.idsrv.Token;
 import foodbook.thinmint.idsrv.TokenHelper;
 import foodbook.thinmint.idsrv.TokenResult;

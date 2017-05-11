@@ -123,7 +123,7 @@ public class Token {
         }
     }
 
-    public TokenResult getRefreshToken(String _clientId, String _clientSecret, String _refreshToken) {
+    public TokenResult getRefreshToken(String _clientId, String _clientSecret) {
         String result = "";
         TokenResult tokenResult = new TokenResult();
 
@@ -139,7 +139,7 @@ public class Token {
 
             //add parameters
             String charset = "UTF-8";
-            String urlParameters = "refresh_token=" + URLEncoder.encode(_refreshToken, charset);
+            String urlParameters = "refresh_token=" + URLEncoder.encode(mRefreshToken, charset);
             urlParameters += "&client_id=" + URLEncoder.encode(_clientId, charset);
             urlParameters += "&client_secret=" + URLEncoder.encode(_clientSecret, charset);
             urlParameters += "&grant_type=" + URLEncoder.encode("refresh_token", charset);

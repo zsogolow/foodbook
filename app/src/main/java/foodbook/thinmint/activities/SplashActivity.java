@@ -48,9 +48,6 @@ public class SplashActivity extends AppCompatActivity {
 
     private class RefreshTokenAsyncTask extends AsyncTask<String, String, TokenResult> {
 
-        private static final String CLIENT_ID = "android";
-        private static final String CLIENT_SECRET = "secret";
-
         private Token mToken;
 
         RefreshTokenAsyncTask(Token token) {
@@ -60,7 +57,7 @@ public class SplashActivity extends AppCompatActivity {
         @Override
         protected TokenResult doInBackground(String... params) {
             publishProgress("Getting refresh token...");
-            TokenResult result = mToken.getRefreshToken(CLIENT_ID, CLIENT_SECRET, mToken.getRefreshToken());
+            TokenResult result = mToken.getRefreshToken(Constants.CLIENT_ID, Constants.CLIENT_SECRET);
 
             if (result.isSuccess()) {
                 UserInfoResult userInfoResult = mToken.getUserInfo();

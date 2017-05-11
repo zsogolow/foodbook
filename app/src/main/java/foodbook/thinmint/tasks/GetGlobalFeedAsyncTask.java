@@ -2,7 +2,6 @@ package foodbook.thinmint.tasks;
 
 import android.os.AsyncTask;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import foodbook.thinmint.api.WebAPIConnect;
@@ -11,32 +10,30 @@ import foodbook.thinmint.constants.Constants;
 import foodbook.thinmint.idsrv.Token;
 import foodbook.thinmint.idsrv.TokenHelper;
 import foodbook.thinmint.idsrv.TokenResult;
+import foodbook.thinmint.models.GlobalFeed;
 import foodbook.thinmint.models.ObjectFactory;
 import foodbook.thinmint.models.ParseException;
-import foodbook.thinmint.models.UserFeed;
 import foodbook.thinmint.models.domain.Note;
-import foodbook.thinmint.models.domain.User;
 
 /**
  * Created by Zachery.Sogolow on 5/9/2017.
  */
 
-public class GetUserFeedAsyncTask extends AsyncTask<String, String, UserFeed> {
+public class GetGlobalFeedAsyncTask extends AsyncTask<String, String, GlobalFeed> {
 
-    private UserFeedCallback mCallback;
+    private GlobalFeedCallback mCallback;
     private Token mToken;
 
-    public GetUserFeedAsyncTask(UserFeedCallback callback, Token token) {
+    public GetGlobalFeedAsyncTask(GlobalFeedCallback callback, Token token) {
         this.mCallback = callback;
         this.mToken = token;
     }
 
     @Override
-    protected UserFeed doInBackground(String... params) { // params[0] is subject
-        UserFeed result = new UserFeed();
-        String subject = params[0];
+    protected GlobalFeed doInBackground(String... params) {
+        GlobalFeed result = new GlobalFeed();
         WebAPIConnect connect = new WebAPIConnect();
-        publishProgress("Getting user's feed...");
+        publishProgress("Getting global feed...");
 
         TokenResult tokenResult = new TokenResult();
 
@@ -45,14 +42,10 @@ public class GetUserFeedAsyncTask extends AsyncTask<String, String, UserFeed> {
         }
 
         if (!TokenHelper.isTokenExpired(mToken) || tokenResult.isSuccess()) {
-            WebAPIResult userResult = connect.callService(mToken.getAccessToken(), "api/users/" + subject);
-            WebAPIResult userNotesResult = connect.callService(mToken.getAccessToken(), "api/users/" + subject + "/notes");
+            WebAPIResult userNotesResult = connect.callService(mToken.getAccessToken(), "api/notes");
             try {
-                User user = (User) new ObjectFactory<User>().Deserialize(new User(), userResult.getResult());
-                result.setUser(user);
-
                 List<Note> notes = new ObjectFactory<Note>().DeserializeCollection(new Note(), userNotesResult.getResult());
-                result.setUsersNotes(notes);
+                result.setNotes(notes);
             } catch (ParseException e) {
             }
         }
@@ -66,7 +59,7 @@ public class GetUserFeedAsyncTask extends AsyncTask<String, String, UserFeed> {
     }
 
     @Override
-    protected void onPostExecute(UserFeed result) {
+    protected void onPostExecute(GlobalFeed result) {
         mCallback.onCompleted(result);
         mCallback.onPostExecute(this);
     }
