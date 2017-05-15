@@ -5,25 +5,30 @@ import android.os.AsyncTask;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.util.Map;
+
 import foodbook.thinmint.api.WebAPIConnect;
 import foodbook.thinmint.api.WebAPIResult;
+import foodbook.thinmint.constants.Constants;
 import foodbook.thinmint.idsrv.Token;
+import foodbook.thinmint.idsrv.TokenHelper;
+import foodbook.thinmint.idsrv.TokenResult;
 import foodbook.thinmint.models.domain.Note;
 
 /**
  * Created by Zachery.Sogolow on 5/9/2017.
  */
 
-public class CreateNoteAsyncTask extends AsyncTask<String, String, WebAPIResult> {
+public class PostServiceAsyncTask extends AsyncTask<String, String, WebAPIResult> {
 
     private CallServiceCallback mCallback;
     private Token mToken;
-    private Note mNote;
+    private Map mMap;
 
-    public CreateNoteAsyncTask(CallServiceCallback callback, Token token, Note note) {
+    public PostServiceAsyncTask(CallServiceCallback callback, Token token, Map map) {
         this.mCallback = callback;
         this.mToken = token;
-        this.mNote = note;
+        this.mMap = map;
     }
 
     @Override
@@ -32,13 +37,15 @@ public class CreateNoteAsyncTask extends AsyncTask<String, String, WebAPIResult>
         String path = params[0];
         WebAPIConnect connect = new WebAPIConnect();
 
-        if (!mToken.getAccessToken().equals("")) {
-            try {
-                JSONObject jsonObject = new JSONObject();
-                jsonObject.put("userid", 1);
-                jsonObject.put("content","This is a fake note!");
-                result = connect.postService(mToken.getAccessToken(), path, jsonObject);
-            } catch (JSONException je) {}
+        TokenResult tokenResult = new TokenResult();
+
+        if (TokenHelper.isTokenExpired(mToken)) {
+            tokenResult = mToken.getRefreshToken(Constants.CLIENT_ID, Constants.CLIENT_SECRET);
+        }
+
+        if (!TokenHelper.isTokenExpired(mToken) || tokenResult.isSuccess()) {
+            JSONObject jsonObject = new JSONObject(mMap);
+            result = connect.postService(mToken.getAccessToken(), path, jsonObject);
         }
 
         return result;

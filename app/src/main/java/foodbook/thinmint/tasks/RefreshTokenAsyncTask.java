@@ -6,6 +6,8 @@ import android.content.SharedPreferences;
 import android.os.AsyncTask;
 import android.preference.PreferenceManager;
 
+import foodbook.thinmint.api.WebAPIConnect;
+import foodbook.thinmint.api.WebAPIResult;
 import foodbook.thinmint.idsrv.Token;
 import foodbook.thinmint.idsrv.TokenHelper;
 import foodbook.thinmint.idsrv.TokenResult;
@@ -13,6 +15,8 @@ import foodbook.thinmint.constants.Constants;
 import foodbook.thinmint.idsrv.UserInfo;
 import foodbook.thinmint.idsrv.UserInfoHelper;
 import foodbook.thinmint.idsrv.UserInfoResult;
+import foodbook.thinmint.models.JsonHelper;
+import foodbook.thinmint.models.domain.User;
 
 /**
  * Created by Zachery.Sogolow on 5/9/2017.
@@ -23,10 +27,10 @@ public class RefreshTokenAsyncTask extends AsyncTask<String, String, TokenResult
     private ProgressDialog pd;
 
     private Context mContext;
-    private RefreshTokenCallback mCallback;
+    private TokenResultCallback mCallback;
     private Token mToken;
 
-    public RefreshTokenAsyncTask(Context context, RefreshTokenCallback callback, Token token) {
+    public RefreshTokenAsyncTask(Context context, TokenResultCallback callback, Token token) {
         this.mContext = context;
         this.mCallback = callback;
         this.mToken = token;
@@ -49,6 +53,10 @@ public class RefreshTokenAsyncTask extends AsyncTask<String, String, TokenResult
             UserInfo userInfo = UserInfoHelper.getUserInfoFromJson(userInfoResult.getUserInfoResult());
             SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(mContext.getApplicationContext());
             prefs.edit().putString(Constants.USER_SUBJECT, userInfo.getSubject()).apply();
+
+            WebAPIResult apiResult = new WebAPIConnect().callService(mToken.getAccessToken(), "api/users/" + userInfo.getSubject());
+            User user = JsonHelper.getUser(apiResult.getResult());
+            prefs.edit().putLong(Constants.USER_ID, user.getId()).apply();
         }
 
         return result;

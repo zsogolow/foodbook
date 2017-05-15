@@ -23,6 +23,7 @@ public class Constants {
     public static final String EXPIRES_IN_PREFERENCE_KEY = "expires_in";
     public static final String LAST_RETRIEVED_PREFERENCE_KEY = "last_retrieved";
     public static final String USER_SUBJECT = "user_subject";
+    public static final String USER_ID = "user_id";
 
 
     public static final String CLIENT_ID = "android";

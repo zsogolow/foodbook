@@ -1,14 +1,9 @@
 package foodbook.thinmint.activities;
 
-import android.animation.Animator;
-import android.animation.AnimatorListenerAdapter;
-import android.annotation.TargetApi;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.os.Build;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
-import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -17,48 +12,41 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
 
-import org.json.JSONException;
-import org.json.JSONObject;
+import com.google.gson.reflect.TypeToken;
 
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.HashMap;
-import java.util.Objects;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
 
 import foodbook.thinmint.IActivityCallback;
 import foodbook.thinmint.IAsyncCallback;
 import foodbook.thinmint.api.WebAPIResult;
-import foodbook.thinmint.idsrv.TokenHelper;
-import foodbook.thinmint.models.ObjectFactory;
-import foodbook.thinmint.models.ParseException;
+import foodbook.thinmint.models.JsonHelper;
 import foodbook.thinmint.models.domain.Note;
 import foodbook.thinmint.models.domain.User;
-import foodbook.thinmint.tasks.AccessTokenAsyncTask;
-import foodbook.thinmint.tasks.AccessTokenCallback;
+import foodbook.thinmint.tasks.TokenResultCallback;
 import foodbook.thinmint.R;
 import foodbook.thinmint.tasks.CallServiceAsyncTask;
 import foodbook.thinmint.tasks.CallServiceCallback;
-import foodbook.thinmint.tasks.CreateNoteAsyncTask;
-import foodbook.thinmint.tasks.GetUserAsyncTask;
+import foodbook.thinmint.tasks.PostServiceAsyncTask;
 import foodbook.thinmint.tasks.RefreshTokenAsyncTask;
-import foodbook.thinmint.tasks.RefreshTokenCallback;
-import foodbook.thinmint.idsrv.Token;
 import foodbook.thinmint.idsrv.TokenResult;
 import foodbook.thinmint.idsrv.UserInfoResult;
 import foodbook.thinmint.tasks.UserInfoAsyncTask;
 import foodbook.thinmint.tasks.UserInfoCallback;
 import foodbook.thinmint.constants.Constants;
 
-public class MainActivity extends AppCompatActivity implements IActivityCallback {
+public class MainActivity extends TokenActivity implements IActivityCallback {
 
-    private RefreshTokenCallback mRefreshCallback;
-    private AccessTokenCallback mAccessCallback;
+    private TokenResultCallback mRefreshCallback;
     private UserInfoCallback mUserInfoCallback;
-    private CallServiceCallback mCallServiceCallback;
-    private CallServiceCallback mGetUserCallback;
-    private CallServiceCallback mGetNotesCallback;
-    private CallServiceCallback mCreateNoteCallback;
-
-    private Token mToken;
-    private String mUserSubject;
+    private CallServiceCallback<List<User>> mGetUsersCallback;
+    private CallServiceCallback<User> mGetUserCallback;
+    private CallServiceCallback<List<Note>> mGetMyNotesCallback;
+    private CallServiceCallback<Note> mCreateNoteCallback;
 
     private TextView mResultTextView;
 
@@ -69,24 +57,15 @@ public class MainActivity extends AppCompatActivity implements IActivityCallback
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
-        // TOKEN OBJECT INIT
-        mToken = new Token();
+        initToken();
+        initUser();
 
-        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(MainActivity.this);
-        mToken.setAccessToken(prefs.getString(Constants.ACCESS_TOKEN_PREFERENCE_KEY, ""));
-        mToken.setRefreshToken(prefs.getString(Constants.REFRESH_TOKEN_PREFERENCE_KEY, ""));
-        mToken.setExpiresIn(prefs.getString(Constants.EXPIRES_IN_PREFERENCE_KEY, ""));
-        mToken.setLastRetrieved(prefs.getLong(Constants.LAST_RETRIEVED_PREFERENCE_KEY, 0));
-
-        mUserSubject = prefs.getString(Constants.USER_SUBJECT, "");
-
-        mRefreshCallback = new RefreshTokenCallback(this);
-        mAccessCallback = new AccessTokenCallback(this);
+        mRefreshCallback = new TokenResultCallback(this);
         mUserInfoCallback = new UserInfoCallback(this);
-        mCallServiceCallback = new CallServiceCallback(this);
-        mGetUserCallback = new CallServiceCallback(this);
-        mGetNotesCallback = new CallServiceCallback(this);
-        mCreateNoteCallback = new CallServiceCallback(this);
+        mGetUsersCallback = new CallServiceCallback<>(this, new TypeToken<List<User>>(){}.getType());
+        mGetUserCallback = new CallServiceCallback<>(this, User.class);
+        mGetMyNotesCallback = new CallServiceCallback<>(this, new TypeToken<List<Note>>(){}.getType());
+        mCreateNoteCallback = new CallServiceCallback<>(this, Note.class);
 
         // TOKEN REFRESH BUTTON EVENT HANDLER
         Button _rtbtn = (Button) findViewById(R.id.rtbtn);
@@ -108,10 +87,9 @@ public class MainActivity extends AppCompatActivity implements IActivityCallback
         Button _cabtn = (Button) findViewById(R.id.cabtn);
         _cabtn.setOnClickListener(new Button.OnClickListener() {
             public void onClick(View v) {
-                new CallServiceAsyncTask(mCallServiceCallback, mToken).execute("api/users");
+                new CallServiceAsyncTask(mGetUsersCallback, mToken).execute("api/users");
             }
         });
-
 
         // GET USER BUTTON EVENT HANDLER
         Button _atbtn = (Button) findViewById(R.id.gubtn);
@@ -125,7 +103,7 @@ public class MainActivity extends AppCompatActivity implements IActivityCallback
         Button _gnbtn = (Button) findViewById(R.id.gnbtn);
         _gnbtn.setOnClickListener(new Button.OnClickListener() {
             public void onClick(View v) {
-                new CallServiceAsyncTask(mGetNotesCallback, mToken).execute("api/users/" + mUserSubject + "/notes");
+                new CallServiceAsyncTask(mGetMyNotesCallback, mToken).execute("api/users/" + mUserSubject + "/notes");
             }
         });
 
@@ -134,24 +112,21 @@ public class MainActivity extends AppCompatActivity implements IActivityCallback
         Button _cnbtn = (Button) findViewById(R.id.cnbtn);
         _cnbtn.setOnClickListener(new Button.OnClickListener() {
             public void onClick(View v) {
-                new CreateNoteAsyncTask(mCreateNoteCallback, mToken, new Note()).execute("api/notes");
+                Map<String, Object> map = new HashMap<>();
+                SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss Z", Locale.US);
+                map.put("content", "this is a note");
+                map.put("userid", mUserId);
+                map.put("datecreated", dateFormat.format(new Date()));
+                new PostServiceAsyncTask(mCreateNoteCallback, mToken, map).execute("api/notes");
             }
         });
 
         mResultTextView = (TextView) findViewById(R.id.resulttxt);
-        mResultTextView.setText(prefs.getString(Constants.ACCESS_TOKEN_PREFERENCE_KEY, ""));
-    }
-
-    private void refreshTokenIfNeeded() {
-        if (TokenHelper.isTokenExpired(mToken)) {
-            new RefreshTokenAsyncTask(MainActivity.this, mRefreshCallback, mToken).execute();
-        }
     }
 
     @Override
     protected void onResume() {
         super.onResume();
-        refreshTokenIfNeeded();
     }
 
     @Override
@@ -181,7 +156,6 @@ public class MainActivity extends AppCompatActivity implements IActivityCallback
                 // If we got here, the user's action was not recognized.
                 // Invoke the superclass to handle it.
                 return super.onOptionsItemSelected(item);
-
         }
     }
 
@@ -193,28 +167,25 @@ public class MainActivity extends AppCompatActivity implements IActivityCallback
         } else if (cb.equals(mRefreshCallback)) {
             TokenResult token = mRefreshCallback.getTokenResult();
             mResultTextView.setText(token.getTokenResult());
-        } else if (cb.equals(mAccessCallback)) {
-            TokenResult token = mAccessCallback.getTokenResult();
-            mResultTextView.setText(token.getTokenResult());
-        } else if (cb.equals(mCallServiceCallback)) {
-            WebAPIResult result = mCallServiceCallback.getResult();
+        } else if (cb.equals(mGetUsersCallback)) {
+            WebAPIResult result = mGetUsersCallback.getResult();
+            String usersString = result.getResult();
+            List<User> users = JsonHelper.getUsers(usersString);
             mResultTextView.setText(result.getResult());
         } else if (cb.equals(mGetUserCallback)) {
             WebAPIResult result = mGetUserCallback.getResult();
             String userString = result.getResult();
-            try {
-                User user = (User)new ObjectFactory<User>().Deserialize(new User(), userString);
-                mResultTextView.setText(user.getUsername());
-            } catch (ParseException e) {
-                mResultTextView.setText(e.getMessage());
-            }
-        } else if (cb.equals(mGetNotesCallback)) {
-            WebAPIResult result = mGetNotesCallback.getResult();
+            User user = JsonHelper.getUser(userString);
+            mResultTextView.setText(userString);
+        } else if (cb.equals(mGetMyNotesCallback)) {
+            WebAPIResult result = mGetMyNotesCallback.getResult();
             String noteString = result.getResult();
+            List<Note> notes = JsonHelper.getNotes(noteString);
             mResultTextView.setText(noteString);
         } else if (cb.equals(mCreateNoteCallback)) {
             WebAPIResult result = mCreateNoteCallback.getResult();
             String noteString = result.getResult();
+            Note note = JsonHelper.getNote(noteString);
             mResultTextView.setText(noteString);
         }
     }

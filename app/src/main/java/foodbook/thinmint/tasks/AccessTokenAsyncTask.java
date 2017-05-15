@@ -17,18 +17,16 @@ import foodbook.thinmint.idsrv.TokenResult;
 
 public class AccessTokenAsyncTask extends AsyncTask<String, String, TokenResult> {
 
-    private static final String CLIENT_ID = "android";
-    private static final String CLIENT_SECRET = "secret";
     private static final String SCOPES = "offline_access openid profile thinmintapi";
 
     private ProgressDialog pd;
 
     private Context mContext;
-    private AccessTokenCallback mCallback;
+    private TokenResultCallback mCallback;
     private Token mToken;
 
 
-    public AccessTokenAsyncTask(Context context, AccessTokenCallback callback, Token token) {
+    public AccessTokenAsyncTask(Context context, TokenResultCallback callback, Token token) {
         mContext = context;
         mCallback = callback;
         mToken = token;
@@ -44,7 +42,7 @@ public class AccessTokenAsyncTask extends AsyncTask<String, String, TokenResult>
     @Override
     protected TokenResult doInBackground(String... params) { //params[0] username params[1] for password.
         publishProgress("Getting access token...");
-        return mToken.getAccessToken(CLIENT_ID, CLIENT_SECRET, params[0], params[1], SCOPES);
+        return mToken.getAccessToken(Constants.CLIENT_ID, Constants.CLIENT_SECRET, params[0], params[1], SCOPES);
     }
 
     @Override

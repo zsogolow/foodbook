@@ -3,7 +3,6 @@ package foodbook.thinmint.activities;
 import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
 import android.annotation.TargetApi;
-import android.content.Intent;
 import android.content.SharedPreferences;
 import android.preference.PreferenceManager;
 import android.support.v7.app.AppCompatActivity;
@@ -13,7 +12,6 @@ import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
 import android.text.TextUtils;
-import android.util.Log;
 import android.view.KeyEvent;
 import android.view.View;
 import android.view.View.OnClickListener;
@@ -26,12 +24,13 @@ import android.widget.TextView;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.util.UUID;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.Locale;
 
 import foodbook.thinmint.R;
 import foodbook.thinmint.api.WebAPIConnect;
 import foodbook.thinmint.api.WebAPIResult;
-import foodbook.thinmint.idsrv.JsonManipulation;
 import foodbook.thinmint.idsrv.Token;
 import foodbook.thinmint.idsrv.TokenHelper;
 import foodbook.thinmint.idsrv.TokenResult;
@@ -39,6 +38,8 @@ import foodbook.thinmint.constants.Constants;
 import foodbook.thinmint.idsrv.UserInfo;
 import foodbook.thinmint.idsrv.UserInfoHelper;
 import foodbook.thinmint.idsrv.UserInfoResult;
+import foodbook.thinmint.models.JsonHelper;
+import foodbook.thinmint.models.domain.User;
 
 /**
  * A login screen that offers login via email/password.
@@ -230,14 +231,18 @@ public class LoginActivity extends AppCompatActivity {
                 WebAPIResult apiResult = new WebAPIConnect().callService(tempToken.getAccessToken(), "api/users/" + userInfo.getSubject());
                 if (!apiResult.isSuccess()) {
                     JSONObject jsonObject = new JSONObject();
+                    SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss Z", Locale.US);
                     try {
                         jsonObject.put("username", mEmail);
+                        jsonObject.put("datecreated", dateFormat.format(new Date()));
                         jsonObject.put("subject", userInfo.getSubject());
-                        jsonObject.put("uniqueid", UUID.randomUUID());
                     } catch (JSONException je) {
                     }
 
                     WebAPIResult postResult = new WebAPIConnect().postService(tempToken.getAccessToken(), "api/users", jsonObject);
+                } else {
+                    User user = JsonHelper.getUser(apiResult.getResult());
+                    prefs.edit().putLong(Constants.USER_ID, user.getId()).apply();
                 }
             }
 

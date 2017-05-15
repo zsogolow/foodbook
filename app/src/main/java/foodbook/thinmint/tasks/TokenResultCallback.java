@@ -10,11 +10,11 @@ import foodbook.thinmint.idsrv.TokenResult;
  * Created by Zachery.Sogolow on 5/9/2017.
  */
 
-public class AccessTokenCallback extends AbstractAsyncCallback<TokenResult> {
+public class TokenResultCallback extends AbstractAsyncCallback<TokenResult> {
 
     private TokenResult mTokenResult;
 
-    public AccessTokenCallback(IActivityCallback callback) {
+    public TokenResultCallback(IActivityCallback callback) {
         super(callback);
     }
 

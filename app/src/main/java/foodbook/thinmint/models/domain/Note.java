@@ -1,40 +1,37 @@
 package foodbook.thinmint.models.domain;
 
-import java.util.List;
+import com.google.gson.annotations.SerializedName;
 
-import foodbook.thinmint.models.JsonField;
+import java.util.List;
 
 /**
  * Created by Zachery.Sogolow on 5/9/2017.
  */
 
-public class Note {
+public class Note extends EntityBase {
 
-    @JsonField(name = "userID", jsonGetMethod = "getLong", isAccessible = true)
+    @SerializedName("userID")
     private long mUserId;
 
-    @JsonField(name = "user", jsonGetMethod = "get", isAccessible = true, isNav = true, objectType = "foodbook.thinmint.models.domain.User")
+    @SerializedName("user")
     private User mUser;
 
-    @JsonField(name = "content", jsonGetMethod = "getString", isAccessible = true)
+    @SerializedName("content")
     private String mContent;
 
-    @JsonField(name = "comments", jsonGetMethod = "get", isAccessible = false)
+    @SerializedName("comments")
     private List<Comment> mComments;
 
     public Note() {
-        this.mUserId = 0;
-        this.mUser = null;
-        this.mContent = "";
-        this.mComments = null;
+        super();
     }
 
     public long getUserId() {
         return mUserId;
     }
 
-    public void setUserId(long mUserId) {
-        this.mUserId = mUserId;
+    public void setUserId(long userId) {
+        this.mUserId = userId;
     }
 
     public User getUser() {

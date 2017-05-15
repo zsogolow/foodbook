@@ -1,37 +1,23 @@
 package foodbook.thinmint.models.domain;
 
-import foodbook.thinmint.models.JsonField;
+import com.google.gson.annotations.SerializedName;
+
+import java.util.Date;
 
 /**
  * Created by Zachery.Sogolow on 5/9/2017.
  */
 
-public class User {
+public class User extends EntityBase {
 
-    @JsonField(name = "id", jsonGetMethod = "getLong", isAccessible = true)
-    private long mId;
-
-    @JsonField(name = "subject", jsonGetMethod = "getString", isAccessible = true)
+    @SerializedName("subject")
     private String mSubject;
 
-    @JsonField(name = "userName", jsonGetMethod = "getString", isAccessible = true)
+    @SerializedName("userName")
     private String mUsername;
 
     public User() {
-    }
-
-    public User(long id, String subject, String username) {
-        this.mId = id;
-        this.mSubject = subject;
-        this.mUsername = username;
-    }
-
-    public long getId() {
-        return mId;
-    }
-
-    public void setId(long id) {
-        this.mId = id;
+        super();
     }
 
     public String getSubject() {
@@ -49,4 +35,5 @@ public class User {
     public void setUsername(String username) {
         this.mUsername = username;
     }
+
 }

@@ -1,8 +1,5 @@
 package foodbook.thinmint.api;
 
-import foodbook.thinmint.models.ObjectFactory;
-import foodbook.thinmint.models.ParseException;
-
 /**
  * Created by ZachS on 5/9/2017.
  */

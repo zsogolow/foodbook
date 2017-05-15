@@ -4,7 +4,10 @@ import android.os.AsyncTask;
 
 import foodbook.thinmint.api.WebAPIConnect;
 import foodbook.thinmint.api.WebAPIResult;
+import foodbook.thinmint.constants.Constants;
 import foodbook.thinmint.idsrv.Token;
+import foodbook.thinmint.idsrv.TokenHelper;
+import foodbook.thinmint.idsrv.TokenResult;
 
 /**
  * Created by Zachery.Sogolow on 5/9/2017.
@@ -25,8 +28,15 @@ public class CallServiceAsyncTask extends AsyncTask<String, String, WebAPIResult
         WebAPIResult result = null;
         String path = params[0];
         WebAPIConnect connect = new WebAPIConnect();
-        publishProgress("Getting user...");
-        if (!mToken.getAccessToken().equals("")) {
+        publishProgress("Getting data...");
+
+        TokenResult tokenResult = new TokenResult();
+
+        if (TokenHelper.isTokenExpired(mToken)) {
+            tokenResult = mToken.getRefreshToken(Constants.CLIENT_ID, Constants.CLIENT_SECRET);
+        }
+
+        if (!TokenHelper.isTokenExpired(mToken) || tokenResult.isSuccess()) {
             result = connect.callService(mToken.getAccessToken(), path);
         }
 

@@ -1,21 +1,22 @@
 package foodbook.thinmint.activities;
 
-import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.AsyncTask;
-import android.os.UserHandle;
 import android.preference.PreferenceManager;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 
+import foodbook.thinmint.api.WebAPIConnect;
+import foodbook.thinmint.api.WebAPIResult;
 import foodbook.thinmint.constants.Constants;
-import foodbook.thinmint.idsrv.JsonManipulation;
 import foodbook.thinmint.idsrv.Token;
 import foodbook.thinmint.idsrv.TokenHelper;
 import foodbook.thinmint.idsrv.TokenResult;
 import foodbook.thinmint.idsrv.UserInfo;
 import foodbook.thinmint.idsrv.UserInfoHelper;
 import foodbook.thinmint.idsrv.UserInfoResult;
+import foodbook.thinmint.models.JsonHelper;
+import foodbook.thinmint.models.domain.User;
 
 public class SplashActivity extends AppCompatActivity {
 
@@ -64,6 +65,10 @@ public class SplashActivity extends AppCompatActivity {
                 UserInfo userInfo = UserInfoHelper.getUserInfoFromJson(userInfoResult.getUserInfoResult());
                 SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
                 prefs.edit().putString(Constants.USER_SUBJECT, userInfo.getSubject()).apply();
+
+                WebAPIResult apiResult = new WebAPIConnect().callService(mToken.getAccessToken(), "api/users/" + userInfo.getSubject());
+                User user = JsonHelper.getUser(apiResult.getResult());
+                prefs.edit().putLong(Constants.USER_ID, user.getId()).apply();
             }
 
             return result;
