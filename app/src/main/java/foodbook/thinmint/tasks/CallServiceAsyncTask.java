@@ -36,7 +36,11 @@ public class CallServiceAsyncTask extends AsyncTask<String, String, WebAPIResult
             tokenResult = mToken.getRefreshToken(Constants.CLIENT_ID, Constants.CLIENT_SECRET);
         }
 
-        if (!TokenHelper.isTokenExpired(mToken) || tokenResult.isSuccess()) {
+        if (tokenResult.isSuccess()) {
+            mToken = TokenHelper.getTokenFromJson(tokenResult.getTokenResult());
+        }
+
+        if (!TokenHelper.isTokenExpired(mToken)) {
             result = connect.callService(mToken.getAccessToken(), path);
         }
 

@@ -43,7 +43,11 @@ public class PostServiceAsyncTask extends AsyncTask<String, String, WebAPIResult
             tokenResult = mToken.getRefreshToken(Constants.CLIENT_ID, Constants.CLIENT_SECRET);
         }
 
-        if (!TokenHelper.isTokenExpired(mToken) || tokenResult.isSuccess()) {
+        if (tokenResult.isSuccess()) {
+            mToken = TokenHelper.getTokenFromJson(tokenResult.getTokenResult());
+        }
+
+        if (!TokenHelper.isTokenExpired(mToken)) {
             JSONObject jsonObject = new JSONObject(mMap);
             result = connect.postService(mToken.getAccessToken(), path, jsonObject);
         }
