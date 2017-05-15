@@ -1,5 +1,6 @@
 package foodbook.thinmint.tasks;
 
+import android.content.Context;
 import android.os.AsyncTask;
 
 import org.json.JSONException;
@@ -21,11 +22,13 @@ import foodbook.thinmint.models.domain.Note;
 
 public class PostServiceAsyncTask extends AsyncTask<String, String, WebAPIResult> {
 
+    private Context mContext;
     private CallServiceCallback mCallback;
     private Token mToken;
     private Map mMap;
 
-    public PostServiceAsyncTask(CallServiceCallback callback, Token token, Map map) {
+    public PostServiceAsyncTask(Context context, CallServiceCallback callback, Token token, Map map) {
+        this.mContext = context;
         this.mCallback = callback;
         this.mToken = token;
         this.mMap = map;
@@ -37,14 +40,11 @@ public class PostServiceAsyncTask extends AsyncTask<String, String, WebAPIResult
         String path = params[0];
         WebAPIConnect connect = new WebAPIConnect();
 
-        TokenResult tokenResult = new TokenResult();
-
         if (TokenHelper.isTokenExpired(mToken)) {
-            tokenResult = mToken.getRefreshToken(Constants.CLIENT_ID, Constants.CLIENT_SECRET);
-        }
-
-        if (tokenResult.isSuccess()) {
-            mToken = TokenHelper.getTokenFromJson(tokenResult.getTokenResult());
+            TokenResult tokenResult = mToken.getRefreshToken(Constants.CLIENT_ID, Constants.CLIENT_SECRET);
+            Token tempToken = TokenHelper.getTokenFromJson(tokenResult);
+            TokenHelper.saveToken(mContext, tempToken);
+            TokenHelper.copyToken(tempToken, mToken);
         }
 
         if (!TokenHelper.isTokenExpired(mToken)) {

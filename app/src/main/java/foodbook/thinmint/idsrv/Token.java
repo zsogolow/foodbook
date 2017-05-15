@@ -115,6 +115,7 @@ public class Token {
 
             // Return response (token)
             tokenResult.setTokenResult(result);
+            tokenResult.setRetrieved(System.currentTimeMillis());
 
             return tokenResult;
 
@@ -169,6 +170,7 @@ public class Token {
 
                 result = response.toString();
                 tokenResult.setSuccess(true);
+                tokenResult.setRetrieved(System.currentTimeMillis());
             } else {
                 result = con.getResponseMessage();
                 tokenResult.setSuccess(false);

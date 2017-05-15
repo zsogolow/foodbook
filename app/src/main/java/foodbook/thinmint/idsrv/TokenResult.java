@@ -7,6 +7,7 @@ package foodbook.thinmint.idsrv;
 public class TokenResult {
     private boolean mSuccess;
     private String mTokenResult;
+    private long mRetrieved;
 
     public TokenResult() {
         mSuccess = false;
@@ -32,5 +33,13 @@ public class TokenResult {
 
     public void setTokenResult(String mTokenResult) {
         this.mTokenResult = mTokenResult;
+    }
+
+    public long getRetrieved() {
+        return mRetrieved;
+    }
+
+    public void setRetrieved(long retrieved) {
+        this.mRetrieved = retrieved;
     }
 }

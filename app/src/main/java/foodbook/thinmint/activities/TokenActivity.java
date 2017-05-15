@@ -19,8 +19,7 @@ public abstract class TokenActivity extends AppCompatActivity {
     protected long mUserId;
 
     protected void initToken() {
-        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
-        mToken = TokenHelper.getToken(prefs);
+        mToken = TokenHelper.getToken(getApplicationContext());
     }
 
     protected void initUser() {

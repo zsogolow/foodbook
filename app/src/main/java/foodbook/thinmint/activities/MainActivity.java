@@ -43,10 +43,10 @@ public class MainActivity extends TokenActivity implements IActivityCallback {
 
     private TokenResultCallback mRefreshCallback;
     private UserInfoCallback mUserInfoCallback;
-    private CallServiceCallback<List<User>> mGetUsersCallback;
-    private CallServiceCallback<User> mGetUserCallback;
-    private CallServiceCallback<List<Note>> mGetMyNotesCallback;
-    private CallServiceCallback<Note> mCreateNoteCallback;
+    private CallServiceCallback mGetUsersCallback;
+    private CallServiceCallback mGetUserCallback;
+    private CallServiceCallback mGetMyNotesCallback;
+    private CallServiceCallback mCreateNoteCallback;
 
     private TextView mResultTextView;
 
@@ -62,10 +62,10 @@ public class MainActivity extends TokenActivity implements IActivityCallback {
 
         mRefreshCallback = new TokenResultCallback(this);
         mUserInfoCallback = new UserInfoCallback(this);
-        mGetUsersCallback = new CallServiceCallback<>(this, new TypeToken<List<User>>(){}.getType());
-        mGetUserCallback = new CallServiceCallback<>(this, User.class);
-        mGetMyNotesCallback = new CallServiceCallback<>(this, new TypeToken<List<Note>>(){}.getType());
-        mCreateNoteCallback = new CallServiceCallback<>(this, Note.class);
+        mGetUsersCallback = new CallServiceCallback(this);
+        mGetUserCallback = new CallServiceCallback(this);
+        mGetMyNotesCallback = new CallServiceCallback(this);
+        mCreateNoteCallback = new CallServiceCallback(this);
 
         // TOKEN REFRESH BUTTON EVENT HANDLER
         Button _rtbtn = (Button) findViewById(R.id.rtbtn);
@@ -87,7 +87,7 @@ public class MainActivity extends TokenActivity implements IActivityCallback {
         Button _cabtn = (Button) findViewById(R.id.cabtn);
         _cabtn.setOnClickListener(new Button.OnClickListener() {
             public void onClick(View v) {
-                new CallServiceAsyncTask(mGetUsersCallback, mToken).execute("api/users");
+                new CallServiceAsyncTask(MainActivity.this, mGetUsersCallback, mToken).execute("api/users");
             }
         });
 
@@ -95,7 +95,7 @@ public class MainActivity extends TokenActivity implements IActivityCallback {
         Button _atbtn = (Button) findViewById(R.id.gubtn);
         _atbtn.setOnClickListener(new Button.OnClickListener() {
             public void onClick(View v) {
-                new CallServiceAsyncTask(mGetUserCallback, mToken).execute("api/users/" + mUserSubject);
+                new CallServiceAsyncTask(MainActivity.this, mGetUserCallback, mToken).execute("api/users/" + mUserSubject);
             }
         });
 
@@ -103,7 +103,7 @@ public class MainActivity extends TokenActivity implements IActivityCallback {
         Button _gnbtn = (Button) findViewById(R.id.gnbtn);
         _gnbtn.setOnClickListener(new Button.OnClickListener() {
             public void onClick(View v) {
-                new CallServiceAsyncTask(mGetMyNotesCallback, mToken).execute("api/users/" + mUserSubject + "/notes");
+                new CallServiceAsyncTask(MainActivity.this, mGetMyNotesCallback, mToken).execute("api/users/" + mUserSubject + "/notes");
             }
         });
 
@@ -117,7 +117,7 @@ public class MainActivity extends TokenActivity implements IActivityCallback {
                 map.put("content", "this is a note");
                 map.put("userid", mUserId);
                 map.put("datecreated", dateFormat.format(new Date()));
-                new PostServiceAsyncTask(mCreateNoteCallback, mToken, map).execute("api/notes");
+                new PostServiceAsyncTask(MainActivity.this, mCreateNoteCallback, mToken, map).execute("api/notes");
             }
         });
 
@@ -170,22 +170,22 @@ public class MainActivity extends TokenActivity implements IActivityCallback {
         } else if (cb.equals(mGetUsersCallback)) {
             WebAPIResult result = mGetUsersCallback.getResult();
             String usersString = result.getResult();
-            List<User> users = JsonHelper.getUsers(usersString);
+//            List<User> users = JsonHelper.getUsers(usersString);
             mResultTextView.setText(result.getResult());
         } else if (cb.equals(mGetUserCallback)) {
             WebAPIResult result = mGetUserCallback.getResult();
             String userString = result.getResult();
-            User user = JsonHelper.getUser(userString);
+//            User user = JsonHelper.getUser(userString);
             mResultTextView.setText(userString);
         } else if (cb.equals(mGetMyNotesCallback)) {
             WebAPIResult result = mGetMyNotesCallback.getResult();
             String noteString = result.getResult();
-            List<Note> notes = JsonHelper.getNotes(noteString);
+//            List<Note> notes = JsonHelper.getNotes(noteString);
             mResultTextView.setText(noteString);
         } else if (cb.equals(mCreateNoteCallback)) {
             WebAPIResult result = mCreateNoteCallback.getResult();
             String noteString = result.getResult();
-            Note note = JsonHelper.getNote(noteString);
+//            Note note = JsonHelper.getNote(noteString);
             mResultTextView.setText(noteString);
         }
     }

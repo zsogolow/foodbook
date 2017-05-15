@@ -4,6 +4,7 @@ import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
 import android.annotation.TargetApi;
 import android.content.SharedPreferences;
+import android.content.SyncAdapterType;
 import android.preference.PreferenceManager;
 import android.support.v7.app.AppCompatActivity;
 
@@ -221,14 +222,16 @@ public class LoginActivity extends AppCompatActivity {
             publishProgress("Getting access token...");
             TokenResult tokenResult = mToken.getAccessToken(CLIENT_ID, CLIENT_SECRET, mEmail, mPassword, SCOPES);
             if (tokenResult.isSuccess()) {
-                Token tempToken = TokenHelper.getTokenFromJson(tokenResult.getTokenResult());
+                Token tempToken = TokenHelper.getTokenFromJson(tokenResult);
+                TokenHelper.saveToken(LoginActivity.this, tempToken);
+                TokenHelper.copyToken(tempToken, mToken);
 
-                UserInfoResult userInfoResult = tempToken.getUserInfo();
+                UserInfoResult userInfoResult = mToken.getUserInfo();
                 UserInfo userInfo = UserInfoHelper.getUserInfoFromJson(userInfoResult.getUserInfoResult());
                 SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
                 prefs.edit().putString(Constants.USER_SUBJECT, userInfo.getSubject()).apply();
 
-                WebAPIResult apiResult = new WebAPIConnect().callService(tempToken.getAccessToken(), "api/users/" + userInfo.getSubject());
+                WebAPIResult apiResult = new WebAPIConnect().callService(mToken.getAccessToken(), "api/users/" + userInfo.getSubject());
                 if (!apiResult.isSuccess()) {
                     JSONObject jsonObject = new JSONObject();
                     SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss Z", Locale.US);
@@ -239,7 +242,7 @@ public class LoginActivity extends AppCompatActivity {
                     } catch (JSONException je) {
                     }
 
-                    WebAPIResult postResult = new WebAPIConnect().postService(tempToken.getAccessToken(), "api/users", jsonObject);
+                    WebAPIResult postResult = new WebAPIConnect().postService(mToken.getAccessToken(), "api/users", jsonObject);
                 } else {
                     User user = JsonHelper.getUser(apiResult.getResult());
                     prefs.edit().putLong(Constants.USER_ID, user.getId()).apply();
@@ -251,22 +254,7 @@ public class LoginActivity extends AppCompatActivity {
 
         @Override
         protected void onPostExecute(final TokenResult result) {
-
             if (result.isSuccess()) {
-                Token tempToken = TokenHelper.getTokenFromJson(result.getTokenResult());
-                long lastRetrieved = System.currentTimeMillis();
-
-                SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
-                prefs.edit().putString(Constants.REFRESH_TOKEN_PREFERENCE_KEY, tempToken.getRefreshToken()).apply();
-                prefs.edit().putString(Constants.ACCESS_TOKEN_PREFERENCE_KEY, tempToken.getAccessToken()).apply();
-                prefs.edit().putString(Constants.EXPIRES_IN_PREFERENCE_KEY, tempToken.getExpiresIn()).apply();
-                prefs.edit().putLong(Constants.LAST_RETRIEVED_PREFERENCE_KEY, lastRetrieved).apply();
-
-                mToken.setRefreshToken(tempToken.getRefreshToken());
-                mToken.setAccessToken(tempToken.getAccessToken());
-                mToken.setExpiresIn(tempToken.getExpiresIn());
-                mToken.setLastRetrieved(lastRetrieved);
-
                 ActivityStarter.finishLogin(LoginActivity.this);
             } else if (!result.isSuccess()) {
                 mLoginErrorView.setError("Username or password is incorrect");

@@ -15,27 +15,22 @@ import foodbook.thinmint.api.WebAPIResult;
  * Created by Zachery.Sogolow on 5/9/2017.
  */
 
-public class CallServiceCallback<T> extends AbstractAsyncCallback<WebAPIResult> {
+public class CallServiceCallback extends AbstractAsyncCallback<WebAPIResult> {
 
     private WebAPIResult mResult;
     private Type mMyType;
-    private T mDeserialized;
 
-    public CallServiceCallback(IActivityCallback callback, Type type) {
+    public CallServiceCallback(IActivityCallback callback) {
         super(callback);
-        mMyType = type;
     }
 
     @Override
     public void onPreExecute() {
-
     }
 
     @Override
     public void onCompleted(WebAPIResult result) {
         mResult = result;
-        Gson gson = new GsonBuilder().setDateFormat("yyyy-MM-dd'T'HH:mm:ss").create();
-        mDeserialized = gson.fromJson(mResult.getResult(), mMyType);
         mActivityCallback.callback(this);
     }
 
@@ -55,9 +50,5 @@ public class CallServiceCallback<T> extends AbstractAsyncCallback<WebAPIResult> 
 
     public WebAPIResult getResult() {
         return mResult;
-    }
-
-    public T getDeserialized() {
-        return mDeserialized;
     }
 }
