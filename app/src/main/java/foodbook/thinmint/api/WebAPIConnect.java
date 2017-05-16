@@ -8,6 +8,8 @@ import java.io.InputStreamReader;
 import java.io.StreamCorruptedException;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.net.URLEncoder;
+import java.nio.charset.Charset;
 
 import foodbook.thinmint.constants.Constants;
 
@@ -26,7 +28,8 @@ public class WebAPIConnect<T> {
 
         try {
 
-            URL obj = new URL(url + path);
+            String resourceUri = url + path;
+            URL obj = new URL(resourceUri);
 
             HttpURLConnection con = (HttpURLConnection) obj.openConnection();
             con.setRequestMethod("GET");

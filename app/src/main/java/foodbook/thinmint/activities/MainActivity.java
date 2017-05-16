@@ -99,6 +99,8 @@ public class MainActivity extends TokenActivity implements IActivityCallback {
             }
         });
 
+//        filter=((DateCreated Ge 2017-05-16 00:00:00 -0700) And (DateCreated Le 2017-05-16 23:59:59 -0700))
+
         // GET MY NOTES BUTTON EVENT HANDLER
         Button _gnbtn = (Button) findViewById(R.id.gnbtn);
         _gnbtn.setOnClickListener(new Button.OnClickListener() {
