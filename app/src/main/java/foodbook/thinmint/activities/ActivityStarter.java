@@ -3,6 +3,8 @@ package foodbook.thinmint.activities;
 import android.app.Activity;
 import android.content.Intent;
 
+import foodbook.thinmint.activities.day.DayActivity;
+
 /**
  * Created by Zachery.Sogolow on 5/10/2017.
  */

@@ -30,7 +30,7 @@
             </intent-filter>
         </activity>
         <activity
-            android:name=".activities.DayActivity"
+            android:name=".activities.day.DayActivity"
             android:label="@string/title_activity_day"
             android:theme="@style/AppTheme.NoActionBar"></activity>
     </application>

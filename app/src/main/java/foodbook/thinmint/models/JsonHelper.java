@@ -2,28 +2,13 @@ package foodbook.thinmint.models;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import com.google.gson.annotations.SerializedName;
+import com.google.gson.JsonSyntaxException;
 import com.google.gson.reflect.TypeToken;
 
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
-
 import java.lang.reflect.Field;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
-import java.lang.reflect.Type;
-import java.text.DateFormat;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Locale;
-import java.util.Map;
 import java.util.TimeZone;
 
 import foodbook.thinmint.models.domain.EntityBase;
@@ -45,33 +30,52 @@ public class JsonHelper {
     }
 
     public static User getUser(String json) {
-        User usr = gson.fromJson(json, User.class);
-        updateDate(usr);
-        return usr;
+        User user;
+        try {
+            user = gson.fromJson(json, User.class);
+            updateDate(user);
+        } catch (JsonSyntaxException jse) {
+            user = null;
+        }
+        return user;
     }
 
 
     public static List<User> getUsers(String json) {
-        List<User> usrs = gson.fromJson(json, new TypeToken<List<User>>() {
-        }.getType());
-        for (EntityBase base : usrs) {
-            updateDate(base);
+        List<User> users;
+        try {
+            users = gson.fromJson(json, new TypeToken<List<User>>() {}.getType());
+            for (EntityBase base : users) {
+                updateDate(base);
+            }
+        } catch (JsonSyntaxException jse) {
+            users = null;
         }
-        return usrs;
+        return users;
     }
 
     public static Note getNote(String json) {
-        Note note = gson.fromJson(json, Note.class);
-        updateDate(note);
+        Note note;
+        try {
+            note = gson.fromJson(json, Note.class);
+            updateDate(note);
+        } catch (JsonSyntaxException jse) {
+            note = null;
+        }
         return note;
     }
 
     public static List<Note> getNotes(String json) {
-        List<Note> notes = gson.fromJson(json, new TypeToken<List<Note>>() {
-        }.getType());
-        for (EntityBase base : notes) {
-            updateDate(base);
+        List<Note> notes;
+        try {
+            notes = gson.fromJson(json, new TypeToken<List<Note>>() {}.getType());
+            for (EntityBase base : notes) {
+                updateDate(base);
+            }
+        } catch (JsonSyntaxException jse) {
+            notes = null;
         }
+
         return notes;
     }
 

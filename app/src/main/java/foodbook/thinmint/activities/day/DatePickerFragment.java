@@ -1,15 +1,16 @@
-package foodbook.thinmint.activities;
+package foodbook.thinmint.activities.day;
 
 import android.app.Activity;
 import android.app.DatePickerDialog;
 import android.app.Dialog;
 import android.os.Bundle;
 import android.support.v4.app.DialogFragment;
-import android.support.v4.util.Pools;
 import android.widget.DatePicker;
 
 import java.util.Calendar;
 import java.util.Date;
+
+import foodbook.thinmint.activities.day.DayActivityFragment;
 
 /**
  * Created by Zachery.Sogolow on 5/16/2017.
@@ -38,8 +39,6 @@ public class DatePickerFragment extends DialogFragment
             throw new ClassCastException(activity.toString()
                     + " must implement OnHeadlineSelectedListener");
         }
-
-//            mDayCallback.selectDay(new Date(System.currentTimeMillis()));
     }
 
     public void setDate(Date date) {

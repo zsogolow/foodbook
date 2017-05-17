@@ -1,18 +1,10 @@
-package foodbook.thinmint.activities;
+package foodbook.thinmint.activities.day;
 
-import android.animation.Animator;
-import android.animation.AnimatorListenerAdapter;
-import android.annotation.TargetApi;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.os.Build;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
-import android.support.design.widget.FloatingActionButton;
-import android.support.design.widget.Snackbar;
-import android.support.v4.app.DialogFragment;
 import android.support.v7.app.ActionBar;
-import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.Menu;
@@ -20,12 +12,9 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 
-import com.google.gson.JsonSyntaxException;
-
 import java.net.URLEncoder;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
@@ -36,6 +25,8 @@ import java.util.Map;
 import foodbook.thinmint.IActivityCallback;
 import foodbook.thinmint.IAsyncCallback;
 import foodbook.thinmint.R;
+import foodbook.thinmint.activities.LoginActivity;
+import foodbook.thinmint.activities.TokenActivity;
 import foodbook.thinmint.constants.Constants;
 import foodbook.thinmint.models.JsonHelper;
 import foodbook.thinmint.models.domain.Note;
@@ -58,6 +49,8 @@ public class DayActivity extends TokenActivity implements IActivityCallback, Day
     private PostServiceAsyncTask mAddNoteTask;
     private CallServiceCallback mAddNoteCallback;
 
+    private DayActivityFragment mDayActivityFragment;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -76,8 +69,8 @@ public class DayActivity extends TokenActivity implements IActivityCallback, Day
         initToken();
         initUser();
 
-//        DayActivityFragment dayActivityFragment = (DayActivityFragment)
-//                getSupportFragmentManager().findFragmentById(R.id.fragment);
+        mDayActivityFragment = (DayActivityFragment)
+                getSupportFragmentManager().findFragmentById(R.id.fragment);
     }
 
     private void setDateTitle(Date date) {
@@ -87,43 +80,19 @@ public class DayActivity extends TokenActivity implements IActivityCallback, Day
         }
     }
 
-
-    /**
-     * Shows the progress UI and hides the login form.
-     */
-    @TargetApi(Build.VERSION_CODES.HONEYCOMB_MR2)
-    private void showProgress(final boolean show) {
-        // On Honeycomb MR2 we have the ViewPropertyAnimator APIs, which allow
-        // for very easy animations. If available, use these APIs to fade-in
-        // the progress spinner.
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB_MR2) {
-            int shortAnimTime = getResources().getInteger(android.R.integer.config_shortAnimTime);
-
-            mContentView.setVisibility(show ? View.GONE : View.VISIBLE);
-            mContentView.animate().setDuration(shortAnimTime).alpha(
-                    show ? 0 : 1).setListener(new AnimatorListenerAdapter() {
-                @Override
-                public void onAnimationEnd(Animator animation) {
-                    mContentView.setVisibility(show ? View.GONE : View.VISIBLE);
-                }
-            });
-
-            mProgressView.setVisibility(show ? View.VISIBLE : View.GONE);
-            mProgressView.animate().setDuration(shortAnimTime).alpha(
-                    show ? 1 : 0).setListener(new AnimatorListenerAdapter() {
-                @Override
-                public void onAnimationEnd(Animator animation) {
-                    mProgressView.setVisibility(show ? View.VISIBLE : View.GONE);
-                }
-            });
-        } else {
-            // The ViewPropertyAnimator APIs are not available, so simply show
-            // and hide the relevant UI components.
-            mProgressView.setVisibility(show ? View.VISIBLE : View.GONE);
-            mContentView.setVisibility(show ? View.GONE : View.VISIBLE);
-        }
+    private void showDatePicker() {
+        DatePickerFragment newFragment = new DatePickerFragment();
+        newFragment.setDate(mCurrentDate);
+        newFragment.show(getSupportFragmentManager(), "datePicker");
     }
 
+    private void logout() {
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+        prefs.edit().putString(Constants.ACCESS_TOKEN_PREFERENCE_KEY, "").apply();
+        Intent loginActivity = new Intent(getApplicationContext(), LoginActivity.class);
+        startActivity(loginActivity);
+        finish();
+    }
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -136,9 +105,7 @@ public class DayActivity extends TokenActivity implements IActivityCallback, Day
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
             case R.id.action_date:
-                DatePickerFragment newFragment = new DatePickerFragment();
-                newFragment.setDate(mCurrentDate);
-                newFragment.show(getSupportFragmentManager(), "datePicker");
+                showDatePicker();
                 return true;
 
             case R.id.action_settings:
@@ -147,11 +114,7 @@ public class DayActivity extends TokenActivity implements IActivityCallback, Day
 
             case R.id.action_logout:
                 // User chose the "Settings" item, show the app settings UI...
-                SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
-                prefs.edit().putString(Constants.ACCESS_TOKEN_PREFERENCE_KEY, "").apply();
-                Intent loginActivity = new Intent(getApplicationContext(), LoginActivity.class);
-                startActivity(loginActivity);
-                finish();
+                logout();
                 return true;
 
             default:
@@ -160,13 +123,6 @@ public class DayActivity extends TokenActivity implements IActivityCallback, Day
                 return super.onOptionsItemSelected(item);
         }
     }
-
-    private void setFragmentLoading(boolean loading) {
-        DayActivityFragment dayActivityFragment = (DayActivityFragment)
-                getSupportFragmentManager().findFragmentById(R.id.fragment);
-        dayActivityFragment.setLoading(loading);
-    }
-
 
     @Override
     public void addNote(Note note) {
@@ -178,16 +134,12 @@ public class DayActivity extends TokenActivity implements IActivityCallback, Day
         map.put("datecreated", dateFormat.format(new Date(System.currentTimeMillis())));
         mAddNoteTask = new PostServiceAsyncTask(this, mAddNoteCallback, mToken, map);
         mAddNoteTask.execute("api/notes");
-        setFragmentLoading(true);
     }
 
     @Override
     public void selectDay(Date date) {
-        DayActivityFragment dayActivityFragment = (DayActivityFragment)
-                getSupportFragmentManager().findFragmentById(R.id.fragment);
-        dayActivityFragment.setLoading(true);
-
         mCurrentDate = date;
+
         setDateTitle(mCurrentDate);
         mLoadingTask = new CallServiceAsyncTask(this, mLoadingCallback, mToken);
 
@@ -198,38 +150,27 @@ public class DayActivity extends TokenActivity implements IActivityCallback, Day
         String rawQuery = String.format(Locale.US, "((DateCreated Ge %d-%d-%d 00:00:00 -0700) And (DateCreated Le %d-%d-%d 23:59:59 -0700))",
                 calendar.get(Calendar.YEAR), calendar.get(Calendar.MONTH) + 1, calendar.get(Calendar.DAY_OF_MONTH),
                 calendar.get(Calendar.YEAR), calendar.get(Calendar.MONTH) + 1, calendar.get(Calendar.DAY_OF_MONTH));
+
+        String encodedQuery = "";
         try {
-            String encodedQuery = URLEncoder.encode(rawQuery, "UTF-8");
-            path += encodedQuery;
-            mLoadingTask.execute(path);
+            encodedQuery = URLEncoder.encode(rawQuery, "UTF-8");
         } catch (Exception e) {
         }
 
+        path += encodedQuery;
+        mLoadingTask.execute(path);
     }
 
     @Override
     public void callback(IAsyncCallback cb) {
         if (cb.equals(mLoadingCallback)) {
             mLoadingTask = null;
-            DayActivityFragment dayActivityFragment = (DayActivityFragment)
-                    getSupportFragmentManager().findFragmentById(R.id.fragment);
-            List<Note> notes = new ArrayList<>();
-            try {
-                notes = JsonHelper.getNotes(mLoadingCallback.getResult().getResult());
-            } catch (JsonSyntaxException jse) {
-            }
-
-            dayActivityFragment.onDataRetrieved(mCurrentDate, notes);
+            List<Note> notes = JsonHelper.getNotes(mLoadingCallback.getResult().getResult());
+            mDayActivityFragment.onDataRetrieved(mCurrentDate, notes);
         } else if (cb.equals(mAddNoteCallback)) {
             mAddNoteTask = null;
-            DayActivityFragment dayActivityFragment = (DayActivityFragment)
-                    getSupportFragmentManager().findFragmentById(R.id.fragment);
-            Note newNote = null;
-            try {
-                newNote = JsonHelper.getNote(mAddNoteCallback.getResult().getResult());
-            } catch (JsonSyntaxException jse) {
-            }
-            dayActivityFragment.onNoteAdded(newNote);
+            Note newNote = JsonHelper.getNote(mAddNoteCallback.getResult().getResult());
+            mDayActivityFragment.onNoteAdded(newNote);
         }
     }
 }
