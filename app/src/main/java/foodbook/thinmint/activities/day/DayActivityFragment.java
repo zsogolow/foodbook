@@ -97,6 +97,12 @@ public class DayActivityFragment extends Fragment {
         mSwipeRefreshLayout.setRefreshing(isLoading);
     }
 
+    public void setDate(Date date) {
+        setLoading(true);
+        mCurrentDate = date;
+        mDayCallback.selectDay(mCurrentDate);
+    }
+
     public void onDataRetrieved(Date date, List<Note> notes) {
         mCurrentDate = date;
         mAdapter.clear();

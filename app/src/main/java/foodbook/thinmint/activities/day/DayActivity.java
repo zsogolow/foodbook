@@ -104,6 +104,11 @@ public class DayActivity extends TokenActivity implements IActivityCallback, Day
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
+
+            case R.id.action_go_to_today:
+                mDayActivityFragment.setDate(new Date(System.currentTimeMillis()));
+                return true;
+
             case R.id.action_date:
                 showDatePicker();
                 return true;
