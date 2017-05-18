@@ -73,6 +73,7 @@ public class SplashActivity extends AppCompatActivity {
                 WebAPIResult apiResult = new WebAPIConnect().callService(mToken.getAccessToken(), "api/users/" + userInfo.getSubject());
                 User user = JsonHelper.getUser(apiResult.getResult());
                 prefs.edit().putLong(Constants.USER_ID, user.getId()).apply();
+                prefs.edit().putString(Constants.USER_NAME, user.getUsername()).apply();
             }
 
             return result;

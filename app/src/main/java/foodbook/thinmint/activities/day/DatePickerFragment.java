@@ -10,8 +10,6 @@ import android.widget.DatePicker;
 import java.util.Calendar;
 import java.util.Date;
 
-import foodbook.thinmint.activities.day.DayActivityFragment;
-
 /**
  * Created by Zachery.Sogolow on 5/16/2017.
  */
@@ -19,7 +17,7 @@ import foodbook.thinmint.activities.day.DayActivityFragment;
 public class DatePickerFragment extends DialogFragment
         implements DatePickerDialog.OnDateSetListener {
 
-    private DayActivityFragment.DayFragmentDataListener mDayCallback;
+    private DayFragment.OnDayFragmentDataListener mDayCallback;
 
     private Date mDate;
 
@@ -34,7 +32,7 @@ public class DatePickerFragment extends DialogFragment
         // This makes sure that the container activity has implemented
         // the callback interface. If not, it throws an exception
         try {
-            mDayCallback = (DayActivityFragment.DayFragmentDataListener) activity;
+            mDayCallback = (DayFragment.OnDayFragmentDataListener) activity;
         } catch (ClassCastException e) {
             throw new ClassCastException(activity.toString()
                     + " must implement OnHeadlineSelectedListener");

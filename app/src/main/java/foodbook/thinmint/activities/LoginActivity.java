@@ -93,7 +93,7 @@ public class LoginActivity extends AppCompatActivity {
     }
 //
 //    private void finishLogin() {
-//        Intent mainActivity = new Intent(getApplicationContext(), MainActivity.class);
+//        Intent mainActivity = new Intent(getApplicationContext(), MainActivity1.class);
 //        startActivity(mainActivity);
 //        finish();
 //    }
@@ -243,9 +243,13 @@ public class LoginActivity extends AppCompatActivity {
                     }
 
                     WebAPIResult postResult = new WebAPIConnect().postService(mToken.getAccessToken(), "api/users", jsonObject);
+                    User user = JsonHelper.getUser(postResult.getResult());
+                    prefs.edit().putLong(Constants.USER_ID, user.getId()).apply();
+                    prefs.edit().putString(Constants.USER_NAME, user.getUsername()).apply();
                 } else {
                     User user = JsonHelper.getUser(apiResult.getResult());
                     prefs.edit().putLong(Constants.USER_ID, user.getId()).apply();
+                    prefs.edit().putString(Constants.USER_NAME, user.getUsername()).apply();
                 }
             }
 

@@ -16,7 +16,7 @@
         android:theme="@style/AppTheme">
         <activity android:name=".activities.LoginActivity" />
         <activity
-            android:name=".activities.MainActivity"
+            android:name=".activities.MainActivity1"
             android:label="@string/title_activity_main"
             android:theme="@style/AppTheme.NoActionBar" />
         <activity
@@ -30,8 +30,8 @@
             </intent-filter>
         </activity>
         <activity
-            android:name=".activities.day.DayActivity"
-            android:label="@string/title_activity_day"
+            android:name=".activities.MainActivity"
+            android:label="@string/title_activity_base"
             android:theme="@style/AppTheme.NoActionBar"></activity>
     </application>
 

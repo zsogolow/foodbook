@@ -16,6 +16,7 @@ import foodbook.thinmint.models.domain.User;
 public abstract class TokenActivity extends AppCompatActivity {
     protected Token mToken;
     protected String mUserSubject;
+    protected String mUserName;
     protected long mUserId;
 
     protected void initToken() {
@@ -25,6 +26,7 @@ public abstract class TokenActivity extends AppCompatActivity {
     protected void initUser() {
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
         mUserSubject = prefs.getString(Constants.USER_SUBJECT, "");
+        mUserName = prefs.getString(Constants.USER_NAME, "");
         mUserId = prefs.getLong(Constants.USER_ID, -1);
     }
 }
