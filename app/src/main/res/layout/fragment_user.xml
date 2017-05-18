@@ -2,7 +2,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context="foodbook.thinmint.activities.mystuff.MyStuffFragment">
+    tools:context="foodbook.thinmint.activities.users.UsersFragment">
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -10,15 +10,22 @@
         android:orientation="vertical">
 
         <android.support.v4.widget.SwipeRefreshLayout
-            android:id="@+id/activity_main_swipe_refresh_layout"
+            android:id="@+id/activity_user_swipe_refresh_layout"
             android:layout_width="match_parent"
             android:layout_height="wrap_content">
 
             <android.support.v7.widget.RecyclerView
-                android:id="@+id/activity_main_listview"
+                android:id="@+id/activity_user_listview"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:scrollbars="vertical" />
+            <!---->
+            <!--<ListView-->
+                <!--android:id="@+id/activity_main_listview"-->
+                <!--android:layout_width="match_parent"-->
+                <!--android:layout_height="match_parent"-->
+                <!--&gt;-->
+            <!--</ListView>-->
 
         </android.support.v4.widget.SwipeRefreshLayout>
 

@@ -9,7 +9,7 @@
 
         <item
             android:id="@+id/nav_home"
-            android:icon="@drawable/home"
+            android:icon="@drawable/rocket"
             android:title="Feed" />
 
         <item
@@ -17,18 +17,19 @@
             android:icon="@drawable/human_greeting"
             android:title="My Stuff" />
 
-        <!--<item-->
-            <!--android:id="@+id/nav_slideshow"-->
-            <!--android:icon="@drawable/ic_menu_slideshow"-->
-            <!--android:title="Slideshow" />-->
+        <item
+            android:id="@+id/nav_users"
+            android:icon="@drawable/account_multiple"
+            android:title="Users" />
         <!--<item-->
             <!--android:id="@+id/nav_manage"-->
             <!--android:icon="@drawable/ic_menu_manage"-->
             <!--android:title="Tools" />-->
     </group>
 
-    <item android:title="Communicate">
+    <item android:title="Social">
         <menu>
+
             <!--<item-->
                 <!--android:id="@+id/nav_share"-->
                 <!--android:icon="@drawable/ic_menu_share"-->

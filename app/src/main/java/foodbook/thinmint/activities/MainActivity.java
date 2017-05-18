@@ -7,8 +7,6 @@ import android.preference.PreferenceManager;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentTransaction;
-import android.support.v4.view.MenuCompat;
-import android.support.v7.app.ActionBar;
 import android.util.Log;
 import android.view.MenuInflater;
 import android.view.View;
@@ -34,13 +32,19 @@ import java.util.Map;
 import foodbook.thinmint.IActivityCallback;
 import foodbook.thinmint.IAsyncCallback;
 import foodbook.thinmint.R;
+import foodbook.thinmint.activities.common.OnNotesListInteractionListener;
 import foodbook.thinmint.activities.day.DatePickerFragment;
 import foodbook.thinmint.activities.day.DayFragment;
 import foodbook.thinmint.activities.home.HomeFragment;
 import foodbook.thinmint.activities.mystuff.MyStuffFragment;
+import foodbook.thinmint.activities.notes.CreateNoteActivity;
+import foodbook.thinmint.activities.notes.NoteActivity;
+import foodbook.thinmint.activities.users.UserActivity;
+import foodbook.thinmint.activities.users.UsersFragment;
 import foodbook.thinmint.constants.Constants;
 import foodbook.thinmint.models.JsonHelper;
 import foodbook.thinmint.models.domain.Note;
+import foodbook.thinmint.models.domain.User;
 import foodbook.thinmint.tasks.CallServiceAsyncTask;
 import foodbook.thinmint.tasks.CallServiceCallback;
 import foodbook.thinmint.tasks.PostServiceAsyncTask;
@@ -48,7 +52,7 @@ import foodbook.thinmint.tasks.PostServiceAsyncTask;
 public class MainActivity extends TokenActivity implements
         IActivityCallback, NavigationView.OnNavigationItemSelectedListener,
         DayFragment.OnDayFragmentDataListener, HomeFragment.OnHomeFragmentDataListener,
-        MyStuffFragment.OnMyStuffFragmentDataListener {
+        MyStuffFragment.OnMyStuffFragmentDataListener, UsersFragment.OnUsersFragmentDataListener {
 
     public static final DateFormat DATE_FORMAT = DateFormat.getDateInstance();
 
@@ -62,6 +66,9 @@ public class MainActivity extends TokenActivity implements
     private CallServiceAsyncTask mGetMyStuffTask;
     private CallServiceCallback mGetMyStuffCallback;
 
+    private CallServiceAsyncTask mGetUsersTask;
+    private CallServiceCallback mGetUsersCallback;
+
     private CallServiceAsyncTask mLoadingTask;
     private CallServiceCallback mLoadingCallback;
 
@@ -71,7 +78,8 @@ public class MainActivity extends TokenActivity implements
     private DayFragment mDayFragment;
     private HomeFragment mHomeFragment;
     private MyStuffFragment mMyStuffFragment;
-    private OnNotesInteractionListener mCurrentFragment;
+    private UsersFragment mUsersFragment;
+    private OnNotesListInteractionListener mCurrentFragment;
 
     private NavigationView mNavigationView;
     private Menu mMenu;
@@ -85,6 +93,7 @@ public class MainActivity extends TokenActivity implements
 
         mGetFeedCallback = new CallServiceCallback(this);
         mGetMyStuffCallback = new CallServiceCallback(this);
+        mGetUsersCallback = new CallServiceCallback(this);
         mLoadingCallback = new CallServiceCallback(this);
         mAddNoteCallback = new CallServiceCallback(this);
 
@@ -99,9 +108,8 @@ public class MainActivity extends TokenActivity implements
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Note note = new Note();
-                note.setContent("this is a note from the fragment");
-                addNote(note);
+                Intent createNoteIntent = new Intent(MainActivity.this, CreateNoteActivity.class);
+                startActivity(createNoteIntent);
             }
         });
 
@@ -150,13 +158,6 @@ public class MainActivity extends TokenActivity implements
         return listener;
     }
 
-    private void setActionBarTitle(String title) {
-        ActionBar toolbar = getSupportActionBar();
-        if (toolbar != null) {
-            toolbar.setTitle(title);
-        }
-    }
-
     private void showDatePicker() {
         DatePickerFragment newFragment = new DatePickerFragment();
         newFragment.setDate(mCurrentDate);
@@ -183,6 +184,7 @@ public class MainActivity extends TokenActivity implements
         FragmentManager fragmentManager = getSupportFragmentManager();
         if (fragmentManager.getBackStackEntryCount() > 0) {
             fragmentManager.popBackStack(null, FragmentManager.POP_BACK_STACK_INCLUSIVE);
+            mCurrentFragment = mDayFragment;
         }
     }
 
@@ -233,6 +235,44 @@ public class MainActivity extends TokenActivity implements
         }
 
         return super.onOptionsItemSelected(item);
+    }
+
+    private void startNoteActivity(long noteId) {
+        Intent userIntent = new Intent(getApplicationContext(), NoteActivity.class);
+
+        Bundle bundle = new Bundle();
+        bundle.putLong("note_id", noteId);
+        userIntent.putExtras(bundle);
+
+        startActivity(userIntent);
+    }
+
+    private void startUserActivity(String userSubject, String username) {
+        Intent userIntent = new Intent(getApplicationContext(), UserActivity.class);
+
+        Bundle bundle = new Bundle();
+        bundle.putString("user_subject", userSubject);
+        bundle.putString("user_name", username);
+        userIntent.putExtras(bundle);
+
+        startActivity(userIntent);
+    }
+
+    private void showUsersFragment() {
+        setActionBarTitle("Users");
+
+        toggleDayFragmentActions(false);
+
+        FragmentManager fragmentManager = getSupportFragmentManager();
+        FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
+
+        // Replace whatever is in the fragment_container view with this fragment,
+        // and add the transaction to the back stack
+        mUsersFragment = UsersFragment.newInstance(mUserSubject);
+        fragmentTransaction.replace(R.id.fragment_container, mUsersFragment, "Users");
+        fragmentTransaction.addToBackStack(null);
+        // Commit the transaction
+        fragmentTransaction.commit();
     }
 
     private void showMyStuffFragment() {
@@ -310,6 +350,10 @@ public class MainActivity extends TokenActivity implements
 
             showMyStuffFragment();
 
+        } else if (id == R.id.nav_users) {
+
+            showUsersFragment();
+
         }
 
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
@@ -361,6 +405,11 @@ public class MainActivity extends TokenActivity implements
     }
 
     @Override
+    public void showNote(long noteId) {
+        startNoteActivity(noteId);
+    }
+
+    @Override
     public void onHomeFragmentCreated(View view) {
         setActionBarTitle("Feed");
     }
@@ -404,6 +453,34 @@ public class MainActivity extends TokenActivity implements
         mGetMyStuffTask.execute(path);
     }
 
+
+    @Override
+    public void onUsersFragmentCreated(View view) {
+        setActionBarTitle("Users");
+    }
+
+    @Override
+    public void refreshUsers() {
+        mGetUsersTask = new CallServiceAsyncTask(this, mGetUsersCallback, mToken);
+
+        String path = "api/users?filter=";
+        String rawQuery = String.format(Locale.US, "(Subject Ne %s)", mUserSubject);
+
+        String encodedQuery = "";
+        try {
+            encodedQuery = URLEncoder.encode(rawQuery, "UTF-8");
+        } catch (Exception e) {
+        }
+
+        path += encodedQuery;
+        mGetUsersTask.execute(path);
+    }
+
+    @Override
+    public void showUser(String subject, String username) {
+        startUserActivity(subject, username);
+    }
+
     @Override
     public void callback(IAsyncCallback cb) {
         if (cb.equals(mLoadingCallback)) {
@@ -422,7 +499,10 @@ public class MainActivity extends TokenActivity implements
             mGetMyStuffTask = null;
             List<Note> notes = JsonHelper.getNotes(mGetMyStuffCallback.getResult().getResult());
             mMyStuffFragment.onNotesRetrieved(notes);
+        } else if (cb.equals(mGetUsersCallback)) {
+            mGetUsersTask = null;
+            List<User> users = JsonHelper.getUsers(mGetUsersCallback.getResult().getResult());
+            mUsersFragment.onUsersRetrieved(users);
         }
     }
-
 }

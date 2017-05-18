@@ -1,4 +1,4 @@
-package foodbook.thinmint.activities.mystuff;
+package foodbook.thinmint.activities.users;
 
 import android.content.Context;
 import android.os.Bundle;
@@ -17,32 +17,30 @@ import java.util.List;
 
 import foodbook.thinmint.R;
 import foodbook.thinmint.activities.BaseFragment;
-import foodbook.thinmint.activities.common.OnNotesListInteractionListener;
-import foodbook.thinmint.activities.adapters.NotesRecyclerAdapter;
-import foodbook.thinmint.models.domain.Note;
+import foodbook.thinmint.activities.adapters.UsersRecyclerAdapter;
+import foodbook.thinmint.models.domain.User;
 
 /**
  * A simple {@link Fragment} subclass.
  * Activities that contain this fragment must implement the
- * {@link OnMyStuffFragmentDataListener} interface
+ * {@link OnUsersFragmentDataListener} interface
  * to handle interaction events.
- * Use the {@link MyStuffFragment#newInstance} factory method to
+ * Use the {@link UsersFragment#newInstance} factory method to
  * create an instance of this fragment.
  */
-public class MyStuffFragment extends BaseFragment implements OnNotesListInteractionListener,
-        NotesRecyclerAdapter.ViewHolder.IOnNoteClickListener {
+public class UsersFragment extends BaseFragment implements UsersRecyclerAdapter.ViewHolder.IOnUserClickListener {
     private static final String ARG_USERID = "userid";
 
     private String mUserId;
 
-    private OnMyStuffFragmentDataListener mListener;
+    private OnUsersFragmentDataListener mListener;
 
     private RecyclerView mListView;
     private SwipeRefreshLayout mSwipeRefreshLayout;
-    private NotesRecyclerAdapter mAdapter;
+    private UsersRecyclerAdapter mAdapter;
     private RecyclerView.LayoutManager mLayoutManager;
 
-    public MyStuffFragment() {
+    public UsersFragment() {
         // Required empty public constructor
     }
 
@@ -53,8 +51,8 @@ public class MyStuffFragment extends BaseFragment implements OnNotesListInteract
      * @param userid Parameter 1.
      * @return A new instance of fragment HomeFragment.
      */
-    public static MyStuffFragment newInstance(String userid) {
-        MyStuffFragment fragment = new MyStuffFragment();
+    public static UsersFragment newInstance(String userid) {
+        UsersFragment fragment = new UsersFragment();
         Bundle args = new Bundle();
         args.putString(ARG_USERID, userid);
         fragment.setArguments(args);
@@ -73,7 +71,7 @@ public class MyStuffFragment extends BaseFragment implements OnNotesListInteract
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
-        View inflated = inflater.inflate(R.layout.fragment_my_stuff, container, false);
+        View inflated = inflater.inflate(R.layout.fragment_users, container, false);
 
         mListView = (RecyclerView) inflated.findViewById(R.id.activity_main_listview);
         mSwipeRefreshLayout = (SwipeRefreshLayout) inflated.findViewById(R.id.activity_main_swipe_refresh_layout);
@@ -82,17 +80,17 @@ public class MyStuffFragment extends BaseFragment implements OnNotesListInteract
         mLayoutManager = new LinearLayoutManager(getActivity());
         mListView.setLayoutManager(mLayoutManager);
 
-        mAdapter = new NotesRecyclerAdapter(new ArrayList<Note>(), this);
+        mAdapter = new UsersRecyclerAdapter(new ArrayList<User>(), this);
         mListView.setAdapter(mAdapter);
 
         mSwipeRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
             @Override
             public void onRefresh() {
-                refreshMyStuff();
+                refreshUsers();
             }
         });
 
-        mListener.onMyStuffFragmentCreated(inflated);
+        mListener.onUsersFragmentCreated(inflated);
 
         return inflated;
     }
@@ -100,17 +98,17 @@ public class MyStuffFragment extends BaseFragment implements OnNotesListInteract
     @Override
     public void onActivityCreated(@Nullable Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
-        refreshMyStuff();
+        refreshUsers();
     }
 
     @Override
     public void onAttach(Context context) {
         super.onAttach(context);
-        if (context instanceof OnMyStuffFragmentDataListener) {
-            mListener = (OnMyStuffFragmentDataListener) context;
+        if (context instanceof OnUsersFragmentDataListener) {
+            mListener = (OnUsersFragmentDataListener) context;
         } else {
             throw new RuntimeException(context.toString()
-                    + " must implement OnHomeFragmentDataListener");
+                    + " must implement OnNoteFragmentDataListener");
         }
     }
 
@@ -120,51 +118,36 @@ public class MyStuffFragment extends BaseFragment implements OnNotesListInteract
         mListener = null;
     }
 
-    @Override
-    public void onNoteClicked(View caller) {
-        TextView hiddenNoteIdTextView = (TextView)caller.findViewById(R.id.hidden_note_id);
-        String noteId = hiddenNoteIdTextView.getText().toString();
-        mListener.showNote(Long.parseLong(noteId));
-    }
-
     private void setLoading(boolean isLoading) {
         mSwipeRefreshLayout.setRefreshing(isLoading);
     }
 
-    private void refreshMyStuff() {
+    private void refreshUsers() {
         setLoading(true);
-        mListener.refreshMyStuff();
+        mListener.refreshUsers();
     }
 
-    @Override
-    public void onNotesRetrieved(List<Note> notes) {
-        mAdapter.swap(notes);
-//        mAdapter.notifyDataSetChanged();
+    public void onUsersRetrieved(List<User> users) {
+        mAdapter.swap(users);
+        mListView.setAdapter(mAdapter);
+        mAdapter.notifyDataSetChanged();
         setLoading(false);
     }
 
     @Override
-    public void onNoteAdded(Note note) {
-        mAdapter.add(note);
-//        mAdapter.notifyDataSetChanged();
-        setLoading(false);
+    public void onUserClicked(View caller) {
+        TextView hiddenUserSubjectTextView = (TextView)caller.findViewById(R.id.hidden_user_id);
+        TextView usernameTextView = (TextView)caller.findViewById(R.id.user_name);
+        String userSubject = hiddenUserSubjectTextView.getText().toString();
+        String username = usernameTextView.getText().toString();
+        mListener.showUser(userSubject, username);
     }
 
-    /**
-     * This interface must be implemented by activities that contain this
-     * fragment to allow an interaction in this fragment to be communicated
-     * to the activity and potentially other fragments contained in that
-     * activity.
-     * <p>
-     * See the Android Training lesson <a href=
-     * "http://developer.android.com/training/basics/fragments/communicating.html"
-     * >Communicating with Other Fragments</a> for more information.
-     */
-    public interface OnMyStuffFragmentDataListener {
-        void onMyStuffFragmentCreated(View view);
+    public interface OnUsersFragmentDataListener {
+        void onUsersFragmentCreated(View view);
 
-        void refreshMyStuff();
+        void refreshUsers();
 
-        void showNote(long noteId);
+        void showUser(String subject, String username);
     }
 }

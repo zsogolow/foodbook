@@ -4,10 +4,12 @@ import android.content.Context;
 import android.support.annotation.Nullable;
 import android.os.Bundle;
 import android.support.v4.widget.SwipeRefreshLayout;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.ListView;
+import android.widget.TextView;
 
 import java.util.ArrayList;
 import java.util.Date;
@@ -15,20 +17,22 @@ import java.util.List;
 
 import foodbook.thinmint.R;
 import foodbook.thinmint.activities.BaseFragment;
-import foodbook.thinmint.activities.OnNotesInteractionListener;
-import foodbook.thinmint.activities.adapters.NotesListAdapter;
+import foodbook.thinmint.activities.common.OnNotesListInteractionListener;
+import foodbook.thinmint.activities.adapters.NotesRecyclerAdapter;
 import foodbook.thinmint.models.domain.Note;
 
 /**
  * A placeholder fragment containing a simple view.
  */
-public class DayFragment extends BaseFragment implements OnNotesInteractionListener {
+public class DayFragment extends BaseFragment implements OnNotesListInteractionListener,
+        NotesRecyclerAdapter.ViewHolder.IOnNoteClickListener {
 
     private OnDayFragmentDataListener mListener;
 
-    private ListView mListView;
+    private RecyclerView mListView;
     private SwipeRefreshLayout mSwipeRefreshLayout;
-    private NotesListAdapter mAdapter;
+    private NotesRecyclerAdapter mAdapter;
+    private RecyclerView.LayoutManager mLayoutManager;
 
     private Date mCurrentDate;
 
@@ -47,10 +51,14 @@ public class DayFragment extends BaseFragment implements OnNotesInteractionListe
                              Bundle savedInstanceState) {
         View inflated = inflater.inflate(R.layout.fragment_day, container, false);
 
-        mListView = (ListView) inflated.findViewById(R.id.activity_main_listview);
+        mListView = (RecyclerView) inflated.findViewById(R.id.activity_main_listview);
         mSwipeRefreshLayout = (SwipeRefreshLayout) inflated.findViewById(R.id.activity_main_swipe_refresh_layout);
-        mAdapter = new NotesListAdapter(getActivity(), new ArrayList<Note>());
 
+        // use a linear layout manager
+        mLayoutManager = new LinearLayoutManager(getActivity());
+        mListView.setLayoutManager(mLayoutManager);
+
+        mAdapter = new NotesRecyclerAdapter(new ArrayList<Note>(), this);
         mListView.setAdapter(mAdapter);
 
         mSwipeRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
@@ -90,6 +98,13 @@ public class DayFragment extends BaseFragment implements OnNotesInteractionListe
         mListener = null;
     }
 
+    @Override
+    public void onNoteClicked(View caller) {
+        TextView hiddenNoteIdTextView = (TextView)caller.findViewById(R.id.hidden_note_id);
+        String noteId = hiddenNoteIdTextView.getText().toString();
+        mListener.showNote(Long.parseLong(noteId));
+    }
+
     private void setLoading(boolean isLoading) {
         mSwipeRefreshLayout.setRefreshing(isLoading);
     }
@@ -100,9 +115,7 @@ public class DayFragment extends BaseFragment implements OnNotesInteractionListe
 
     @Override
     public void onNotesRetrieved(List<Note> notes) {
-        mAdapter.clear();
-        mAdapter.addAll(notes);
-        mAdapter.notifyDataSetChanged();
+        mAdapter.swap(notes);
         setLoading(false);
     }
 
@@ -110,7 +123,6 @@ public class DayFragment extends BaseFragment implements OnNotesInteractionListe
     @Override
     public void onNoteAdded(Note note) {
         mAdapter.add(note);
-        mAdapter.notifyDataSetChanged();
         setLoading(false);
     }
 
@@ -120,6 +132,8 @@ public class DayFragment extends BaseFragment implements OnNotesInteractionListe
         void addNote(Note note);
 
         void selectDay(Date date);
+
+        void showNote(long noteId);
     }
 }
 

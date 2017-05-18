@@ -2,6 +2,7 @@ package foodbook.thinmint.activities;
 
 import android.content.SharedPreferences;
 import android.preference.PreferenceManager;
+import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 
 import foodbook.thinmint.constants.Constants;
@@ -28,5 +29,12 @@ public abstract class TokenActivity extends AppCompatActivity {
         mUserSubject = prefs.getString(Constants.USER_SUBJECT, "");
         mUserName = prefs.getString(Constants.USER_NAME, "");
         mUserId = prefs.getLong(Constants.USER_ID, -1);
+    }
+
+    protected void setActionBarTitle(String title) {
+        ActionBar toolbar = getSupportActionBar();
+        if (toolbar != null) {
+            toolbar.setTitle(title);
+        }
     }
 }

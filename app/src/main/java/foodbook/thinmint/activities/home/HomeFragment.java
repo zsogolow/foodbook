@@ -5,18 +5,20 @@ import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.support.v4.widget.SwipeRefreshLayout;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.ListView;
+import android.widget.TextView;
 
 import java.util.ArrayList;
 import java.util.List;
 
 import foodbook.thinmint.R;
 import foodbook.thinmint.activities.BaseFragment;
-import foodbook.thinmint.activities.OnNotesInteractionListener;
-import foodbook.thinmint.activities.adapters.NotesListAdapter;
+import foodbook.thinmint.activities.common.OnNotesListInteractionListener;
+import foodbook.thinmint.activities.adapters.NotesRecyclerAdapter;
 import foodbook.thinmint.models.domain.Note;
 
 /**
@@ -27,16 +29,19 @@ import foodbook.thinmint.models.domain.Note;
  * Use the {@link HomeFragment#newInstance} factory method to
  * create an instance of this fragment.
  */
-public class HomeFragment extends BaseFragment implements OnNotesInteractionListener {
+public class HomeFragment extends BaseFragment implements OnNotesListInteractionListener,
+        NotesRecyclerAdapter.ViewHolder.IOnNoteClickListener {
     private static final String ARG_PARAM1 = "param1";
 
     private String mParam1;
 
     private OnHomeFragmentDataListener mListener;
 
-    private ListView mListView;
+    private RecyclerView mListView;
     private SwipeRefreshLayout mSwipeRefreshLayout;
-    private NotesListAdapter mAdapter;
+    private NotesRecyclerAdapter mAdapter;
+    private RecyclerView.LayoutManager mLayoutManager;
+
 
     public HomeFragment() {
         // Required empty public constructor
@@ -71,10 +76,14 @@ public class HomeFragment extends BaseFragment implements OnNotesInteractionList
         // Inflate the layout for this fragment
         View inflated = inflater.inflate(R.layout.fragment_home, container, false);
 
-        mListView = (ListView) inflated.findViewById(R.id.activity_main_listview);
+        mListView = (RecyclerView) inflated.findViewById(R.id.activity_main_listview);
         mSwipeRefreshLayout = (SwipeRefreshLayout) inflated.findViewById(R.id.activity_main_swipe_refresh_layout);
-        mAdapter = new NotesListAdapter(getActivity(), new ArrayList<Note>());
 
+        // use a linear layout manager
+        mLayoutManager = new LinearLayoutManager(getActivity());
+        mListView.setLayoutManager(mLayoutManager);
+
+        mAdapter = new NotesRecyclerAdapter(new ArrayList<Note>(), this);
         mListView.setAdapter(mAdapter);
 
         mSwipeRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
@@ -112,6 +121,13 @@ public class HomeFragment extends BaseFragment implements OnNotesInteractionList
         mListener = null;
     }
 
+    @Override
+    public void onNoteClicked(View caller) {
+        TextView hiddenNoteIdTextView = (TextView)caller.findViewById(R.id.hidden_note_id);
+        String noteId = hiddenNoteIdTextView.getText().toString();
+        mListener.showNote(Long.parseLong(noteId));
+    }
+
     private void setLoading(boolean isLoading) {
         mSwipeRefreshLayout.setRefreshing(isLoading);
     }
@@ -123,16 +139,13 @@ public class HomeFragment extends BaseFragment implements OnNotesInteractionList
 
     @Override
     public void onNotesRetrieved(List<Note> notes) {
-        mAdapter.clear();
-        mAdapter.addAll(notes);
-        mAdapter.notifyDataSetChanged();
+        mAdapter.swap(notes);
         setLoading(false);
     }
 
     @Override
     public void onNoteAdded(Note note) {
         mAdapter.add(note);
-        mAdapter.notifyDataSetChanged();
         setLoading(false);
     }
 
@@ -148,6 +161,9 @@ public class HomeFragment extends BaseFragment implements OnNotesInteractionList
      */
     public interface OnHomeFragmentDataListener {
         void onHomeFragmentCreated(View view);
+
         void refreshFeed();
+
+        void showNote(long noteId);
     }
 }
