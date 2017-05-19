@@ -3,6 +3,7 @@ package foodbook.thinmint.activities.day;
 import android.content.Context;
 import android.support.annotation.Nullable;
 import android.os.Bundle;
+import android.support.v4.app.Fragment;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
@@ -16,7 +17,6 @@ import java.util.Date;
 import java.util.List;
 
 import foodbook.thinmint.R;
-import foodbook.thinmint.activities.BaseFragment;
 import foodbook.thinmint.activities.common.OnNotesListInteractionListener;
 import foodbook.thinmint.activities.adapters.NotesRecyclerAdapter;
 import foodbook.thinmint.models.domain.Note;
@@ -24,7 +24,7 @@ import foodbook.thinmint.models.domain.Note;
 /**
  * A placeholder fragment containing a simple view.
  */
-public class DayFragment extends BaseFragment implements OnNotesListInteractionListener,
+public class DayFragment extends Fragment implements OnNotesListInteractionListener,
         NotesRecyclerAdapter.ViewHolder.IOnNoteClickListener {
 
     private OnDayFragmentDataListener mListener;

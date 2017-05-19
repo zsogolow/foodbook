@@ -36,7 +36,8 @@ import foodbook.thinmint.activities.common.OnNotesListInteractionListener;
 import foodbook.thinmint.activities.day.DatePickerFragment;
 import foodbook.thinmint.activities.day.DayFragment;
 import foodbook.thinmint.activities.home.HomeFragment;
-import foodbook.thinmint.activities.mystuff.MyStuffFragment;
+import foodbook.thinmint.activities.mystuff.UserNotesFragment;
+import foodbook.thinmint.activities.mystuff.UserInfoFragment;
 import foodbook.thinmint.activities.notes.CreateNoteActivity;
 import foodbook.thinmint.activities.notes.NoteActivity;
 import foodbook.thinmint.activities.users.UserActivity;
@@ -52,7 +53,8 @@ import foodbook.thinmint.tasks.PostServiceAsyncTask;
 public class MainActivity extends TokenActivity implements
         IActivityCallback, NavigationView.OnNavigationItemSelectedListener,
         DayFragment.OnDayFragmentDataListener, HomeFragment.OnHomeFragmentDataListener,
-        MyStuffFragment.OnMyStuffFragmentDataListener, UsersFragment.OnUsersFragmentDataListener {
+        UserNotesFragment.OnMyStuffFragmentDataListener, UserInfoFragment.OnUserInfoFragmentDataListener,
+        UsersFragment.OnUsersFragmentDataListener {
 
     public static final DateFormat DATE_FORMAT = DateFormat.getDateInstance();
 
@@ -62,9 +64,6 @@ public class MainActivity extends TokenActivity implements
 
     private CallServiceAsyncTask mGetFeedTask;
     private CallServiceCallback mGetFeedCallback;
-
-    private CallServiceAsyncTask mGetMyStuffTask;
-    private CallServiceCallback mGetMyStuffCallback;
 
     private CallServiceAsyncTask mGetUsersTask;
     private CallServiceCallback mGetUsersCallback;
@@ -77,7 +76,6 @@ public class MainActivity extends TokenActivity implements
 
     private DayFragment mDayFragment;
     private HomeFragment mHomeFragment;
-    private MyStuffFragment mMyStuffFragment;
     private UsersFragment mUsersFragment;
     private OnNotesListInteractionListener mCurrentFragment;
 
@@ -92,7 +90,6 @@ public class MainActivity extends TokenActivity implements
         setSupportActionBar(toolbar);
 
         mGetFeedCallback = new CallServiceCallback(this);
-        mGetMyStuffCallback = new CallServiceCallback(this);
         mGetUsersCallback = new CallServiceCallback(this);
         mLoadingCallback = new CallServiceCallback(this);
         mAddNoteCallback = new CallServiceCallback(this);
@@ -108,8 +105,7 @@ public class MainActivity extends TokenActivity implements
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Intent createNoteIntent = new Intent(MainActivity.this, CreateNoteActivity.class);
-                startActivity(createNoteIntent);
+                startCreateNoteActivity();
             }
         });
 
@@ -247,6 +243,11 @@ public class MainActivity extends TokenActivity implements
         startActivity(userIntent);
     }
 
+    private void startCreateNoteActivity() {
+        Intent createNoteIntent = new Intent(MainActivity.this, CreateNoteActivity.class);
+        startActivity(createNoteIntent);
+    }
+
     private void startUserActivity(String userSubject, String username) {
         Intent userIntent = new Intent(getApplicationContext(), UserActivity.class);
 
@@ -273,25 +274,6 @@ public class MainActivity extends TokenActivity implements
         fragmentTransaction.addToBackStack(null);
         // Commit the transaction
         fragmentTransaction.commit();
-    }
-
-    private void showMyStuffFragment() {
-        setActionBarTitle("My Stuff");
-
-        toggleDayFragmentActions(false);
-
-        FragmentManager fragmentManager = getSupportFragmentManager();
-        FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
-
-        // Replace whatever is in the fragment_container view with this fragment,
-        // and add the transaction to the back stack
-        mMyStuffFragment = MyStuffFragment.newInstance(mUserSubject);
-        fragmentTransaction.replace(R.id.fragment_container, mMyStuffFragment, "MyStuff");
-        fragmentTransaction.addToBackStack(null);
-        // Commit the transaction
-        fragmentTransaction.commit();
-
-        mCurrentFragment = mMyStuffFragment;
     }
 
     private void showDayFragment() {
@@ -348,7 +330,7 @@ public class MainActivity extends TokenActivity implements
 
         } else if (id == R.id.nav_my_stuff) {
 
-            showMyStuffFragment();
+            startUserActivity(mUserSubject, mUserName);
 
         } else if (id == R.id.nav_users) {
 
@@ -433,26 +415,12 @@ public class MainActivity extends TokenActivity implements
 
     @Override
     public void onMyStuffFragmentCreated(View view) {
-        setActionBarTitle("My Stuff");
     }
 
     @Override
-    public void refreshMyStuff() {
-        mGetMyStuffTask = new CallServiceAsyncTask(this, mGetMyStuffCallback, mToken);
+    public void onUserInfoFragmentCreated(View view) {
 
-        String path = String.format(Locale.US, "api/users/%s/notes?sort=", mUserSubject);
-        String rawQuery = "-datecreated";
-
-        String encodedQuery = "";
-        try {
-            encodedQuery = URLEncoder.encode(rawQuery, "UTF-8");
-        } catch (Exception e) {
-        }
-
-        path += encodedQuery;
-        mGetMyStuffTask.execute(path);
     }
-
 
     @Override
     public void onUsersFragmentCreated(View view) {
@@ -495,10 +463,6 @@ public class MainActivity extends TokenActivity implements
             mGetFeedTask = null;
             List<Note> notes = JsonHelper.getNotes(mGetFeedCallback.getResult().getResult());
             mHomeFragment.onNotesRetrieved(notes);
-        } else if (cb.equals(mGetMyStuffCallback)) {
-            mGetMyStuffTask = null;
-            List<Note> notes = JsonHelper.getNotes(mGetMyStuffCallback.getResult().getResult());
-            mMyStuffFragment.onNotesRetrieved(notes);
         } else if (cb.equals(mGetUsersCallback)) {
             mGetUsersTask = null;
             List<User> users = JsonHelper.getUsers(mGetUsersCallback.getResult().getResult());

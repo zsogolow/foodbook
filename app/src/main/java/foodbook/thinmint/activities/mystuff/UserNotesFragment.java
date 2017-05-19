@@ -12,25 +12,32 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
+import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 
+import foodbook.thinmint.IActivityCallback;
+import foodbook.thinmint.IAsyncCallback;
 import foodbook.thinmint.R;
-import foodbook.thinmint.activities.BaseFragment;
+import foodbook.thinmint.activities.TokenFragment;
 import foodbook.thinmint.activities.common.OnNotesListInteractionListener;
 import foodbook.thinmint.activities.adapters.NotesRecyclerAdapter;
+import foodbook.thinmint.models.JsonHelper;
 import foodbook.thinmint.models.domain.Note;
+import foodbook.thinmint.tasks.CallServiceAsyncTask;
+import foodbook.thinmint.tasks.CallServiceCallback;
 
 /**
  * A simple {@link Fragment} subclass.
  * Activities that contain this fragment must implement the
  * {@link OnMyStuffFragmentDataListener} interface
  * to handle interaction events.
- * Use the {@link MyStuffFragment#newInstance} factory method to
+ * Use the {@link UserNotesFragment#newInstance} factory method to
  * create an instance of this fragment.
  */
-public class MyStuffFragment extends BaseFragment implements OnNotesListInteractionListener,
-        NotesRecyclerAdapter.ViewHolder.IOnNoteClickListener {
+public class UserNotesFragment extends TokenFragment implements OnNotesListInteractionListener,
+        NotesRecyclerAdapter.ViewHolder.IOnNoteClickListener, IActivityCallback {
     private static final String ARG_USERID = "userid";
 
     private String mUserId;
@@ -42,7 +49,10 @@ public class MyStuffFragment extends BaseFragment implements OnNotesListInteract
     private NotesRecyclerAdapter mAdapter;
     private RecyclerView.LayoutManager mLayoutManager;
 
-    public MyStuffFragment() {
+    private CallServiceAsyncTask mGetMyStuffTask;
+    private CallServiceCallback mGetMyStuffCallback;
+
+    public UserNotesFragment() {
         // Required empty public constructor
     }
 
@@ -53,8 +63,8 @@ public class MyStuffFragment extends BaseFragment implements OnNotesListInteract
      * @param userid Parameter 1.
      * @return A new instance of fragment HomeFragment.
      */
-    public static MyStuffFragment newInstance(String userid) {
-        MyStuffFragment fragment = new MyStuffFragment();
+    public static UserNotesFragment newInstance(String userid) {
+        UserNotesFragment fragment = new UserNotesFragment();
         Bundle args = new Bundle();
         args.putString(ARG_USERID, userid);
         fragment.setArguments(args);
@@ -67,6 +77,11 @@ public class MyStuffFragment extends BaseFragment implements OnNotesListInteract
         if (getArguments() != null) {
             mUserId = getArguments().getString(ARG_USERID);
         }
+
+        initUser();
+        initToken();
+
+        mGetMyStuffCallback = new CallServiceCallback(this);
     }
 
     @Override
@@ -95,6 +110,11 @@ public class MyStuffFragment extends BaseFragment implements OnNotesListInteract
         mListener.onMyStuffFragmentCreated(inflated);
 
         return inflated;
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
     }
 
     @Override
@@ -131,9 +151,22 @@ public class MyStuffFragment extends BaseFragment implements OnNotesListInteract
         mSwipeRefreshLayout.setRefreshing(isLoading);
     }
 
-    private void refreshMyStuff() {
+    public void refreshMyStuff() {
         setLoading(true);
-        mListener.refreshMyStuff();
+//        mListener.refreshMyStuff();
+        mGetMyStuffTask = new CallServiceAsyncTask(getContext(), mGetMyStuffCallback, mToken);
+
+        String path = String.format(Locale.US, "api/users/%s/notes?sort=", mUserId);
+        String rawQuery = "-datecreated";
+
+        String encodedQuery = "";
+        try {
+            encodedQuery = URLEncoder.encode(rawQuery, "UTF-8");
+        } catch (Exception e) {
+        }
+
+        path += encodedQuery;
+        mGetMyStuffTask.execute(path);
     }
 
     @Override
@@ -150,6 +183,15 @@ public class MyStuffFragment extends BaseFragment implements OnNotesListInteract
         setLoading(false);
     }
 
+    @Override
+    public void callback(IAsyncCallback cb) {
+        if (cb.equals(mGetMyStuffCallback)) {
+            mGetMyStuffTask = null;
+            List<Note> notes = JsonHelper.getNotes(mGetMyStuffCallback.getResult().getResult());
+            onNotesRetrieved(notes);
+        }
+    }
+
     /**
      * This interface must be implemented by activities that contain this
      * fragment to allow an interaction in this fragment to be communicated
@@ -162,8 +204,6 @@ public class MyStuffFragment extends BaseFragment implements OnNotesListInteract
      */
     public interface OnMyStuffFragmentDataListener {
         void onMyStuffFragmentCreated(View view);
-
-        void refreshMyStuff();
 
         void showNote(long noteId);
     }

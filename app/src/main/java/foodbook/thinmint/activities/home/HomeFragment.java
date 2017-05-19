@@ -16,7 +16,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import foodbook.thinmint.R;
-import foodbook.thinmint.activities.BaseFragment;
 import foodbook.thinmint.activities.common.OnNotesListInteractionListener;
 import foodbook.thinmint.activities.adapters.NotesRecyclerAdapter;
 import foodbook.thinmint.models.domain.Note;
@@ -29,7 +28,7 @@ import foodbook.thinmint.models.domain.Note;
  * Use the {@link HomeFragment#newInstance} factory method to
  * create an instance of this fragment.
  */
-public class HomeFragment extends BaseFragment implements OnNotesListInteractionListener,
+public class HomeFragment extends Fragment implements OnNotesListInteractionListener,
         NotesRecyclerAdapter.ViewHolder.IOnNoteClickListener {
     private static final String ARG_PARAM1 = "param1";
 

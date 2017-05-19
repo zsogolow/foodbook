@@ -32,7 +32,7 @@ public class TokenHelper {
         long now = System.currentTimeMillis();
         long expiresInMs = Long.parseLong(token.getExpiresIn()) * 1000;
         long lastRefresh = token.getLastRetrieved();
-        return (lastRefresh + expiresInMs) < (now + 5000);
+        return (lastRefresh + expiresInMs) < (now + 15000);
     }
 
     public static Token getToken(Context context) {

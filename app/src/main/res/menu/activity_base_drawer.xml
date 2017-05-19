@@ -12,10 +12,6 @@
             android:icon="@drawable/rocket"
             android:title="Feed" />
 
-        <item
-            android:id="@+id/nav_my_stuff"
-            android:icon="@drawable/human_greeting"
-            android:title="My Stuff" />
 
         <item
             android:id="@+id/nav_users"
@@ -27,9 +23,13 @@
             <!--android:title="Tools" />-->
     </group>
 
-    <item android:title="Social">
+    <item android:title="Personal">
         <menu>
 
+            <item
+                android:id="@+id/nav_my_stuff"
+                android:icon="@drawable/human_greeting"
+                android:title="My Stuff" />
             <!--<item-->
                 <!--android:id="@+id/nav_share"-->
                 <!--android:icon="@drawable/ic_menu_share"-->

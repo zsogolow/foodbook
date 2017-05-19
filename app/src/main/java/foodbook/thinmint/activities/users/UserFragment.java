@@ -16,11 +16,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 import foodbook.thinmint.R;
-import foodbook.thinmint.activities.BaseFragment;
 import foodbook.thinmint.activities.adapters.NotesRecyclerAdapter;
-import foodbook.thinmint.activities.adapters.UsersRecyclerAdapter;
 import foodbook.thinmint.models.domain.Note;
-import foodbook.thinmint.models.domain.User;
 
 /**
  * A simple {@link Fragment} subclass.
@@ -30,7 +27,7 @@ import foodbook.thinmint.models.domain.User;
  * Use the {@link UserFragment#newInstance} factory method to
  * create an instance of this fragment.
  */
-public class UserFragment extends BaseFragment implements NotesRecyclerAdapter.ViewHolder.IOnNoteClickListener {
+public class UserFragment extends Fragment implements NotesRecyclerAdapter.ViewHolder.IOnNoteClickListener {
     private static final String ARG_USERID = "userid";
 
     private String mUserId;

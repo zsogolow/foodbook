@@ -5,18 +5,12 @@ import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.support.v4.widget.SwipeRefreshLayout;
-import android.support.v7.widget.LinearLayoutManager;
-import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-
-import java.util.ArrayList;
-import java.util.List;
+import android.widget.TextView;
 
 import foodbook.thinmint.R;
-import foodbook.thinmint.activities.BaseFragment;
-import foodbook.thinmint.activities.adapters.NotesRecyclerAdapter;
 import foodbook.thinmint.models.domain.Note;
 
 /**
@@ -27,7 +21,7 @@ import foodbook.thinmint.models.domain.Note;
  * Use the {@link NoteFragment#newInstance} factory method to
  * create an instance of this fragment.
  */
-public class NoteFragment extends BaseFragment {
+public class NoteFragment extends Fragment {
     private static final String ARG_NOTEID = "noteid";
 
     private long mNoteId;
@@ -35,6 +29,7 @@ public class NoteFragment extends BaseFragment {
     private OnNoteFragmentDataListener mListener;
 
     private SwipeRefreshLayout mSwipeRefreshLayout;
+    private TextView mNoteContents;
 
     public NoteFragment() {
         // Required empty public constructor
@@ -70,6 +65,7 @@ public class NoteFragment extends BaseFragment {
         View inflated = inflater.inflate(R.layout.fragment_note, container, false);
 
         mSwipeRefreshLayout = (SwipeRefreshLayout) inflated.findViewById(R.id.activity_note_swipe_refresh_layout);
+        mNoteContents = (TextView) inflated.findViewById(R.id.note_contents);
 
         mSwipeRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
             @Override
@@ -117,6 +113,7 @@ public class NoteFragment extends BaseFragment {
 
     public void onNoteRetrieved(Note note) {
         setLoading(false);
+        mNoteContents.setText(note.getContent());
     }
 
     /**

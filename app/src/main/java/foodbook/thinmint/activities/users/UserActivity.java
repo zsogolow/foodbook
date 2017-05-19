@@ -1,8 +1,12 @@
 package foodbook.thinmint.activities.users;
 
 import android.content.Intent;
+import android.support.design.widget.TabLayout;
+import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
+import android.support.v4.app.FragmentPagerAdapter;
 import android.support.v4.app.FragmentTransaction;
+import android.support.v4.view.ViewPager;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.Toolbar;
@@ -16,6 +20,8 @@ import foodbook.thinmint.IActivityCallback;
 import foodbook.thinmint.IAsyncCallback;
 import foodbook.thinmint.R;
 import foodbook.thinmint.activities.TokenActivity;
+import foodbook.thinmint.activities.mystuff.UserInfoFragment;
+import foodbook.thinmint.activities.mystuff.UserNotesFragment;
 import foodbook.thinmint.activities.notes.NoteActivity;
 import foodbook.thinmint.activities.users.UserFragment;
 import foodbook.thinmint.models.JsonHelper;
@@ -23,23 +29,22 @@ import foodbook.thinmint.models.domain.Note;
 import foodbook.thinmint.tasks.CallServiceAsyncTask;
 import foodbook.thinmint.tasks.CallServiceCallback;
 
-public class UserActivity extends TokenActivity implements IActivityCallback,
-        UserFragment.OnUserFragmentDataListener {
+public class UserActivity extends TokenActivity implements
+        UserInfoFragment.OnUserInfoFragmentDataListener,
+        UserNotesFragment.OnMyStuffFragmentDataListener {
 
-    private CallServiceAsyncTask mGetUserTask;
-    private CallServiceCallback mGetUserCallback;
-
-    private UserFragment mUserFragment;
+    private FragmentPagerAdapter mFragmentPagerAdapter;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_user);
 
+        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
+        setSupportActionBar(toolbar);
+
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         getSupportActionBar().setDisplayShowHomeEnabled(true);
-
-        mGetUserCallback = new CallServiceCallback(this);
 
         initToken();
         initUser();
@@ -48,7 +53,15 @@ public class UserActivity extends TokenActivity implements IActivityCallback,
         String subject = bundle.getString("user_subject");
         String username = bundle.getString("user_name");
 
-        showUserFragment(subject, username);
+        mFragmentPagerAdapter = new MyPagerAdapter(getSupportFragmentManager(), subject);
+
+        ViewPager viewPager = (ViewPager) findViewById(R.id.view_pager);
+        viewPager.setAdapter(mFragmentPagerAdapter);
+
+        TabLayout tabLayout = (TabLayout) findViewById(R.id.tabs);
+        tabLayout.setupWithViewPager(viewPager);
+
+        setActionBarTitle(username);
     }
 
     @Override
@@ -67,41 +80,14 @@ public class UserActivity extends TokenActivity implements IActivityCallback,
         startActivity(userIntent);
     }
 
-    public void showUserFragment(String userSubject, String username) {
-        setActionBarTitle(username);
-
-        FragmentManager fragmentManager = getSupportFragmentManager();
-        FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
-
-        // Replace whatever is in the fragment_container view with this fragment,
-        // and add the transaction to the back stack
-        mUserFragment = UserFragment.newInstance(userSubject);
-        fragmentTransaction.replace(R.id.fragment_container, mUserFragment, "User");
-
-        // Commit the transaction
-        fragmentTransaction.commit();
-    }
-
     @Override
-    public void onUserFragmentCreated(View view) {
+    public void onUserInfoFragmentCreated(View view) {
 
     }
 
     @Override
-    public void refreshUser(String userSubject) {
-        mGetUserTask = new CallServiceAsyncTask(this, mGetUserCallback, mToken);
+    public void onMyStuffFragmentCreated(View view) {
 
-        String path = String.format(Locale.US, "api/users/%s/notes/?sort=", userSubject);
-        String rawQuery = "-datecreated";
-
-        String encodedQuery = "";
-        try {
-            encodedQuery = URLEncoder.encode(rawQuery, "UTF-8");
-        } catch (Exception e) {
-        }
-
-        path += encodedQuery;
-        mGetUserTask.execute(path);
     }
 
     @Override
@@ -109,12 +95,42 @@ public class UserActivity extends TokenActivity implements IActivityCallback,
         startNoteActivity(noteId);
     }
 
-    @Override
-    public void callback(IAsyncCallback cb) {
-        if (cb.equals(mGetUserCallback)) {
-            mGetUserTask = null;
-            List<Note> notes = JsonHelper.getNotes(mGetUserCallback.getResult().getResult());
-            mUserFragment.onUserRetrieved(notes);
+    public static class MyPagerAdapter extends FragmentPagerAdapter {
+        private static int NUM_ITEMS = 2;
+        private static String[] NAMES = {"Notes", "Info"};
+        private String mUserId;
+
+        private UserNotesFragment mUserNotesFragment;
+        private UserInfoFragment mUserInfoFragment;
+
+        public MyPagerAdapter(FragmentManager fragmentManager, String userid) {
+            super(fragmentManager);
+            mUserId = userid;
+        }
+
+        // Returns total number of pages
+        @Override
+        public int getCount() {
+            return NUM_ITEMS;
+        }
+
+        // Returns the fragment to display for that page
+        @Override
+        public Fragment getItem(int position) {
+            switch (position) {
+                case 0:
+                    return UserNotesFragment.newInstance(mUserId);
+                case 1:
+                    return UserInfoFragment.newInstance(mUserId);
+                default:
+                    return null;
+            }
+        }
+
+        // Returns the page title for the top indicator
+        @Override
+        public CharSequence getPageTitle(int position) {
+            return NAMES[position];
         }
     }
 }
