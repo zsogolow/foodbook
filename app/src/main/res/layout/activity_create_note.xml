@@ -6,4 +6,9 @@
     android:layout_height="match_parent"
     tools:context="foodbook.thinmint.activities.notes.CreateNoteActivity">
 
+    <EditText
+        android:id="@+id/edit_note_contents"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content" />
+
 </android.support.constraint.ConstraintLayout>

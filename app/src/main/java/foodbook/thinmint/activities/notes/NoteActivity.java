@@ -3,7 +3,12 @@ package foodbook.thinmint.activities.notes;
 import android.os.Bundle;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentTransaction;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
+
+import java.net.URLEncoder;
 
 import foodbook.thinmint.IApiCallback;
 import foodbook.thinmint.IAsyncCallback;
@@ -14,13 +19,10 @@ import foodbook.thinmint.models.domain.Note;
 import foodbook.thinmint.tasks.CallServiceAsyncTask;
 import foodbook.thinmint.tasks.CallServiceCallback;
 
-public class NoteApi extends TokenActivity implements IApiCallback,
-        NoteFragment.OnNoteFragmentDataListener {
-
-    private CallServiceAsyncTask mGetNoteTask;
-    private CallServiceCallback mGetNoteCallback;
+public class NoteActivity extends TokenActivity implements NoteFragment.OnNoteFragmentDataListener {
 
     private NoteFragment mNoteFragment;
+    private Menu mMenu;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -30,7 +32,6 @@ public class NoteApi extends TokenActivity implements IApiCallback,
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         getSupportActionBar().setDisplayShowHomeEnabled(true);
 
-        mGetNoteCallback = new CallServiceCallback(this);
 
         initToken();
         initUser();
@@ -45,6 +46,45 @@ public class NoteApi extends TokenActivity implements IApiCallback,
     public boolean onSupportNavigateUp() {
         onBackPressed();
         return true;
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        // Inflate the menu; this adds items to the action bar if it is present.
+        MenuInflater inflater = getMenuInflater();
+        inflater.inflate(R.menu.note, menu);
+
+        mMenu = menu;
+
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        // Handle action bar item clicks here. The action bar will
+        // automatically handle clicks on the Home/Up button, so long
+        // as you specify a parent activity in AndroidManifest.xml.
+        int id = item.getItemId();
+
+        //noinspection SimplifiableIfStatement
+        if (id == R.id.action_delete) {
+            return true;
+        } else if (id == R.id.action_edit) {
+            return true;
+        } else if (id == R.id.action_save) {
+            return true;
+        }
+
+        return super.onOptionsItemSelected(item);
+    }
+
+    private void toggleNoteActions(boolean show) {
+        if (mMenu != null) {
+            MenuItem delete = mMenu.findItem(R.id.action_delete);
+            MenuItem edit = mMenu.findItem(R.id.action_edit);
+            delete.setVisible(show);
+            edit.setVisible(show);
+        }
     }
 
     public void showNoteFragment(long noteId) {
@@ -64,20 +104,14 @@ public class NoteApi extends TokenActivity implements IApiCallback,
 
     @Override
     public void onNoteFragmentCreated(View view) {
-
     }
 
     @Override
-    public void refreshNote(long noteId) {
-
-    }
-
-    @Override
-    public void callback(IAsyncCallback cb) {
-        if (cb.equals(mGetNoteCallback)) {
-            mGetNoteTask = null;
-            Note note = JsonHelper.getNote(mGetNoteCallback.getResult().getResult());
-            mNoteFragment.onNoteRetrieved(note);
+    public void onNoteRetrieved(Note note) {
+        if (note.getUserId() != mUserId) {
+            toggleNoteActions(false);
+        } else {
+            toggleNoteActions(true);
         }
     }
 }

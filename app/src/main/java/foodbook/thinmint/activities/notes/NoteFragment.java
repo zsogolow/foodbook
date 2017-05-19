@@ -10,8 +10,17 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
+import java.net.URLEncoder;
+import java.util.Locale;
+
+import foodbook.thinmint.IApiCallback;
+import foodbook.thinmint.IAsyncCallback;
 import foodbook.thinmint.R;
+import foodbook.thinmint.activities.TokenFragment;
+import foodbook.thinmint.models.JsonHelper;
 import foodbook.thinmint.models.domain.Note;
+import foodbook.thinmint.tasks.CallServiceAsyncTask;
+import foodbook.thinmint.tasks.CallServiceCallback;
 
 /**
  * A simple {@link Fragment} subclass.
@@ -21,7 +30,7 @@ import foodbook.thinmint.models.domain.Note;
  * Use the {@link NoteFragment#newInstance} factory method to
  * create an instance of this fragment.
  */
-public class NoteFragment extends Fragment {
+public class NoteFragment extends TokenFragment implements IApiCallback {
     private static final String ARG_NOTEID = "noteid";
 
     private long mNoteId;
@@ -30,6 +39,12 @@ public class NoteFragment extends Fragment {
 
     private SwipeRefreshLayout mSwipeRefreshLayout;
     private TextView mNoteContents;
+    private TextView mNoteUser;
+    private TextView mNoteDate;
+
+    private CallServiceAsyncTask mGetNoteTask;
+    private CallServiceCallback mGetNoteCallback;
+
 
     public NoteFragment() {
         // Required empty public constructor
@@ -56,6 +71,18 @@ public class NoteFragment extends Fragment {
         if (getArguments() != null) {
             mNoteId = getArguments().getLong(ARG_NOTEID);
         }
+
+        initToken();
+        initUser();
+
+        mGetNoteCallback = new CallServiceCallback(this);
+
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        refreshNote();
     }
 
     @Override
@@ -66,11 +93,13 @@ public class NoteFragment extends Fragment {
 
         mSwipeRefreshLayout = (SwipeRefreshLayout) inflated.findViewById(R.id.activity_note_swipe_refresh_layout);
         mNoteContents = (TextView) inflated.findViewById(R.id.note_contents);
+        mNoteUser = (TextView) inflated.findViewById(R.id.note_user);
+        mNoteDate = (TextView) inflated.findViewById(R.id.note_date);
 
         mSwipeRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
             @Override
             public void onRefresh() {
-                refreshUser();
+                refreshNote();
             }
         });
 
@@ -82,7 +111,6 @@ public class NoteFragment extends Fragment {
     @Override
     public void onActivityCreated(@Nullable Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
-        refreshUser();
     }
 
     @Override
@@ -106,14 +134,38 @@ public class NoteFragment extends Fragment {
         mSwipeRefreshLayout.setRefreshing(isLoading);
     }
 
-    private void refreshUser() {
-        setLoading(true);
-        mListener.refreshNote(mNoteId);
-    }
-
-    public void onNoteRetrieved(Note note) {
+    private void onNoteRetrieved(Note note) {
         setLoading(false);
         mNoteContents.setText(note.getContent());
+        mNoteUser.setText(note.getUser().getUsername());
+        mNoteDate.setText(note.getDateCreated().toString());
+    }
+
+    private void refreshNote() {
+        setLoading(true);
+        mGetNoteTask = new CallServiceAsyncTask(getContext(), mGetNoteCallback, mToken);
+
+        String path = String.format(Locale.US,"api/notes/%d", mNoteId);
+        String rawQuery = "";
+
+        String encodedQuery = "";
+        try {
+            encodedQuery = URLEncoder.encode(rawQuery, "UTF-8");
+        } catch (Exception e) {
+        }
+
+        path += encodedQuery;
+        mGetNoteTask.execute(path);
+    }
+
+    @Override
+    public void callback(IAsyncCallback cb) {
+        if (cb.equals(mGetNoteCallback)) {
+            mGetNoteTask = null;
+            Note note = JsonHelper.getNote(mGetNoteCallback.getResult().getResult());
+            onNoteRetrieved(note);
+            mListener.onNoteRetrieved(note);
+        }
     }
 
     /**
@@ -128,7 +180,6 @@ public class NoteFragment extends Fragment {
      */
     public interface OnNoteFragmentDataListener {
         void onNoteFragmentCreated(View view);
-
-        void refreshNote(long noteId);
+        void onNoteRetrieved(Note note);
     }
 }

@@ -87,6 +87,12 @@ public class UsersFragment extends TokenFragment implements IApiCallback,
     }
 
     @Override
+    public void onResume() {
+        super.onResume();
+        refreshUsers();
+    }
+
+    @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
@@ -117,7 +123,6 @@ public class UsersFragment extends TokenFragment implements IApiCallback,
     @Override
     public void onActivityCreated(@Nullable Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
-        refreshUsers();
     }
 
     @Override

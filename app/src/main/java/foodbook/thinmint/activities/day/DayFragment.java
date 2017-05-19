@@ -83,10 +83,14 @@ public class DayFragment extends TokenFragment implements OnNotesListInteraction
     }
 
     @Override
+    public void onResume() {
+        super.onResume();
+        refreshList();
+    }
+
+    @Override
     public void onActivityCreated(@Nullable Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
-        mCurrentDate = new Date(System.currentTimeMillis());
-        refreshList();
     }
 
     @Override
@@ -116,29 +120,6 @@ public class DayFragment extends TokenFragment implements OnNotesListInteraction
         return inflated;
     }
 
-    private void refreshList() {
-        setLoading(true);
-
-        mLoadingTask = new CallServiceAsyncTask(getContext(), mLoadingCallback, mToken);
-
-        Calendar calendar = Calendar.getInstance();
-        calendar.setTime(mCurrentDate);
-
-        String path = String.format("api/users/%s/notes?filter=", mUserSubject);
-        String rawQuery = String.format(Locale.US, "((DateCreated Ge %d-%d-%d 00:00:00 -0700) And (DateCreated Le %d-%d-%d 23:59:59 -0700))",
-                calendar.get(Calendar.YEAR), calendar.get(Calendar.MONTH) + 1, calendar.get(Calendar.DAY_OF_MONTH),
-                calendar.get(Calendar.YEAR), calendar.get(Calendar.MONTH) + 1, calendar.get(Calendar.DAY_OF_MONTH));
-
-        String encodedQuery = "";
-        try {
-            encodedQuery = URLEncoder.encode(rawQuery, "UTF-8");
-        } catch (Exception e) {
-        }
-
-        path += encodedQuery;
-        mLoadingTask.execute(path);
-    }
-
     @Override
     public void onAttach(Context activity) {
         super.onAttach(activity);
@@ -164,6 +145,29 @@ public class DayFragment extends TokenFragment implements OnNotesListInteraction
         TextView hiddenNoteIdTextView = (TextView) caller.findViewById(R.id.hidden_note_id);
         String noteId = hiddenNoteIdTextView.getText().toString();
         mListener.showNote(Long.parseLong(noteId));
+    }
+
+    private void refreshList() {
+        setLoading(true);
+
+        mLoadingTask = new CallServiceAsyncTask(getContext(), mLoadingCallback, mToken);
+
+        Calendar calendar = Calendar.getInstance();
+        calendar.setTime(mCurrentDate);
+
+        String path = String.format("api/users/%s/notes?filter=", mUserSubject);
+        String rawQuery = String.format(Locale.US, "((DateCreated Ge %d-%d-%d 00:00:00 -0700) And (DateCreated Le %d-%d-%d 23:59:59 -0700))",
+                calendar.get(Calendar.YEAR), calendar.get(Calendar.MONTH) + 1, calendar.get(Calendar.DAY_OF_MONTH),
+                calendar.get(Calendar.YEAR), calendar.get(Calendar.MONTH) + 1, calendar.get(Calendar.DAY_OF_MONTH));
+
+        String encodedQuery = "";
+        try {
+            encodedQuery = URLEncoder.encode(rawQuery, "UTF-8");
+        } catch (Exception e) {
+        }
+
+        path += encodedQuery;
+        mLoadingTask.execute(path);
     }
 
     private void setLoading(boolean isLoading) {

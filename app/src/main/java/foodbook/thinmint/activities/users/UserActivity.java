@@ -12,7 +12,7 @@ import android.view.View;
 
 import foodbook.thinmint.R;
 import foodbook.thinmint.activities.TokenActivity;
-import foodbook.thinmint.activities.notes.NoteApi;
+import foodbook.thinmint.activities.notes.NoteActivity;
 
 public class UserActivity extends TokenActivity implements
         UserInfoFragment.OnUserInfoFragmentDataListener,
@@ -56,7 +56,7 @@ public class UserActivity extends TokenActivity implements
     }
 
     private void startNoteActivity(long noteId) {
-        Intent userIntent = new Intent(getApplicationContext(), NoteApi.class);
+        Intent userIntent = new Intent(getApplicationContext(), NoteActivity.class);
 
         Bundle bundle = new Bundle();
         bundle.putLong("note_id", noteId);

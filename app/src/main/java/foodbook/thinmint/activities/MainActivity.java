@@ -35,7 +35,7 @@ import foodbook.thinmint.activities.day.DayFragment;
 import foodbook.thinmint.activities.home.HomeFragment;
 import foodbook.thinmint.activities.users.UserNotesFragment;
 import foodbook.thinmint.activities.users.UserInfoFragment;
-import foodbook.thinmint.activities.notes.NoteApi;
+import foodbook.thinmint.activities.notes.NoteActivity;
 import foodbook.thinmint.activities.users.UsersFragment;
 import foodbook.thinmint.constants.Constants;
 import foodbook.thinmint.models.JsonHelper;
@@ -54,9 +54,6 @@ public class MainActivity extends TokenActivity implements
 
     private Date mCurrentDate;
 
-    private PostServiceAsyncTask mAddNoteTask;
-    private CallServiceCallback mAddNoteCallback;
-
     private DayFragment mDayFragment;
     private OnNotesListInteractionListener mCurrentFragment;
 
@@ -71,7 +68,6 @@ public class MainActivity extends TokenActivity implements
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
-        mAddNoteCallback = new CallServiceCallback(this);
 
         initToken();
         initUser();
@@ -211,7 +207,7 @@ public class MainActivity extends TokenActivity implements
     }
 
     private void startNoteActivity(long noteId) {
-        Intent userIntent = new Intent(getApplicationContext(), NoteApi.class);
+        Intent userIntent = new Intent(getApplicationContext(), NoteActivity.class);
 
         Bundle bundle = new Bundle();
         bundle.putLong("note_id", noteId);
@@ -229,10 +225,6 @@ public class MainActivity extends TokenActivity implements
     }
 
     private void showUsersFragment() {
-        setActionBarTitle("Users");
-
-        toggleDayFragmentActions(false);
-
         FragmentManager fragmentManager = getSupportFragmentManager();
         FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
 
@@ -246,10 +238,6 @@ public class MainActivity extends TokenActivity implements
     }
 
     private void showDayFragment() {
-        setActionBarTitle(DATE_FORMAT.format(mCurrentDate));
-
-        toggleDayFragmentActions(true);
-
         FragmentManager fragmentManager = getSupportFragmentManager();
         FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
 
@@ -267,10 +255,6 @@ public class MainActivity extends TokenActivity implements
     }
 
     private void showHomeFragment() {
-        setActionBarTitle("Feed");
-
-        toggleDayFragmentActions(false);
-
         FragmentManager fragmentManager = getSupportFragmentManager();
         FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
         fragmentTransaction.addToBackStack(null);
@@ -291,10 +275,14 @@ public class MainActivity extends TokenActivity implements
 
         if (id == R.id.nav_calendar) {
 
+            setActionBarTitle(DATE_FORMAT.format(mCurrentDate));
+            toggleDayFragmentActions(true);
             showDayFragment();
 
         } else if (id == R.id.nav_home) {
 
+            setActionBarTitle("Feed");
+            toggleDayFragmentActions(false);
             showHomeFragment();
 
         } else if (id == R.id.nav_my_stuff) {
@@ -303,6 +291,8 @@ public class MainActivity extends TokenActivity implements
 
         } else if (id == R.id.nav_users) {
 
+            setActionBarTitle("Users");
+            toggleDayFragmentActions(false);
             showUsersFragment();
 
         }
@@ -313,17 +303,6 @@ public class MainActivity extends TokenActivity implements
 
     @Override
     public void onDayFragmentCreated(View view) {
-    }
-
-    public void addNote(Note note) {
-        Log.d(TAG, note.toString());
-        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss Z", Locale.US);
-        Map<String, Object> map = new HashMap<>();
-        map.put("content", note.getContent());
-        map.put("userid", mUserId);
-        map.put("datecreated", dateFormat.format(new Date(System.currentTimeMillis())));
-        mAddNoteTask = new PostServiceAsyncTask(this, mAddNoteCallback, mToken, map);
-        mAddNoteTask.execute("api/notes");
     }
 
     @Override
@@ -344,7 +323,6 @@ public class MainActivity extends TokenActivity implements
 
     @Override
     public void onHomeFragmentCreated(View view) {
-        setActionBarTitle("Feed");
     }
 
     @Override
@@ -357,16 +335,9 @@ public class MainActivity extends TokenActivity implements
 
     @Override
     public void onUsersFragmentCreated(View view) {
-        setActionBarTitle("Users");
     }
-
 
     @Override
     public void callback(IAsyncCallback cb) {
-       if (cb.equals(mAddNoteCallback)) {
-            mAddNoteTask = null;
-            Note newNote = JsonHelper.getNote(mAddNoteCallback.getResult().getResult());
-            mCurrentFragment.onNoteAdded(newNote);
-        }
     }
 }

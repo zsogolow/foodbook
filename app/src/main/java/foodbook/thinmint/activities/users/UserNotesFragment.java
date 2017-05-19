@@ -49,7 +49,7 @@ public class UserNotesFragment extends TokenFragment implements OnNotesListInter
     private NotesRecyclerAdapter mAdapter;
     private RecyclerView.LayoutManager mLayoutManager;
 
-    private CallServiceAsyncTask mGetMyStuffTask;
+    private CallServiceAsyncTask mGetMyNotesTask;
     private CallServiceCallback mGetMyStuffCallback;
 
     public UserNotesFragment() {
@@ -103,7 +103,7 @@ public class UserNotesFragment extends TokenFragment implements OnNotesListInter
         mSwipeRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
             @Override
             public void onRefresh() {
-                refreshMyStuff();
+                refreshMyNotes();
             }
         });
 
@@ -115,12 +115,12 @@ public class UserNotesFragment extends TokenFragment implements OnNotesListInter
     @Override
     public void onResume() {
         super.onResume();
+        refreshMyNotes();
     }
 
     @Override
     public void onActivityCreated(@Nullable Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
-        refreshMyStuff();
     }
 
     @Override
@@ -151,9 +151,9 @@ public class UserNotesFragment extends TokenFragment implements OnNotesListInter
         mSwipeRefreshLayout.setRefreshing(isLoading);
     }
 
-    public void refreshMyStuff() {
+    private void refreshMyNotes() {
         setLoading(true);
-        mGetMyStuffTask = new CallServiceAsyncTask(getContext(), mGetMyStuffCallback, mToken);
+        mGetMyNotesTask = new CallServiceAsyncTask(getContext(), mGetMyStuffCallback, mToken);
 
         String path = String.format(Locale.US, "api/users/%s/notes?sort=", mUserId);
         String rawQuery = "-datecreated";
@@ -165,7 +165,7 @@ public class UserNotesFragment extends TokenFragment implements OnNotesListInter
         }
 
         path += encodedQuery;
-        mGetMyStuffTask.execute(path);
+        mGetMyNotesTask.execute(path);
     }
 
     public void onNotesRetrieved(List<Note> notes) {
@@ -182,7 +182,7 @@ public class UserNotesFragment extends TokenFragment implements OnNotesListInter
     @Override
     public void callback(IAsyncCallback cb) {
         if (cb.equals(mGetMyStuffCallback)) {
-            mGetMyStuffTask = null;
+            mGetMyNotesTask = null;
             List<Note> notes = JsonHelper.getNotes(mGetMyStuffCallback.getResult().getResult());
             onNotesRetrieved(notes);
         }

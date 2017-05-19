@@ -85,6 +85,12 @@ public class HomeFragment extends TokenFragment implements IApiCallback, OnNotes
     }
 
     @Override
+    public void onResume() {
+        super.onResume();
+        refreshFeed();
+    }
+
+    @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
@@ -115,7 +121,6 @@ public class HomeFragment extends TokenFragment implements IApiCallback, OnNotes
     @Override
     public void onActivityCreated(@Nullable Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
-        refreshFeed();
     }
 
     @Override

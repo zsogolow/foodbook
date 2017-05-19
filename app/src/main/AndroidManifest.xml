@@ -31,7 +31,7 @@
             android:theme="@style/AppTheme.NoActionBar" />
         <activity android:name=".activities.users.UserActivity"
             android:theme="@style/AppTheme.NoActionBar" />
-        <activity android:name=".activities.notes.NoteApi" />
+        <activity android:name=".activities.notes.NoteActivity" />
         <activity android:name=".activities.notes.CreateNoteActivity" />
     </application>
 
