@@ -3,7 +3,7 @@ package foodbook.thinmint.tasks;
 import android.os.AsyncTask;
 
 import foodbook.thinmint.AbstractAsyncCallback;
-import foodbook.thinmint.IActivityCallback;
+import foodbook.thinmint.IApiCallback;
 import foodbook.thinmint.idsrv.TokenResult;
 
 /**
@@ -14,7 +14,7 @@ public class TokenResultCallback extends AbstractAsyncCallback<TokenResult> {
 
     private TokenResult mTokenResult;
 
-    public TokenResultCallback(IActivityCallback callback) {
+    public TokenResultCallback(IApiCallback callback) {
         super(callback);
     }
 

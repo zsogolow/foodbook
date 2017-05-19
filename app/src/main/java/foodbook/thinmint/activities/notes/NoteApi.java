@@ -5,7 +5,7 @@ import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentTransaction;
 import android.view.View;
 
-import foodbook.thinmint.IActivityCallback;
+import foodbook.thinmint.IApiCallback;
 import foodbook.thinmint.IAsyncCallback;
 import foodbook.thinmint.R;
 import foodbook.thinmint.activities.TokenActivity;
@@ -14,7 +14,7 @@ import foodbook.thinmint.models.domain.Note;
 import foodbook.thinmint.tasks.CallServiceAsyncTask;
 import foodbook.thinmint.tasks.CallServiceCallback;
 
-public class NoteActivity extends TokenActivity implements IActivityCallback,
+public class NoteApi extends TokenActivity implements IApiCallback,
         NoteFragment.OnNoteFragmentDataListener {
 
     private CallServiceAsyncTask mGetNoteTask;

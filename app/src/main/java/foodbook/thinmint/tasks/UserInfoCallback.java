@@ -3,7 +3,7 @@ package foodbook.thinmint.tasks;
 import android.os.AsyncTask;
 
 import foodbook.thinmint.AbstractAsyncCallback;
-import foodbook.thinmint.IActivityCallback;
+import foodbook.thinmint.IApiCallback;
 import foodbook.thinmint.idsrv.UserInfoResult;
 
 /**
@@ -13,7 +13,7 @@ import foodbook.thinmint.idsrv.UserInfoResult;
 public class UserInfoCallback extends AbstractAsyncCallback<UserInfoResult> {
     private UserInfoResult mUserInfo;
 
-    public UserInfoCallback(IActivityCallback callback) {
+    public UserInfoCallback(IApiCallback callback) {
         super(callback);
     }
 

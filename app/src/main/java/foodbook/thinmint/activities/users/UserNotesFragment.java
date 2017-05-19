@@ -1,4 +1,4 @@
-package foodbook.thinmint.activities.mystuff;
+package foodbook.thinmint.activities.users;
 
 import android.content.Context;
 import android.os.Bundle;
@@ -17,7 +17,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 
-import foodbook.thinmint.IActivityCallback;
+import foodbook.thinmint.IApiCallback;
 import foodbook.thinmint.IAsyncCallback;
 import foodbook.thinmint.R;
 import foodbook.thinmint.activities.TokenFragment;
@@ -31,18 +31,18 @@ import foodbook.thinmint.tasks.CallServiceCallback;
 /**
  * A simple {@link Fragment} subclass.
  * Activities that contain this fragment must implement the
- * {@link OnMyStuffFragmentDataListener} interface
+ * {@link OnUserNotesFragmentDataListener} interface
  * to handle interaction events.
  * Use the {@link UserNotesFragment#newInstance} factory method to
  * create an instance of this fragment.
  */
 public class UserNotesFragment extends TokenFragment implements OnNotesListInteractionListener,
-        NotesRecyclerAdapter.ViewHolder.IOnNoteClickListener, IActivityCallback {
+        NotesRecyclerAdapter.ViewHolder.IOnNoteClickListener, IApiCallback {
     private static final String ARG_USERID = "userid";
 
     private String mUserId;
 
-    private OnMyStuffFragmentDataListener mListener;
+    private OnUserNotesFragmentDataListener mListener;
 
     private RecyclerView mListView;
     private SwipeRefreshLayout mSwipeRefreshLayout;
@@ -88,7 +88,7 @@ public class UserNotesFragment extends TokenFragment implements OnNotesListInter
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
-        View inflated = inflater.inflate(R.layout.fragment_my_stuff, container, false);
+        View inflated = inflater.inflate(R.layout.fragment_user_notes, container, false);
 
         mListView = (RecyclerView) inflated.findViewById(R.id.activity_main_listview);
         mSwipeRefreshLayout = (SwipeRefreshLayout) inflated.findViewById(R.id.activity_main_swipe_refresh_layout);
@@ -107,7 +107,7 @@ public class UserNotesFragment extends TokenFragment implements OnNotesListInter
             }
         });
 
-        mListener.onMyStuffFragmentCreated(inflated);
+        mListener.onUserNotesFragmentCreated(inflated);
 
         return inflated;
     }
@@ -126,11 +126,11 @@ public class UserNotesFragment extends TokenFragment implements OnNotesListInter
     @Override
     public void onAttach(Context context) {
         super.onAttach(context);
-        if (context instanceof OnMyStuffFragmentDataListener) {
-            mListener = (OnMyStuffFragmentDataListener) context;
+        if (context instanceof OnUserNotesFragmentDataListener) {
+            mListener = (OnUserNotesFragmentDataListener) context;
         } else {
             throw new RuntimeException(context.toString()
-                    + " must implement OnHomeFragmentDataListener");
+                    + " must implement OnUserNotesFragmentDataListener");
         }
     }
 
@@ -153,7 +153,6 @@ public class UserNotesFragment extends TokenFragment implements OnNotesListInter
 
     public void refreshMyStuff() {
         setLoading(true);
-//        mListener.refreshMyStuff();
         mGetMyStuffTask = new CallServiceAsyncTask(getContext(), mGetMyStuffCallback, mToken);
 
         String path = String.format(Locale.US, "api/users/%s/notes?sort=", mUserId);
@@ -169,17 +168,14 @@ public class UserNotesFragment extends TokenFragment implements OnNotesListInter
         mGetMyStuffTask.execute(path);
     }
 
-    @Override
     public void onNotesRetrieved(List<Note> notes) {
         mAdapter.swap(notes);
-//        mAdapter.notifyDataSetChanged();
         setLoading(false);
     }
 
     @Override
     public void onNoteAdded(Note note) {
         mAdapter.add(note);
-//        mAdapter.notifyDataSetChanged();
         setLoading(false);
     }
 
@@ -202,8 +198,8 @@ public class UserNotesFragment extends TokenFragment implements OnNotesListInter
      * "http://developer.android.com/training/basics/fragments/communicating.html"
      * >Communicating with Other Fragments</a> for more information.
      */
-    public interface OnMyStuffFragmentDataListener {
-        void onMyStuffFragmentCreated(View view);
+    public interface OnUserNotesFragmentDataListener {
+        void onUserNotesFragmentCreated(View view);
 
         void showNote(long noteId);
     }

@@ -12,12 +12,21 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
+import java.net.URLEncoder;
+import java.security.InvalidAlgorithmParameterException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 
+import foodbook.thinmint.IApiCallback;
+import foodbook.thinmint.IAsyncCallback;
 import foodbook.thinmint.R;
+import foodbook.thinmint.activities.TokenFragment;
 import foodbook.thinmint.activities.adapters.UsersRecyclerAdapter;
+import foodbook.thinmint.models.JsonHelper;
 import foodbook.thinmint.models.domain.User;
+import foodbook.thinmint.tasks.CallServiceAsyncTask;
+import foodbook.thinmint.tasks.CallServiceCallback;
 
 /**
  * A simple {@link Fragment} subclass.
@@ -27,7 +36,8 @@ import foodbook.thinmint.models.domain.User;
  * Use the {@link UsersFragment#newInstance} factory method to
  * create an instance of this fragment.
  */
-public class UsersFragment extends Fragment implements UsersRecyclerAdapter.ViewHolder.IOnUserClickListener {
+public class UsersFragment extends TokenFragment implements IApiCallback,
+        UsersRecyclerAdapter.ViewHolder.IOnUserClickListener {
     private static final String ARG_USERID = "userid";
 
     private String mUserId;
@@ -38,6 +48,10 @@ public class UsersFragment extends Fragment implements UsersRecyclerAdapter.View
     private SwipeRefreshLayout mSwipeRefreshLayout;
     private UsersRecyclerAdapter mAdapter;
     private RecyclerView.LayoutManager mLayoutManager;
+
+    private CallServiceAsyncTask mGetUsersTask;
+    private CallServiceCallback mGetUsersCallback;
+
 
     public UsersFragment() {
         // Required empty public constructor
@@ -64,6 +78,12 @@ public class UsersFragment extends Fragment implements UsersRecyclerAdapter.View
         if (getArguments() != null) {
             mUserId = getArguments().getString(ARG_USERID);
         }
+
+        initToken();
+        initUser();
+
+        mGetUsersCallback = new CallServiceCallback(this);
+
     }
 
     @Override
@@ -123,10 +143,24 @@ public class UsersFragment extends Fragment implements UsersRecyclerAdapter.View
 
     private void refreshUsers() {
         setLoading(true);
-        mListener.refreshUsers();
-    }
+        mGetUsersTask = new CallServiceAsyncTask(getContext(), mGetUsersCallback, mToken);
 
-    public void onUsersRetrieved(List<User> users) {
+        String path = "api/users";
+        String rawQuery = "";
+
+//        String path = "api/users?filter=";
+//        String rawQuery = String.format(Locale.US, "(Subject Ne %s)", mUserSubject);
+
+        String encodedQuery = "";
+        try {
+            encodedQuery = URLEncoder.encode(rawQuery, "UTF-8");
+        } catch (Exception e) {
+        }
+
+        path += encodedQuery;
+        mGetUsersTask.execute(path);    }
+
+    private void onUsersRetrieved(List<User> users) {
         mAdapter.swap(users);
         mListView.setAdapter(mAdapter);
         mAdapter.notifyDataSetChanged();
@@ -142,10 +176,17 @@ public class UsersFragment extends Fragment implements UsersRecyclerAdapter.View
         mListener.showUser(userSubject, username);
     }
 
+    @Override
+    public void callback(IAsyncCallback cb) {
+        if (cb.equals(mGetUsersCallback)) {
+            mGetUsersTask = null;
+            List<User> users = JsonHelper.getUsers(mGetUsersCallback.getResult().getResult());
+            onUsersRetrieved(users);
+        }
+    }
+
     public interface OnUsersFragmentDataListener {
         void onUsersFragmentCreated(View view);
-
-        void refreshUsers();
 
         void showUser(String subject, String username);
     }

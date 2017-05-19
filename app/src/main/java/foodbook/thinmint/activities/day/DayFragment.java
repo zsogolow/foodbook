@@ -12,20 +12,35 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
+import java.net.URLEncoder;
+import java.text.ParseException;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
+import java.util.Locale;
 
+import foodbook.thinmint.IApiCallback;
+import foodbook.thinmint.IAsyncCallback;
 import foodbook.thinmint.R;
+import foodbook.thinmint.activities.MainActivity;
+import foodbook.thinmint.activities.TokenFragment;
 import foodbook.thinmint.activities.common.OnNotesListInteractionListener;
 import foodbook.thinmint.activities.adapters.NotesRecyclerAdapter;
+import foodbook.thinmint.activities.users.UsersFragment;
+import foodbook.thinmint.models.JsonHelper;
 import foodbook.thinmint.models.domain.Note;
+import foodbook.thinmint.tasks.CallServiceAsyncTask;
+import foodbook.thinmint.tasks.CallServiceCallback;
 
 /**
  * A placeholder fragment containing a simple view.
  */
-public class DayFragment extends Fragment implements OnNotesListInteractionListener,
-        NotesRecyclerAdapter.ViewHolder.IOnNoteClickListener {
+public class DayFragment extends TokenFragment implements OnNotesListInteractionListener,
+        NotesRecyclerAdapter.ViewHolder.IOnNoteClickListener, IApiCallback {
+    private static final String ARG_DATE = "date";
+
+    private Date mCurrentDate;
 
     private OnDayFragmentDataListener mListener;
 
@@ -34,9 +49,37 @@ public class DayFragment extends Fragment implements OnNotesListInteractionListe
     private NotesRecyclerAdapter mAdapter;
     private RecyclerView.LayoutManager mLayoutManager;
 
-    private Date mCurrentDate;
+
+    private CallServiceAsyncTask mLoadingTask;
+    private CallServiceCallback mLoadingCallback;
 
     public DayFragment() {
+    }
+
+    public static DayFragment newInstance(Date date) {
+        DayFragment fragment = new DayFragment();
+        Bundle args = new Bundle();
+        args.putString(ARG_DATE, MainActivity.DATE_FORMAT.format(date));
+        fragment.setArguments(args);
+        return fragment;
+    }
+
+    @Override
+    public void onCreate(@Nullable Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        if (getArguments() != null) {
+            String dateString = getArguments().getString(ARG_DATE);
+            try {
+                mCurrentDate = MainActivity.DATE_FORMAT.parse(dateString);
+            } catch (ParseException pe) {
+                mCurrentDate = new Date(System.currentTimeMillis());
+            }
+        }
+
+        initToken();
+        initUser();
+
+        mLoadingCallback = new CallServiceCallback(this);
     }
 
     @Override
@@ -75,7 +118,25 @@ public class DayFragment extends Fragment implements OnNotesListInteractionListe
 
     private void refreshList() {
         setLoading(true);
-        mListener.selectDay(mCurrentDate);
+
+        mLoadingTask = new CallServiceAsyncTask(getContext(), mLoadingCallback, mToken);
+
+        Calendar calendar = Calendar.getInstance();
+        calendar.setTime(mCurrentDate);
+
+        String path = String.format("api/users/%s/notes?filter=", mUserSubject);
+        String rawQuery = String.format(Locale.US, "((DateCreated Ge %d-%d-%d 00:00:00 -0700) And (DateCreated Le %d-%d-%d 23:59:59 -0700))",
+                calendar.get(Calendar.YEAR), calendar.get(Calendar.MONTH) + 1, calendar.get(Calendar.DAY_OF_MONTH),
+                calendar.get(Calendar.YEAR), calendar.get(Calendar.MONTH) + 1, calendar.get(Calendar.DAY_OF_MONTH));
+
+        String encodedQuery = "";
+        try {
+            encodedQuery = URLEncoder.encode(rawQuery, "UTF-8");
+        } catch (Exception e) {
+        }
+
+        path += encodedQuery;
+        mLoadingTask.execute(path);
     }
 
     @Override
@@ -100,7 +161,7 @@ public class DayFragment extends Fragment implements OnNotesListInteractionListe
 
     @Override
     public void onNoteClicked(View caller) {
-        TextView hiddenNoteIdTextView = (TextView)caller.findViewById(R.id.hidden_note_id);
+        TextView hiddenNoteIdTextView = (TextView) caller.findViewById(R.id.hidden_note_id);
         String noteId = hiddenNoteIdTextView.getText().toString();
         mListener.showNote(Long.parseLong(noteId));
     }
@@ -111,10 +172,10 @@ public class DayFragment extends Fragment implements OnNotesListInteractionListe
 
     public void setDate(Date date) {
         mCurrentDate = date;
+        refreshList();
     }
 
-    @Override
-    public void onNotesRetrieved(List<Note> notes) {
+    private void onNotesRetrieved(List<Note> notes) {
         mAdapter.swap(notes);
         setLoading(false);
     }
@@ -126,10 +187,17 @@ public class DayFragment extends Fragment implements OnNotesListInteractionListe
         setLoading(false);
     }
 
+    @Override
+    public void callback(IAsyncCallback cb) {
+        if (cb.equals(mLoadingCallback)) {
+            mLoadingTask = null;
+            List<Note> notes = JsonHelper.getNotes(mLoadingCallback.getResult().getResult());
+            onNotesRetrieved(notes);
+        }
+    }
+
     public interface OnDayFragmentDataListener {
         void onDayFragmentCreated(View view);
-
-        void addNote(Note note);
 
         void selectDay(Date date);
 

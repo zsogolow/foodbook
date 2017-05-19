@@ -2,13 +2,10 @@ package foodbook.thinmint.tasks;
 
 import android.os.AsyncTask;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-
 import java.lang.reflect.Type;
 
 import foodbook.thinmint.AbstractAsyncCallback;
-import foodbook.thinmint.IActivityCallback;
+import foodbook.thinmint.IApiCallback;
 import foodbook.thinmint.api.WebAPIResult;
 
 /**
@@ -20,7 +17,7 @@ public class CallServiceCallback extends AbstractAsyncCallback<WebAPIResult> {
     private WebAPIResult mResult;
     private Type mMyType;
 
-    public CallServiceCallback(IActivityCallback callback) {
+    public CallServiceCallback(IApiCallback callback) {
         super(callback);
     }
 

@@ -1,4 +1,4 @@
-package foodbook.thinmint.activities.mystuff;
+package foodbook.thinmint.activities.users;
 
 import android.content.Context;
 import android.os.Bundle;
@@ -11,27 +11,23 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
-import java.util.List;
-
 import foodbook.thinmint.R;
-import foodbook.thinmint.activities.common.OnNotesListInteractionListener;
-import foodbook.thinmint.models.domain.Note;
 
 /**
  * A simple {@link Fragment} subclass.
  * Activities that contain this fragment must implement the
- * {@link UserProfileFragment.OnMyProfileFragmentDataListener} interface
+ * {@link OnUserProfileFragmentDataListener} interface
  * to handle interaction events.
  * Use the {@link UserProfileFragment#newInstance} factory method to
  * create an instance of this fragment.
  */
-public class UserProfileFragment extends Fragment implements OnNotesListInteractionListener {
+public class UserProfileFragment extends Fragment {
 
     private static final String ARG_USERID = "userid";
 
     private String mUserId;
 
-    private OnMyProfileFragmentDataListener mListener;
+    private OnUserProfileFragmentDataListener mListener;
     private FragmentPagerAdapter mFragmentPagerAdapter;
 
     public UserProfileFragment() {
@@ -45,7 +41,6 @@ public class UserProfileFragment extends Fragment implements OnNotesListInteract
      * @param userid Parameter 1.
      * @return A new instance of fragment UserProfileFragment.
      */
-    // TODO: Rename and change types and number of parameters
     public static UserProfileFragment newInstance(String userid) {
         UserProfileFragment fragment = new UserProfileFragment();
         Bundle args = new Bundle();
@@ -66,7 +61,7 @@ public class UserProfileFragment extends Fragment implements OnNotesListInteract
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
-        View inflated = inflater.inflate(R.layout.fragment_my_profile, container, false);
+        View inflated = inflater.inflate(R.layout.fragment_user_profile, container, false);
 
         ViewPager viewPager = (ViewPager) inflated.findViewById(R.id.view_pager);
         viewPager.setAdapter(mFragmentPagerAdapter);
@@ -82,11 +77,11 @@ public class UserProfileFragment extends Fragment implements OnNotesListInteract
     @Override
     public void onAttach(Context context) {
         super.onAttach(context);
-        if (context instanceof OnMyProfileFragmentDataListener) {
-            mListener = (OnMyProfileFragmentDataListener) context;
+        if (context instanceof OnUserProfileFragmentDataListener) {
+            mListener = (OnUserProfileFragmentDataListener) context;
         } else {
             throw new RuntimeException(context.toString()
-                    + " must implement OnUserInfoFragmentDataListener");
+                    + " must implement OnUserProfileFragmentDataListener");
         }
 
         mFragmentPagerAdapter = new MyPagerAdapter(getChildFragmentManager(), mUserId);
@@ -98,17 +93,7 @@ public class UserProfileFragment extends Fragment implements OnNotesListInteract
         mListener = null;
     }
 
-    @Override
-    public void onNoteAdded(Note note) {
-
-    }
-
-    @Override
-    public void onNotesRetrieved(List<Note> notes) {
-
-    }
-
-    public interface OnMyProfileFragmentDataListener {
+    public interface OnUserProfileFragmentDataListener {
         void onMyProfileFragmentCreated(View view);
     }
 

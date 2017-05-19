@@ -1,16 +1,13 @@
 package foodbook.thinmint;
 
-import foodbook.thinmint.IActivityCallback;
-import foodbook.thinmint.IAsyncCallback;
-
 /**
  * Created by Zachery.Sogolow on 5/9/2017.
  */
 
 public abstract class AbstractAsyncCallback<T> implements IAsyncCallback<T> {
-    protected IActivityCallback mActivityCallback;
+    protected IApiCallback mActivityCallback;
 
-    public AbstractAsyncCallback(IActivityCallback callback) {
+    public AbstractAsyncCallback(IApiCallback callback) {
         this.mActivityCallback = callback;
     }
 }

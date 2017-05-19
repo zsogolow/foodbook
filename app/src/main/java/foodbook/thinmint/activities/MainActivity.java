@@ -19,67 +19,49 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.TextView;
 
-import java.net.URLEncoder;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
-import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
-import foodbook.thinmint.IActivityCallback;
+import foodbook.thinmint.IApiCallback;
 import foodbook.thinmint.IAsyncCallback;
 import foodbook.thinmint.R;
 import foodbook.thinmint.activities.common.OnNotesListInteractionListener;
 import foodbook.thinmint.activities.day.DatePickerFragment;
 import foodbook.thinmint.activities.day.DayFragment;
 import foodbook.thinmint.activities.home.HomeFragment;
-import foodbook.thinmint.activities.mystuff.UserNotesFragment;
-import foodbook.thinmint.activities.mystuff.UserInfoFragment;
-import foodbook.thinmint.activities.notes.CreateNoteActivity;
-import foodbook.thinmint.activities.notes.NoteActivity;
-import foodbook.thinmint.activities.users.UserActivity;
+import foodbook.thinmint.activities.users.UserNotesFragment;
+import foodbook.thinmint.activities.users.UserInfoFragment;
+import foodbook.thinmint.activities.notes.NoteApi;
 import foodbook.thinmint.activities.users.UsersFragment;
 import foodbook.thinmint.constants.Constants;
 import foodbook.thinmint.models.JsonHelper;
 import foodbook.thinmint.models.domain.Note;
-import foodbook.thinmint.models.domain.User;
-import foodbook.thinmint.tasks.CallServiceAsyncTask;
 import foodbook.thinmint.tasks.CallServiceCallback;
 import foodbook.thinmint.tasks.PostServiceAsyncTask;
 
 public class MainActivity extends TokenActivity implements
-        IActivityCallback, NavigationView.OnNavigationItemSelectedListener,
+        IApiCallback, NavigationView.OnNavigationItemSelectedListener,
         DayFragment.OnDayFragmentDataListener, HomeFragment.OnHomeFragmentDataListener,
-        UserNotesFragment.OnMyStuffFragmentDataListener, UserInfoFragment.OnUserInfoFragmentDataListener,
+        UserNotesFragment.OnUserNotesFragmentDataListener, UserInfoFragment.OnUserInfoFragmentDataListener,
         UsersFragment.OnUsersFragmentDataListener {
+    private static final String TAG = "MainActivity";
 
     public static final DateFormat DATE_FORMAT = DateFormat.getDateInstance();
 
-    private static final String TAG = "MainActivity";
-    private static final DateFormat mDateFormatter = new SimpleDateFormat("EEE, d MMM yyyy", Locale.US);
     private Date mCurrentDate;
-
-    private CallServiceAsyncTask mGetFeedTask;
-    private CallServiceCallback mGetFeedCallback;
-
-    private CallServiceAsyncTask mGetUsersTask;
-    private CallServiceCallback mGetUsersCallback;
-
-    private CallServiceAsyncTask mLoadingTask;
-    private CallServiceCallback mLoadingCallback;
 
     private PostServiceAsyncTask mAddNoteTask;
     private CallServiceCallback mAddNoteCallback;
 
     private DayFragment mDayFragment;
-    private HomeFragment mHomeFragment;
-    private UsersFragment mUsersFragment;
     private OnNotesListInteractionListener mCurrentFragment;
 
     private NavigationView mNavigationView;
+    private DrawerLayout mDrawerLayout;
     private Menu mMenu;
 
     @Override
@@ -89,9 +71,6 @@ public class MainActivity extends TokenActivity implements
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
-        mGetFeedCallback = new CallServiceCallback(this);
-        mGetUsersCallback = new CallServiceCallback(this);
-        mLoadingCallback = new CallServiceCallback(this);
         mAddNoteCallback = new CallServiceCallback(this);
 
         initToken();
@@ -109,10 +88,10 @@ public class MainActivity extends TokenActivity implements
             }
         });
 
-        DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
+        mDrawerLayout = (DrawerLayout) findViewById(R.id.drawer_layout);
         ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
-                this, drawer, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
-        drawer.addDrawerListener(toggle);
+                this, mDrawerLayout, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
+        mDrawerLayout.addDrawerListener(toggle);
         toggle.syncState();
 
         mNavigationView = (NavigationView) findViewById(R.id.nav_view);
@@ -141,7 +120,7 @@ public class MainActivity extends TokenActivity implements
                     try {
                         DayFragment dayFragment = (DayFragment) fragmentManager.findFragmentByTag("DayFragment");
                         if (dayFragment != null) {
-                            setActionBarTitle(mDateFormatter.format(mCurrentDate));
+                            setActionBarTitle(DATE_FORMAT.format(mCurrentDate));
                             toggleDayFragmentActions(true);
                             mNavigationView.getMenu().getItem(0).setChecked(true);
                         }
@@ -170,9 +149,8 @@ public class MainActivity extends TokenActivity implements
 
     @Override
     public void onBackPressed() {
-        DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
-        if (drawer.isDrawerOpen(GravityCompat.START)) {
-            drawer.closeDrawer(GravityCompat.START);
+        if (mDrawerLayout.isDrawerOpen(GravityCompat.START)) {
+            mDrawerLayout.closeDrawer(GravityCompat.START);
         } else {
             super.onBackPressed();
         }
@@ -183,7 +161,6 @@ public class MainActivity extends TokenActivity implements
             mCurrentFragment = mDayFragment;
         }
     }
-
 
     private void toggleDayFragmentActions(boolean show) {
         if (mMenu != null) {
@@ -234,7 +211,7 @@ public class MainActivity extends TokenActivity implements
     }
 
     private void startNoteActivity(long noteId) {
-        Intent userIntent = new Intent(getApplicationContext(), NoteActivity.class);
+        Intent userIntent = new Intent(getApplicationContext(), NoteApi.class);
 
         Bundle bundle = new Bundle();
         bundle.putLong("note_id", noteId);
@@ -244,19 +221,11 @@ public class MainActivity extends TokenActivity implements
     }
 
     private void startCreateNoteActivity() {
-        Intent createNoteIntent = new Intent(MainActivity.this, CreateNoteActivity.class);
-        startActivity(createNoteIntent);
+        ActivityStarter.startCreateNoteActivity(MainActivity.this);
     }
 
     private void startUserActivity(String userSubject, String username) {
-        Intent userIntent = new Intent(getApplicationContext(), UserActivity.class);
-
-        Bundle bundle = new Bundle();
-        bundle.putString("user_subject", userSubject);
-        bundle.putString("user_name", username);
-        userIntent.putExtras(bundle);
-
-        startActivity(userIntent);
+        ActivityStarter.startUserActivity(MainActivity.this, userSubject, username);
     }
 
     private void showUsersFragment() {
@@ -269,15 +238,15 @@ public class MainActivity extends TokenActivity implements
 
         // Replace whatever is in the fragment_container view with this fragment,
         // and add the transaction to the back stack
-        mUsersFragment = UsersFragment.newInstance(mUserSubject);
-        fragmentTransaction.replace(R.id.fragment_container, mUsersFragment, "Users");
+        UsersFragment usersFragment = UsersFragment.newInstance(mUserSubject);
+        fragmentTransaction.replace(R.id.fragment_container, usersFragment, "Users");
         fragmentTransaction.addToBackStack(null);
         // Commit the transaction
         fragmentTransaction.commit();
     }
 
     private void showDayFragment() {
-        setActionBarTitle(mDateFormatter.format(mCurrentDate));
+        setActionBarTitle(DATE_FORMAT.format(mCurrentDate));
 
         toggleDayFragmentActions(true);
 
@@ -286,7 +255,7 @@ public class MainActivity extends TokenActivity implements
 
         // Replace whatever is in the fragment_container view with this fragment,
         // and add the transaction to the back stack
-        mDayFragment = new DayFragment();
+        mDayFragment = DayFragment.newInstance(mCurrentDate);
         fragmentTransaction.replace(R.id.fragment_container, mDayFragment, "DayFragment");
 
         fragmentManager.popBackStack();
@@ -306,13 +275,13 @@ public class MainActivity extends TokenActivity implements
         FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
         fragmentTransaction.addToBackStack(null);
 
-        mHomeFragment = HomeFragment.newInstance("Hello home fragment");
-        fragmentTransaction.replace(R.id.fragment_container, mHomeFragment, "HomeFragment");
+        HomeFragment homeFragment = HomeFragment.newInstance("Hello home fragment");
+        fragmentTransaction.replace(R.id.fragment_container, homeFragment, "HomeFragment");
 
         // Commit the transaction
         fragmentTransaction.commit();
 
-        mCurrentFragment = mHomeFragment;
+        mCurrentFragment = homeFragment;
     }
 
     @Override
@@ -338,8 +307,7 @@ public class MainActivity extends TokenActivity implements
 
         }
 
-        DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
-        drawer.closeDrawer(GravityCompat.START);
+        mDrawerLayout.closeDrawer(GravityCompat.START);
         return true;
     }
 
@@ -347,7 +315,6 @@ public class MainActivity extends TokenActivity implements
     public void onDayFragmentCreated(View view) {
     }
 
-    @Override
     public void addNote(Note note) {
         Log.d(TAG, note.toString());
         SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss Z", Locale.US);
@@ -361,29 +328,8 @@ public class MainActivity extends TokenActivity implements
 
     @Override
     public void selectDay(Date date) {
-        mCurrentDate = date;
-
-        mDayFragment.setDate(mCurrentDate);
-
-        setActionBarTitle(mDateFormatter.format(mCurrentDate));
-        mLoadingTask = new CallServiceAsyncTask(this, mLoadingCallback, mToken);
-
-        Calendar calendar = Calendar.getInstance();
-        calendar.setTime(mCurrentDate);
-
-        String path = String.format("api/users/%s/notes?filter=", mUserSubject);
-        String rawQuery = String.format(Locale.US, "((DateCreated Ge %d-%d-%d 00:00:00 -0700) And (DateCreated Le %d-%d-%d 23:59:59 -0700))",
-                calendar.get(Calendar.YEAR), calendar.get(Calendar.MONTH) + 1, calendar.get(Calendar.DAY_OF_MONTH),
-                calendar.get(Calendar.YEAR), calendar.get(Calendar.MONTH) + 1, calendar.get(Calendar.DAY_OF_MONTH));
-
-        String encodedQuery = "";
-        try {
-            encodedQuery = URLEncoder.encode(rawQuery, "UTF-8");
-        } catch (Exception e) {
-        }
-
-        path += encodedQuery;
-        mLoadingTask.execute(path);
+        setActionBarTitle(DATE_FORMAT.format(date));
+        mDayFragment.setDate(date);
     }
 
     @Override
@@ -392,34 +338,21 @@ public class MainActivity extends TokenActivity implements
     }
 
     @Override
+    public void showUser(String subject, String username) {
+        startUserActivity(subject, username);
+    }
+
+    @Override
     public void onHomeFragmentCreated(View view) {
         setActionBarTitle("Feed");
     }
 
     @Override
-    public void refreshFeed() {
-        mGetFeedTask = new CallServiceAsyncTask(this, mGetFeedCallback, mToken);
-
-        String path = "api/notes?sort=";
-        String rawQuery = "-datecreated";
-
-        String encodedQuery = "";
-        try {
-            encodedQuery = URLEncoder.encode(rawQuery, "UTF-8");
-        } catch (Exception e) {
-        }
-
-        path += encodedQuery;
-        mGetFeedTask.execute(path);
-    }
-
-    @Override
-    public void onMyStuffFragmentCreated(View view) {
+    public void onUserNotesFragmentCreated(View view) {
     }
 
     @Override
     public void onUserInfoFragmentCreated(View view) {
-
     }
 
     @Override
@@ -427,46 +360,13 @@ public class MainActivity extends TokenActivity implements
         setActionBarTitle("Users");
     }
 
-    @Override
-    public void refreshUsers() {
-        mGetUsersTask = new CallServiceAsyncTask(this, mGetUsersCallback, mToken);
-
-        String path = "api/users?filter=";
-        String rawQuery = String.format(Locale.US, "(Subject Ne %s)", mUserSubject);
-
-        String encodedQuery = "";
-        try {
-            encodedQuery = URLEncoder.encode(rawQuery, "UTF-8");
-        } catch (Exception e) {
-        }
-
-        path += encodedQuery;
-        mGetUsersTask.execute(path);
-    }
-
-    @Override
-    public void showUser(String subject, String username) {
-        startUserActivity(subject, username);
-    }
 
     @Override
     public void callback(IAsyncCallback cb) {
-        if (cb.equals(mLoadingCallback)) {
-            mLoadingTask = null;
-            List<Note> notes = JsonHelper.getNotes(mLoadingCallback.getResult().getResult());
-            mDayFragment.onNotesRetrieved(notes);
-        } else if (cb.equals(mAddNoteCallback)) {
+       if (cb.equals(mAddNoteCallback)) {
             mAddNoteTask = null;
             Note newNote = JsonHelper.getNote(mAddNoteCallback.getResult().getResult());
             mCurrentFragment.onNoteAdded(newNote);
-        } else if (cb.equals(mGetFeedCallback)) {
-            mGetFeedTask = null;
-            List<Note> notes = JsonHelper.getNotes(mGetFeedCallback.getResult().getResult());
-            mHomeFragment.onNotesRetrieved(notes);
-        } else if (cb.equals(mGetUsersCallback)) {
-            mGetUsersTask = null;
-            List<User> users = JsonHelper.getUsers(mGetUsersCallback.getResult().getResult());
-            mUsersFragment.onUsersRetrieved(users);
         }
     }
 }

@@ -5,33 +5,18 @@ import android.support.design.widget.TabLayout;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentPagerAdapter;
-import android.support.v4.app.FragmentTransaction;
 import android.support.v4.view.ViewPager;
-import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.Toolbar;
 import android.view.View;
 
-import java.net.URLEncoder;
-import java.util.List;
-import java.util.Locale;
-
-import foodbook.thinmint.IActivityCallback;
-import foodbook.thinmint.IAsyncCallback;
 import foodbook.thinmint.R;
 import foodbook.thinmint.activities.TokenActivity;
-import foodbook.thinmint.activities.mystuff.UserInfoFragment;
-import foodbook.thinmint.activities.mystuff.UserNotesFragment;
-import foodbook.thinmint.activities.notes.NoteActivity;
-import foodbook.thinmint.activities.users.UserFragment;
-import foodbook.thinmint.models.JsonHelper;
-import foodbook.thinmint.models.domain.Note;
-import foodbook.thinmint.tasks.CallServiceAsyncTask;
-import foodbook.thinmint.tasks.CallServiceCallback;
+import foodbook.thinmint.activities.notes.NoteApi;
 
 public class UserActivity extends TokenActivity implements
         UserInfoFragment.OnUserInfoFragmentDataListener,
-        UserNotesFragment.OnMyStuffFragmentDataListener {
+        UserNotesFragment.OnUserNotesFragmentDataListener {
 
     private FragmentPagerAdapter mFragmentPagerAdapter;
 
@@ -71,7 +56,7 @@ public class UserActivity extends TokenActivity implements
     }
 
     private void startNoteActivity(long noteId) {
-        Intent userIntent = new Intent(getApplicationContext(), NoteActivity.class);
+        Intent userIntent = new Intent(getApplicationContext(), NoteApi.class);
 
         Bundle bundle = new Bundle();
         bundle.putLong("note_id", noteId);
@@ -86,7 +71,7 @@ public class UserActivity extends TokenActivity implements
     }
 
     @Override
-    public void onMyStuffFragmentCreated(View view) {
+    public void onUserNotesFragmentCreated(View view) {
 
     }
 

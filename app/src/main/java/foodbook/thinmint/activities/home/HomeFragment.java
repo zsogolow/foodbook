@@ -12,13 +12,20 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
+import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.List;
 
+import foodbook.thinmint.IApiCallback;
+import foodbook.thinmint.IAsyncCallback;
 import foodbook.thinmint.R;
-import foodbook.thinmint.activities.common.OnNotesListInteractionListener;
+import foodbook.thinmint.activities.TokenFragment;
 import foodbook.thinmint.activities.adapters.NotesRecyclerAdapter;
+import foodbook.thinmint.activities.common.OnNotesListInteractionListener;
+import foodbook.thinmint.models.JsonHelper;
 import foodbook.thinmint.models.domain.Note;
+import foodbook.thinmint.tasks.CallServiceAsyncTask;
+import foodbook.thinmint.tasks.CallServiceCallback;
 
 /**
  * A simple {@link Fragment} subclass.
@@ -28,7 +35,7 @@ import foodbook.thinmint.models.domain.Note;
  * Use the {@link HomeFragment#newInstance} factory method to
  * create an instance of this fragment.
  */
-public class HomeFragment extends Fragment implements OnNotesListInteractionListener,
+public class HomeFragment extends TokenFragment implements IApiCallback, OnNotesListInteractionListener,
         NotesRecyclerAdapter.ViewHolder.IOnNoteClickListener {
     private static final String ARG_PARAM1 = "param1";
 
@@ -41,6 +48,8 @@ public class HomeFragment extends Fragment implements OnNotesListInteractionList
     private NotesRecyclerAdapter mAdapter;
     private RecyclerView.LayoutManager mLayoutManager;
 
+    private CallServiceAsyncTask mGetFeedTask;
+    private CallServiceCallback mGetFeedCallback;
 
     public HomeFragment() {
         // Required empty public constructor
@@ -67,6 +76,12 @@ public class HomeFragment extends Fragment implements OnNotesListInteractionList
         if (getArguments() != null) {
             mParam1 = getArguments().getString(ARG_PARAM1);
         }
+
+        initToken();
+        initUser();
+
+        mGetFeedCallback = new CallServiceCallback(this);
+
     }
 
     @Override
@@ -133,11 +148,22 @@ public class HomeFragment extends Fragment implements OnNotesListInteractionList
 
     private void refreshFeed() {
         setLoading(true);
-        mListener.refreshFeed();
+        mGetFeedTask = new CallServiceAsyncTask(getContext(), mGetFeedCallback, mToken);
+
+        String path = "api/notes?sort=";
+        String rawQuery = "-datecreated";
+
+        String encodedQuery = "";
+        try {
+            encodedQuery = URLEncoder.encode(rawQuery, "UTF-8");
+        } catch (Exception e) {
+        }
+
+        path += encodedQuery;
+        mGetFeedTask.execute(path);
     }
 
-    @Override
-    public void onNotesRetrieved(List<Note> notes) {
+    private void onNotesRetrieved(List<Note> notes) {
         mAdapter.swap(notes);
         setLoading(false);
     }
@@ -148,20 +174,17 @@ public class HomeFragment extends Fragment implements OnNotesListInteractionList
         setLoading(false);
     }
 
-    /**
-     * This interface must be implemented by activities that contain this
-     * fragment to allow an interaction in this fragment to be communicated
-     * to the activity and potentially other fragments contained in that
-     * activity.
-     * <p>
-     * See the Android Training lesson <a href=
-     * "http://developer.android.com/training/basics/fragments/communicating.html"
-     * >Communicating with Other Fragments</a> for more information.
-     */
+    @Override
+    public void callback(IAsyncCallback cb) {
+        if (cb.equals(mGetFeedCallback)) {
+            mGetFeedTask = null;
+            List<Note> notes = JsonHelper.getNotes(mGetFeedCallback.getResult().getResult());
+            onNotesRetrieved(notes);
+        }
+    }
+
     public interface OnHomeFragmentDataListener {
         void onHomeFragmentCreated(View view);
-
-        void refreshFeed();
 
         void showNote(long noteId);
     }

@@ -1,7 +1,6 @@
-package foodbook.thinmint.activities.mystuff;
+package foodbook.thinmint.activities.users;
 
 import android.content.Context;
-import android.net.Uri;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.view.LayoutInflater;
@@ -20,11 +19,8 @@ import foodbook.thinmint.activities.TokenFragment;
  * create an instance of this fragment.
  */
 public class UserInfoFragment extends TokenFragment {
-    // TODO: Rename parameter arguments, choose names that match
-    // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
     private static final String ARG_USERID = "userid";
 
-    // TODO: Rename and change types of parameters
     private String mUserId;
 
     private OnUserInfoFragmentDataListener mListener;
