@@ -30,6 +30,7 @@ import java.util.Date;
 import java.util.Locale;
 
 import foodbook.thinmint.R;
+import foodbook.thinmint.api.Query;
 import foodbook.thinmint.api.WebAPIConnect;
 import foodbook.thinmint.api.WebAPIResult;
 import foodbook.thinmint.idsrv.Token;
@@ -231,7 +232,12 @@ public class LoginActivity extends AppCompatActivity {
                 SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
                 prefs.edit().putString(Constants.USER_SUBJECT, userInfo.getSubject()).apply();
 
-                WebAPIResult apiResult = new WebAPIConnect().callService(mToken.getAccessToken(), "api/users/" + userInfo.getSubject());
+                Query query = Query.builder()
+                        .setPath("api/users/" + userInfo.getSubject())
+                        .setAccessToken(mToken.getAccessToken())
+                        .build();
+                WebAPIResult apiResult = new WebAPIConnect().callService(query);
+
                 if (!apiResult.isSuccess()) {
                     JSONObject jsonObject = new JSONObject();
                     SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss Z", Locale.US);

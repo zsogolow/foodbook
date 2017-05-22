@@ -7,12 +7,12 @@ import android.support.v4.app.Fragment;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
-import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -20,8 +20,10 @@ import foodbook.thinmint.IApiCallback;
 import foodbook.thinmint.IAsyncCallback;
 import foodbook.thinmint.R;
 import foodbook.thinmint.activities.TokenFragment;
+import foodbook.thinmint.activities.adapters.EndlessRecyclerViewScrollListener;
 import foodbook.thinmint.activities.adapters.NotesRecyclerAdapter;
 import foodbook.thinmint.activities.common.OnNotesListInteractionListener;
+import foodbook.thinmint.api.Query;
 import foodbook.thinmint.models.JsonHelper;
 import foodbook.thinmint.models.domain.Note;
 import foodbook.thinmint.tasks.CallServiceAsyncTask;
@@ -32,11 +34,13 @@ import foodbook.thinmint.tasks.CallServiceCallback;
  * Activities that contain this fragment must implement the
  * {@link OnHomeFragmentDataListener} interface
  * to handle interaction events.
- * Use the {@link HomeFragment#newInstance} factory method to
+ * Use the {@link FeedFragment#newInstance} factory method to
  * create an instance of this fragment.
  */
-public class HomeFragment extends TokenFragment implements IApiCallback, OnNotesListInteractionListener,
+public class FeedFragment extends TokenFragment implements IApiCallback, OnNotesListInteractionListener,
         NotesRecyclerAdapter.ViewHolder.IOnNoteClickListener {
+    private static final String TAG = "FeedFragment";
+
     private static final String ARG_PARAM1 = "param1";
 
     private String mParam1;
@@ -46,12 +50,15 @@ public class HomeFragment extends TokenFragment implements IApiCallback, OnNotes
     private RecyclerView mListView;
     private SwipeRefreshLayout mSwipeRefreshLayout;
     private NotesRecyclerAdapter mAdapter;
-    private RecyclerView.LayoutManager mLayoutManager;
+    private LinearLayoutManager mLayoutManager;
 
     private CallServiceAsyncTask mGetFeedTask;
     private CallServiceCallback mGetFeedCallback;
+    private CallServiceCallback mLoadMoreCallback;
 
-    public HomeFragment() {
+    private EndlessRecyclerViewScrollListener mScrollListener;
+
+    public FeedFragment() {
         // Required empty public constructor
     }
 
@@ -60,10 +67,10 @@ public class HomeFragment extends TokenFragment implements IApiCallback, OnNotes
      * this fragment using the provided parameters.
      *
      * @param param1 Parameter 1.
-     * @return A new instance of fragment HomeFragment.
+     * @return A new instance of fragment FeedFragment.
      */
-    public static HomeFragment newInstance(String param1) {
-        HomeFragment fragment = new HomeFragment();
+    public static FeedFragment newInstance(String param1) {
+        FeedFragment fragment = new FeedFragment();
         Bundle args = new Bundle();
         args.putString(ARG_PARAM1, param1);
         fragment.setArguments(args);
@@ -81,13 +88,12 @@ public class HomeFragment extends TokenFragment implements IApiCallback, OnNotes
         initUser();
 
         mGetFeedCallback = new CallServiceCallback(this);
-
+        mLoadMoreCallback = new CallServiceCallback(this);
     }
 
     @Override
     public void onResume() {
         super.onResume();
-        refreshFeed();
     }
 
     @Override
@@ -113,7 +119,25 @@ public class HomeFragment extends TokenFragment implements IApiCallback, OnNotes
             }
         });
 
-        mListener.onHomeFragmentCreated(inflated);
+        mListener.onFeedFragmentCreated(inflated);
+
+         mScrollListener = new EndlessRecyclerViewScrollListener(mLayoutManager) {
+            @Override
+            public void onLoadMore(int page, int totalItemsCount, RecyclerView view) {
+                Query query = Query.builder()
+                        .setPath("api/notes")
+                        .setAccessToken(mToken.getAccessToken())
+                        .setSort("-datecreated")
+                        .setPage(page + 1)
+                        .build();
+                mGetFeedTask = new CallServiceAsyncTask(getContext(), mLoadMoreCallback, mToken);
+                mGetFeedTask.execute(query);
+            }
+        };
+
+        mListView.addOnScrollListener(mScrollListener);
+
+        refreshFeed();
 
         return inflated;
     }
@@ -142,7 +166,7 @@ public class HomeFragment extends TokenFragment implements IApiCallback, OnNotes
 
     @Override
     public void onNoteClicked(View caller) {
-        TextView hiddenNoteIdTextView = (TextView)caller.findViewById(R.id.hidden_note_id);
+        TextView hiddenNoteIdTextView = (TextView) caller.findViewById(R.id.hidden_note_id);
         String noteId = hiddenNoteIdTextView.getText().toString();
         mListener.showNote(Long.parseLong(noteId));
     }
@@ -153,24 +177,29 @@ public class HomeFragment extends TokenFragment implements IApiCallback, OnNotes
 
     private void refreshFeed() {
         setLoading(true);
+
+        mScrollListener.resetState();
+
         mGetFeedTask = new CallServiceAsyncTask(getContext(), mGetFeedCallback, mToken);
 
-        String path = "api/notes?sort=";
-        String rawQuery = "-datecreated";
+        String path = "api/notes";
 
-        String encodedQuery = "";
-        try {
-            encodedQuery = URLEncoder.encode(rawQuery, "UTF-8");
-        } catch (Exception e) {
-        }
+        Query query = Query.builder()
+                .setPath(path)
+                .setAccessToken(mToken.getAccessToken())
+                .setSort("-datecreated")
+                .build();
 
-        path += encodedQuery;
-        mGetFeedTask.execute(path);
+        mGetFeedTask.execute(query);
     }
 
     private void onNotesRetrieved(List<Note> notes) {
         mAdapter.swap(notes);
         setLoading(false);
+    }
+
+    private void onLoadedMore(List<Note> notes) {
+        mAdapter.append(notes);
     }
 
     @Override
@@ -185,11 +214,15 @@ public class HomeFragment extends TokenFragment implements IApiCallback, OnNotes
             mGetFeedTask = null;
             List<Note> notes = JsonHelper.getNotes(mGetFeedCallback.getResult().getResult());
             onNotesRetrieved(notes);
+        } else if (cb.equals(mLoadMoreCallback)) {
+            mGetFeedTask = null;
+            List<Note> notes = JsonHelper.getNotes(mLoadMoreCallback.getResult().getResult());
+            onLoadedMore(notes);
         }
     }
 
     public interface OnHomeFragmentDataListener {
-        void onHomeFragmentCreated(View view);
+        void onFeedFragmentCreated(View view);
 
         void showNote(long noteId);
     }

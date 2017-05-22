@@ -17,6 +17,7 @@ import foodbook.thinmint.IApiCallback;
 import foodbook.thinmint.IAsyncCallback;
 import foodbook.thinmint.R;
 import foodbook.thinmint.activities.TokenFragment;
+import foodbook.thinmint.api.Query;
 import foodbook.thinmint.models.JsonHelper;
 import foodbook.thinmint.models.domain.User;
 import foodbook.thinmint.tasks.CallServiceAsyncTask;
@@ -79,7 +80,6 @@ public class UserInfoFragment extends TokenFragment implements IApiCallback {
     @Override
     public void onResume() {
         super.onResume();
-        refreshUser();
     }
 
     @Override
@@ -103,6 +103,8 @@ public class UserInfoFragment extends TokenFragment implements IApiCallback {
                 refreshUser();
             }
         });
+
+        refreshUser();
 
         return inflated;
     }
@@ -133,16 +135,13 @@ public class UserInfoFragment extends TokenFragment implements IApiCallback {
         mGetUserTask = new CallServiceAsyncTask(getContext(), mGetUserCallback, mToken);
 
         String path = String.format(Locale.US, "api/users/%s", mUserId);
-        String rawQuery = "";
 
-        String encodedQuery = "";
-        try {
-            encodedQuery = URLEncoder.encode(rawQuery, "UTF-8");
-        } catch (Exception e) {
-        }
+        Query query = Query.builder()
+                .setPath(path)
+                .setAccessToken(mToken.getAccessToken())
+                .build();
 
-        path += encodedQuery;
-        mGetUserTask.execute(path);
+        mGetUserTask.execute(query);
     }
 
     private void onUserRetrieved(User user) {

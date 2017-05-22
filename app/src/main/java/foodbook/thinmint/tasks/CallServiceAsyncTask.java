@@ -4,6 +4,7 @@ import android.content.Context;
 import android.os.AsyncTask;
 import android.os.SystemClock;
 
+import foodbook.thinmint.api.Query;
 import foodbook.thinmint.api.WebAPIConnect;
 import foodbook.thinmint.api.WebAPIResult;
 import foodbook.thinmint.constants.Constants;
@@ -15,7 +16,7 @@ import foodbook.thinmint.idsrv.TokenResult;
  * Created by Zachery.Sogolow on 5/9/2017.
  */
 
-public class CallServiceAsyncTask extends AsyncTask<String, String, WebAPIResult> {
+public class CallServiceAsyncTask extends AsyncTask<Query, String, WebAPIResult> {
 
     private Context mContext;
     private CallServiceCallback mCallback;
@@ -28,9 +29,9 @@ public class CallServiceAsyncTask extends AsyncTask<String, String, WebAPIResult
     }
 
     @Override
-    protected WebAPIResult doInBackground(String... params) { // params[0] is path
+    protected WebAPIResult doInBackground(Query... params) { // params[0] is path
         WebAPIResult result = null;
-        String path = params[0];
+        Query query = params[0];
         WebAPIConnect connect = new WebAPIConnect();
         publishProgress("Getting data...");
 
@@ -42,7 +43,7 @@ public class CallServiceAsyncTask extends AsyncTask<String, String, WebAPIResult
         }
 
         if (!TokenHelper.isTokenExpired(mToken)) {
-            result = connect.callService(mToken.getAccessToken(), path);
+            result = connect.callService(query);
         }
 
         return result;

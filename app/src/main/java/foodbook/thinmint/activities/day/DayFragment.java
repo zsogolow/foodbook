@@ -28,6 +28,7 @@ import foodbook.thinmint.activities.TokenFragment;
 import foodbook.thinmint.activities.common.OnNotesListInteractionListener;
 import foodbook.thinmint.activities.adapters.NotesRecyclerAdapter;
 import foodbook.thinmint.activities.users.UsersFragment;
+import foodbook.thinmint.api.Query;
 import foodbook.thinmint.models.JsonHelper;
 import foodbook.thinmint.models.domain.Note;
 import foodbook.thinmint.tasks.CallServiceAsyncTask;
@@ -85,7 +86,6 @@ public class DayFragment extends TokenFragment implements OnNotesListInteraction
     @Override
     public void onResume() {
         super.onResume();
-        refreshList();
     }
 
     @Override
@@ -116,6 +116,8 @@ public class DayFragment extends TokenFragment implements OnNotesListInteraction
         });
 
         mListener.onDayFragmentCreated(inflated);
+
+        refreshList();
 
         return inflated;
     }
@@ -155,19 +157,18 @@ public class DayFragment extends TokenFragment implements OnNotesListInteraction
         Calendar calendar = Calendar.getInstance();
         calendar.setTime(mCurrentDate);
 
-        String path = String.format("api/users/%s/notes?filter=", mUserSubject);
+        String path = String.format("api/users/%s/notes", mUserSubject);
         String rawQuery = String.format(Locale.US, "((DateCreated Ge %d-%d-%d 00:00:00 -0700) And (DateCreated Le %d-%d-%d 23:59:59 -0700))",
                 calendar.get(Calendar.YEAR), calendar.get(Calendar.MONTH) + 1, calendar.get(Calendar.DAY_OF_MONTH),
                 calendar.get(Calendar.YEAR), calendar.get(Calendar.MONTH) + 1, calendar.get(Calendar.DAY_OF_MONTH));
 
-        String encodedQuery = "";
-        try {
-            encodedQuery = URLEncoder.encode(rawQuery, "UTF-8");
-        } catch (Exception e) {
-        }
+        Query query = Query.builder()
+                .setPath(path)
+                .setAccessToken(mToken.getAccessToken())
+                .setFilter(rawQuery)
+                .build();
 
-        path += encodedQuery;
-        mLoadingTask.execute(path);
+        mLoadingTask.execute(query);
     }
 
     private void setLoading(boolean isLoading) {

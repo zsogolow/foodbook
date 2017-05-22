@@ -17,6 +17,7 @@ import foodbook.thinmint.IApiCallback;
 import foodbook.thinmint.IAsyncCallback;
 import foodbook.thinmint.R;
 import foodbook.thinmint.activities.TokenFragment;
+import foodbook.thinmint.api.Query;
 import foodbook.thinmint.models.JsonHelper;
 import foodbook.thinmint.models.domain.Note;
 import foodbook.thinmint.tasks.CallServiceAsyncTask;
@@ -55,7 +56,7 @@ public class NoteFragment extends TokenFragment implements IApiCallback {
      * this fragment using the provided parameters.
      *
      * @param noteid Parameter 1.
-     * @return A new instance of fragment HomeFragment.
+     * @return A new instance of fragment FeedFragment.
      */
     public static NoteFragment newInstance(long noteid) {
         NoteFragment fragment = new NoteFragment();
@@ -82,7 +83,6 @@ public class NoteFragment extends TokenFragment implements IApiCallback {
     @Override
     public void onResume() {
         super.onResume();
-        refreshNote();
     }
 
     @Override
@@ -104,6 +104,8 @@ public class NoteFragment extends TokenFragment implements IApiCallback {
         });
 
         mListener.onNoteFragmentCreated(inflated);
+
+        refreshNote();
 
         return inflated;
     }
@@ -146,16 +148,14 @@ public class NoteFragment extends TokenFragment implements IApiCallback {
         mGetNoteTask = new CallServiceAsyncTask(getContext(), mGetNoteCallback, mToken);
 
         String path = String.format(Locale.US,"api/notes/%d", mNoteId);
-        String rawQuery = "";
 
-        String encodedQuery = "";
-        try {
-            encodedQuery = URLEncoder.encode(rawQuery, "UTF-8");
-        } catch (Exception e) {
-        }
+        Query query = Query.builder()
+                .setPath(path)
+                .setAccessToken(mToken.getAccessToken())
+                .setSort("-datecreated")
+                .build();
 
-        path += encodedQuery;
-        mGetNoteTask.execute(path);
+        mGetNoteTask.execute(query);
     }
 
     @Override

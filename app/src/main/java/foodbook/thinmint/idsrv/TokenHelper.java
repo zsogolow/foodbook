@@ -29,10 +29,14 @@ public class TokenHelper {
     }
 
     public static boolean isTokenExpired(Token token) {
-        long now = System.currentTimeMillis();
-        long expiresInMs = Long.parseLong(token.getExpiresIn()) * 1000;
-        long lastRefresh = token.getLastRetrieved();
-        return (lastRefresh + expiresInMs) < (now + 15000);
+        try {
+            long now = System.currentTimeMillis();
+            long expiresInMs = Long.parseLong(token.getExpiresIn()) * 1000;
+            long lastRefresh = token.getLastRetrieved();
+            return (lastRefresh + expiresInMs) < (now + 15000);
+        } catch (Exception e) {
+            return true;
+        }
     }
 
     public static Token getToken(Context context) {

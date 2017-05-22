@@ -113,6 +113,11 @@ public class NotesRecyclerAdapter extends RecyclerView.Adapter<NotesRecyclerAdap
         notifyDataSetChanged();
     }
 
+    public void append(List<Note> notes){
+        mNotes.addAll(notes);
+        notifyDataSetChanged();
+    }
+
     public void add(Note note){
         mNotes.add(0, note);
         notifyDataSetChanged();

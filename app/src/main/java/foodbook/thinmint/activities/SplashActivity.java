@@ -6,6 +6,7 @@ import android.preference.PreferenceManager;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 
+import foodbook.thinmint.api.Query;
 import foodbook.thinmint.api.WebAPIConnect;
 import foodbook.thinmint.api.WebAPIResult;
 import foodbook.thinmint.constants.Constants;
@@ -70,7 +71,12 @@ public class SplashActivity extends AppCompatActivity {
                 SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
                 prefs.edit().putString(Constants.USER_SUBJECT, userInfo.getSubject()).apply();
 
-                WebAPIResult apiResult = new WebAPIConnect().callService(mToken.getAccessToken(), "api/users/" + userInfo.getSubject());
+                Query query = Query.builder()
+                        .setPath("api/users/" + userInfo.getSubject())
+                        .setAccessToken(mToken.getAccessToken())
+                        .build();
+
+                WebAPIResult apiResult = new WebAPIConnect().callService(query);
                 User user = JsonHelper.getUser(apiResult.getResult());
                 prefs.edit().putLong(Constants.USER_ID, user.getId()).apply();
                 prefs.edit().putString(Constants.USER_NAME, user.getUsername()).apply();

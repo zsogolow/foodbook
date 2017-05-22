@@ -23,6 +23,7 @@ import foodbook.thinmint.IAsyncCallback;
 import foodbook.thinmint.R;
 import foodbook.thinmint.activities.TokenFragment;
 import foodbook.thinmint.activities.adapters.UsersRecyclerAdapter;
+import foodbook.thinmint.api.Query;
 import foodbook.thinmint.models.JsonHelper;
 import foodbook.thinmint.models.domain.User;
 import foodbook.thinmint.tasks.CallServiceAsyncTask;
@@ -62,7 +63,7 @@ public class UsersFragment extends TokenFragment implements IApiCallback,
      * this fragment using the provided parameters.
      *
      * @param userid Parameter 1.
-     * @return A new instance of fragment HomeFragment.
+     * @return A new instance of fragment FeedFragment.
      */
     public static UsersFragment newInstance(String userid) {
         UsersFragment fragment = new UsersFragment();
@@ -89,7 +90,6 @@ public class UsersFragment extends TokenFragment implements IApiCallback,
     @Override
     public void onResume() {
         super.onResume();
-        refreshUsers();
     }
 
     @Override
@@ -116,6 +116,8 @@ public class UsersFragment extends TokenFragment implements IApiCallback,
         });
 
         mListener.onUsersFragmentCreated(inflated);
+
+        refreshUsers();
 
         return inflated;
     }
@@ -151,19 +153,14 @@ public class UsersFragment extends TokenFragment implements IApiCallback,
         mGetUsersTask = new CallServiceAsyncTask(getContext(), mGetUsersCallback, mToken);
 
         String path = "api/users";
-        String rawQuery = "";
 
-//        String path = "api/users?filter=";
-//        String rawQuery = String.format(Locale.US, "(Subject Ne %s)", mUserSubject);
+        Query query = Query.builder()
+                .setPath(path)
+                .setAccessToken(mToken.getAccessToken())
+                .build();
 
-        String encodedQuery = "";
-        try {
-            encodedQuery = URLEncoder.encode(rawQuery, "UTF-8");
-        } catch (Exception e) {
-        }
-
-        path += encodedQuery;
-        mGetUsersTask.execute(path);    }
+        mGetUsersTask.execute(query);
+    }
 
     private void onUsersRetrieved(List<User> users) {
         mAdapter.swap(users);
@@ -174,8 +171,8 @@ public class UsersFragment extends TokenFragment implements IApiCallback,
 
     @Override
     public void onUserClicked(View caller) {
-        TextView hiddenUserSubjectTextView = (TextView)caller.findViewById(R.id.hidden_user_id);
-        TextView usernameTextView = (TextView)caller.findViewById(R.id.user_name);
+        TextView hiddenUserSubjectTextView = (TextView) caller.findViewById(R.id.hidden_user_id);
+        TextView usernameTextView = (TextView) caller.findViewById(R.id.user_name);
         String userSubject = hiddenUserSubjectTextView.getText().toString();
         String username = usernameTextView.getText().toString();
         mListener.showUser(userSubject, username);

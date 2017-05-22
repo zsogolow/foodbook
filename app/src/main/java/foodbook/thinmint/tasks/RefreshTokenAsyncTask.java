@@ -6,6 +6,7 @@ import android.content.SharedPreferences;
 import android.os.AsyncTask;
 import android.preference.PreferenceManager;
 
+import foodbook.thinmint.api.Query;
 import foodbook.thinmint.api.WebAPIConnect;
 import foodbook.thinmint.api.WebAPIResult;
 import foodbook.thinmint.idsrv.Token;
@@ -58,7 +59,12 @@ public class RefreshTokenAsyncTask extends AsyncTask<String, String, TokenResult
             SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(mContext.getApplicationContext());
             prefs.edit().putString(Constants.USER_SUBJECT, userInfo.getSubject()).apply();
 
-            WebAPIResult apiResult = new WebAPIConnect().callService(mToken.getAccessToken(), "api/users/" + userInfo.getSubject());
+            Query query = Query.builder()
+                    .setPath("api/users/" + userInfo.getSubject())
+                    .setAccessToken(mToken.getAccessToken())
+                    .build();
+
+            WebAPIResult apiResult = new WebAPIConnect().callService(query);
             User user = JsonHelper.getUser(apiResult.getResult());
             prefs.edit().putLong(Constants.USER_ID, user.getId()).apply();
             prefs.edit().putString(Constants.USER_NAME, user.getUsername()).apply();

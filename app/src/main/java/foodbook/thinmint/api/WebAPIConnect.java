@@ -23,17 +23,17 @@ public class WebAPIConnect<T> {
 
     private String url = Constants.ThinMintAPI;
 
-    public WebAPIResult callService(String accessToken, String path) {
+    public WebAPIResult callService(Query query) {
         WebAPIResult result = new WebAPIResult();
 
         try {
 
-            String resourceUri = url + path;
+            String resourceUri = url + query.toString();
             URL obj = new URL(resourceUri);
 
             HttpURLConnection con = (HttpURLConnection) obj.openConnection();
             con.setRequestMethod("GET");
-            con.setRequestProperty("Authorization", "Bearer " + accessToken);
+            con.setRequestProperty("Authorization", "Bearer " + query.getAccessToken());
 
             int responseCode = con.getResponseCode();
 

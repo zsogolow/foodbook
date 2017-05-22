@@ -23,6 +23,7 @@ import foodbook.thinmint.R;
 import foodbook.thinmint.activities.TokenFragment;
 import foodbook.thinmint.activities.common.OnNotesListInteractionListener;
 import foodbook.thinmint.activities.adapters.NotesRecyclerAdapter;
+import foodbook.thinmint.api.Query;
 import foodbook.thinmint.models.JsonHelper;
 import foodbook.thinmint.models.domain.Note;
 import foodbook.thinmint.tasks.CallServiceAsyncTask;
@@ -61,7 +62,7 @@ public class UserNotesFragment extends TokenFragment implements OnNotesListInter
      * this fragment using the provided parameters.
      *
      * @param userid Parameter 1.
-     * @return A new instance of fragment HomeFragment.
+     * @return A new instance of fragment FeedFragment.
      */
     public static UserNotesFragment newInstance(String userid) {
         UserNotesFragment fragment = new UserNotesFragment();
@@ -82,6 +83,11 @@ public class UserNotesFragment extends TokenFragment implements OnNotesListInter
         initToken();
 
         mGetMyStuffCallback = new CallServiceCallback(this);
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
     }
 
     @Override
@@ -109,13 +115,9 @@ public class UserNotesFragment extends TokenFragment implements OnNotesListInter
 
         mListener.onUserNotesFragmentCreated(inflated);
 
-        return inflated;
-    }
-
-    @Override
-    public void onResume() {
-        super.onResume();
         refreshMyNotes();
+
+        return inflated;
     }
 
     @Override
@@ -155,17 +157,15 @@ public class UserNotesFragment extends TokenFragment implements OnNotesListInter
         setLoading(true);
         mGetMyNotesTask = new CallServiceAsyncTask(getContext(), mGetMyStuffCallback, mToken);
 
-        String path = String.format(Locale.US, "api/users/%s/notes?sort=", mUserId);
-        String rawQuery = "-datecreated";
+        String path = String.format(Locale.US, "api/users/%s/notes", mUserId);
 
-        String encodedQuery = "";
-        try {
-            encodedQuery = URLEncoder.encode(rawQuery, "UTF-8");
-        } catch (Exception e) {
-        }
+        Query query = Query.builder()
+                .setPath(path)
+                .setAccessToken(mToken.getAccessToken())
+                .setSort("-datecreated")
+                .build();
 
-        path += encodedQuery;
-        mGetMyNotesTask.execute(path);
+        mGetMyNotesTask.execute(query);
     }
 
     public void onNotesRetrieved(List<Note> notes) {

@@ -7,7 +7,6 @@ import android.preference.PreferenceManager;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentTransaction;
-import android.util.Log;
 import android.view.MenuInflater;
 import android.view.View;
 import android.support.design.widget.NavigationView;
@@ -20,11 +19,7 @@ import android.view.MenuItem;
 import android.widget.TextView;
 
 import java.text.DateFormat;
-import java.text.SimpleDateFormat;
 import java.util.Date;
-import java.util.HashMap;
-import java.util.Locale;
-import java.util.Map;
 
 import foodbook.thinmint.IApiCallback;
 import foodbook.thinmint.IAsyncCallback;
@@ -32,20 +27,16 @@ import foodbook.thinmint.R;
 import foodbook.thinmint.activities.common.OnNotesListInteractionListener;
 import foodbook.thinmint.activities.day.DatePickerFragment;
 import foodbook.thinmint.activities.day.DayFragment;
-import foodbook.thinmint.activities.home.HomeFragment;
+import foodbook.thinmint.activities.home.FeedFragment;
 import foodbook.thinmint.activities.users.UserNotesFragment;
 import foodbook.thinmint.activities.users.UserInfoFragment;
 import foodbook.thinmint.activities.notes.NoteActivity;
 import foodbook.thinmint.activities.users.UsersFragment;
 import foodbook.thinmint.constants.Constants;
-import foodbook.thinmint.models.JsonHelper;
-import foodbook.thinmint.models.domain.Note;
-import foodbook.thinmint.tasks.CallServiceCallback;
-import foodbook.thinmint.tasks.PostServiceAsyncTask;
 
 public class MainActivity extends TokenActivity implements
         IApiCallback, NavigationView.OnNavigationItemSelectedListener,
-        DayFragment.OnDayFragmentDataListener, HomeFragment.OnHomeFragmentDataListener,
+        DayFragment.OnDayFragmentDataListener, FeedFragment.OnHomeFragmentDataListener,
         UserNotesFragment.OnUserNotesFragmentDataListener, UserInfoFragment.OnUserInfoFragmentDataListener,
         UsersFragment.OnUsersFragmentDataListener {
     private static final String TAG = "MainActivity";
@@ -259,13 +250,13 @@ public class MainActivity extends TokenActivity implements
         FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
         fragmentTransaction.addToBackStack(null);
 
-        HomeFragment homeFragment = HomeFragment.newInstance("Hello home fragment");
-        fragmentTransaction.replace(R.id.fragment_container, homeFragment, "HomeFragment");
+        FeedFragment feedFragment = FeedFragment.newInstance("Hello home fragment");
+        fragmentTransaction.replace(R.id.fragment_container, feedFragment, "FeedFragment");
 
         // Commit the transaction
         fragmentTransaction.commit();
 
-        mCurrentFragment = homeFragment;
+        mCurrentFragment = feedFragment;
     }
 
     @Override
@@ -322,7 +313,7 @@ public class MainActivity extends TokenActivity implements
     }
 
     @Override
-    public void onHomeFragmentCreated(View view) {
+    public void onFeedFragmentCreated(View view) {
     }
 
     @Override
