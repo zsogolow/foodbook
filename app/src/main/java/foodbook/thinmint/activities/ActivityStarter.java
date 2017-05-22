@@ -2,10 +2,13 @@ package foodbook.thinmint.activities;
 
 import android.app.Activity;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 
 import foodbook.thinmint.activities.notes.CreateNoteActivity;
 import foodbook.thinmint.activities.users.UserActivity;
+import foodbook.thinmint.constants.Constants;
 
 /**
  * Created by Zachery.Sogolow on 5/10/2017.
@@ -37,5 +40,13 @@ public class ActivityStarter {
         bundle.putString("user_name", username);
         userIntent.putExtras(bundle);
         activity.startActivity(userIntent);
+    }
+
+    public static void logout(Activity activity) {
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(activity);
+        prefs.edit().putString(Constants.ACCESS_TOKEN_PREFERENCE_KEY, "").apply();
+        Intent loginActivity = new Intent(activity, LoginActivity.class);
+        activity.startActivity(loginActivity);
+        activity.finish();
     }
 }
