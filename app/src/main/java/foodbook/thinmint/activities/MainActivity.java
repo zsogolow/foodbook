@@ -300,6 +300,7 @@ public class MainActivity extends TokenActivity implements
     public void selectDay(Date date) {
         setActionBarTitle(DATE_FORMAT.format(date));
         mDayFragment.setDate(date);
+        mCurrentDate = date;
     }
 
     @Override

@@ -25,12 +25,14 @@ import foodbook.thinmint.IAsyncCallback;
 import foodbook.thinmint.R;
 import foodbook.thinmint.activities.MainActivity;
 import foodbook.thinmint.activities.TokenFragment;
+import foodbook.thinmint.activities.adapters.EndlessRecyclerViewScrollListener;
 import foodbook.thinmint.activities.common.OnNotesListInteractionListener;
 import foodbook.thinmint.activities.adapters.NotesRecyclerAdapter;
 import foodbook.thinmint.activities.users.UsersFragment;
 import foodbook.thinmint.api.Query;
 import foodbook.thinmint.models.JsonHelper;
 import foodbook.thinmint.models.domain.Note;
+import foodbook.thinmint.models.domain.User;
 import foodbook.thinmint.tasks.CallServiceAsyncTask;
 import foodbook.thinmint.tasks.CallServiceCallback;
 
@@ -48,11 +50,13 @@ public class DayFragment extends TokenFragment implements OnNotesListInteraction
     private RecyclerView mListView;
     private SwipeRefreshLayout mSwipeRefreshLayout;
     private NotesRecyclerAdapter mAdapter;
-    private RecyclerView.LayoutManager mLayoutManager;
-
+    private LinearLayoutManager mLayoutManager;
 
     private CallServiceAsyncTask mLoadingTask;
     private CallServiceCallback mLoadingCallback;
+    private CallServiceCallback mLoadMoreCallback;
+
+    private EndlessRecyclerViewScrollListener mScrollListener;
 
     public DayFragment() {
     }
@@ -81,6 +85,7 @@ public class DayFragment extends TokenFragment implements OnNotesListInteraction
         initUser();
 
         mLoadingCallback = new CallServiceCallback(this);
+        mLoadMoreCallback = new CallServiceCallback(this);
     }
 
     @Override
@@ -116,6 +121,30 @@ public class DayFragment extends TokenFragment implements OnNotesListInteraction
         });
 
         mListener.onDayFragmentCreated(inflated);
+
+        mScrollListener = new EndlessRecyclerViewScrollListener(mLayoutManager) {
+            @Override
+            public void onLoadMore(int page, int totalItemsCount, RecyclerView view) {
+                Calendar calendar = Calendar.getInstance();
+                calendar.setTime(mCurrentDate);
+
+                String path = String.format("api/users/%s/notes", mUserSubject);
+                String rawQuery = String.format(Locale.US, "((DateCreated Ge %d-%d-%d 00:00:00 -0700) And (DateCreated Le %d-%d-%d 23:59:59 -0700))",
+                        calendar.get(Calendar.YEAR), calendar.get(Calendar.MONTH) + 1, calendar.get(Calendar.DAY_OF_MONTH),
+                        calendar.get(Calendar.YEAR), calendar.get(Calendar.MONTH) + 1, calendar.get(Calendar.DAY_OF_MONTH));
+
+                Query query = Query.builder()
+                        .setPath(path)
+                        .setAccessToken(mToken.getAccessToken())
+                        .setSort("-datecreated")
+                        .setFilter(rawQuery)
+                        .setPage(page + 1)
+                        .build();
+
+                mLoadingTask = new CallServiceAsyncTask(getContext(), mLoadMoreCallback, mToken);
+                mLoadingTask.execute(query);
+            }
+        };
 
         refreshList();
 
@@ -165,6 +194,7 @@ public class DayFragment extends TokenFragment implements OnNotesListInteraction
         Query query = Query.builder()
                 .setPath(path)
                 .setAccessToken(mToken.getAccessToken())
+                .setSort("-datecreated")
                 .setFilter(rawQuery)
                 .build();
 
@@ -185,6 +215,9 @@ public class DayFragment extends TokenFragment implements OnNotesListInteraction
         setLoading(false);
     }
 
+    private void onLoadedMore(List<Note> notes) {
+        mAdapter.append(notes);
+    }
 
     @Override
     public void onNoteAdded(Note note) {
@@ -198,6 +231,10 @@ public class DayFragment extends TokenFragment implements OnNotesListInteraction
             mLoadingTask = null;
             List<Note> notes = JsonHelper.getNotes(mLoadingCallback.getResult().getResult());
             onNotesRetrieved(notes);
+        } else if (cb.equals(mLoadMoreCallback)) {
+            mLoadingTask = null;
+            List<Note> notes = JsonHelper.getNotes(mLoadMoreCallback.getResult().getResult());
+            onLoadedMore(notes);
         }
     }
 

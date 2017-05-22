@@ -10,6 +10,7 @@ import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import java.net.URLEncoder;
@@ -22,9 +23,11 @@ import foodbook.thinmint.IApiCallback;
 import foodbook.thinmint.IAsyncCallback;
 import foodbook.thinmint.R;
 import foodbook.thinmint.activities.TokenFragment;
+import foodbook.thinmint.activities.adapters.EndlessRecyclerViewScrollListener;
 import foodbook.thinmint.activities.adapters.UsersRecyclerAdapter;
 import foodbook.thinmint.api.Query;
 import foodbook.thinmint.models.JsonHelper;
+import foodbook.thinmint.models.domain.Note;
 import foodbook.thinmint.models.domain.User;
 import foodbook.thinmint.tasks.CallServiceAsyncTask;
 import foodbook.thinmint.tasks.CallServiceCallback;
@@ -48,11 +51,13 @@ public class UsersFragment extends TokenFragment implements IApiCallback,
     private RecyclerView mListView;
     private SwipeRefreshLayout mSwipeRefreshLayout;
     private UsersRecyclerAdapter mAdapter;
-    private RecyclerView.LayoutManager mLayoutManager;
+    private LinearLayoutManager mLayoutManager;
 
     private CallServiceAsyncTask mGetUsersTask;
     private CallServiceCallback mGetUsersCallback;
+    private CallServiceCallback mLoadMoreCallback;
 
+    private EndlessRecyclerViewScrollListener mScrollListener;
 
     public UsersFragment() {
         // Required empty public constructor
@@ -84,7 +89,7 @@ public class UsersFragment extends TokenFragment implements IApiCallback,
         initUser();
 
         mGetUsersCallback = new CallServiceCallback(this);
-
+        mLoadMoreCallback = new CallServiceCallback(this);
     }
 
     @Override
@@ -116,6 +121,20 @@ public class UsersFragment extends TokenFragment implements IApiCallback,
         });
 
         mListener.onUsersFragmentCreated(inflated);
+
+        mScrollListener = new EndlessRecyclerViewScrollListener(mLayoutManager) {
+            @Override
+            public void onLoadMore(int page, int totalItemsCount, RecyclerView view) {
+                Query query = Query.builder()
+                        .setPath("api/users")
+                        .setAccessToken(mToken.getAccessToken())
+                        .setSort("username")
+                        .setPage(page + 1)
+                        .build();
+                mGetUsersTask = new CallServiceAsyncTask(getContext(), mLoadMoreCallback, mToken);
+                mGetUsersTask.execute(query);
+            }
+        };
 
         refreshUsers();
 
@@ -157,6 +176,7 @@ public class UsersFragment extends TokenFragment implements IApiCallback,
         Query query = Query.builder()
                 .setPath(path)
                 .setAccessToken(mToken.getAccessToken())
+                .setSort("username")
                 .build();
 
         mGetUsersTask.execute(query);
@@ -164,10 +184,15 @@ public class UsersFragment extends TokenFragment implements IApiCallback,
 
     private void onUsersRetrieved(List<User> users) {
         mAdapter.swap(users);
-        mListView.setAdapter(mAdapter);
-        mAdapter.notifyDataSetChanged();
+//        mListView.setAdapter(mAdapter);
+//        mAdapter.notifyDataSetChanged();
         setLoading(false);
     }
+
+    private void onLoadedMore(List<User> users) {
+        mAdapter.append(users);
+    }
+
 
     @Override
     public void onUserClicked(View caller) {
@@ -184,6 +209,10 @@ public class UsersFragment extends TokenFragment implements IApiCallback,
             mGetUsersTask = null;
             List<User> users = JsonHelper.getUsers(mGetUsersCallback.getResult().getResult());
             onUsersRetrieved(users);
+        } else if (cb.equals(mLoadMoreCallback)) {
+            mGetUsersTask = null;
+            List<User> users = JsonHelper.getUsers(mLoadMoreCallback.getResult().getResult());
+            onLoadedMore(users);
         }
     }
 

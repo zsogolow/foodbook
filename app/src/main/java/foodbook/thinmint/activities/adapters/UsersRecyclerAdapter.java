@@ -10,6 +10,7 @@ import android.widget.TextView;
 import java.util.List;
 
 import foodbook.thinmint.R;
+import foodbook.thinmint.models.domain.Note;
 import foodbook.thinmint.models.domain.User;
 
 /**
@@ -84,6 +85,11 @@ public class UsersRecyclerAdapter extends RecyclerView.Adapter<UsersRecyclerAdap
         mUsers = users;
 //        mUsers.clear();
 //        mUsers.addAll(users);
+        notifyDataSetChanged();
+    }
+
+    public void append(List<User> users){
+        mUsers.addAll(users);
         notifyDataSetChanged();
     }
 }

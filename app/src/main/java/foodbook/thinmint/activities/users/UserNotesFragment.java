@@ -21,6 +21,7 @@ import foodbook.thinmint.IApiCallback;
 import foodbook.thinmint.IAsyncCallback;
 import foodbook.thinmint.R;
 import foodbook.thinmint.activities.TokenFragment;
+import foodbook.thinmint.activities.adapters.EndlessRecyclerViewScrollListener;
 import foodbook.thinmint.activities.common.OnNotesListInteractionListener;
 import foodbook.thinmint.activities.adapters.NotesRecyclerAdapter;
 import foodbook.thinmint.api.Query;
@@ -48,10 +49,13 @@ public class UserNotesFragment extends TokenFragment implements OnNotesListInter
     private RecyclerView mListView;
     private SwipeRefreshLayout mSwipeRefreshLayout;
     private NotesRecyclerAdapter mAdapter;
-    private RecyclerView.LayoutManager mLayoutManager;
+    private LinearLayoutManager mLayoutManager;
 
     private CallServiceAsyncTask mGetMyNotesTask;
     private CallServiceCallback mGetMyStuffCallback;
+    private CallServiceCallback mLoadMoreCallback;
+
+    private EndlessRecyclerViewScrollListener mScrollListener;
 
     public UserNotesFragment() {
         // Required empty public constructor
@@ -83,6 +87,7 @@ public class UserNotesFragment extends TokenFragment implements OnNotesListInter
         initToken();
 
         mGetMyStuffCallback = new CallServiceCallback(this);
+        mLoadMoreCallback = new CallServiceCallback(this);
     }
 
     @Override
@@ -115,6 +120,23 @@ public class UserNotesFragment extends TokenFragment implements OnNotesListInter
 
         mListener.onUserNotesFragmentCreated(inflated);
 
+        mScrollListener = new EndlessRecyclerViewScrollListener(mLayoutManager) {
+            @Override
+            public void onLoadMore(int page, int totalItemsCount, RecyclerView view) {
+                String path = String.format(Locale.US, "api/users/%s/notes", mUserId);
+
+                Query query = Query.builder()
+                        .setPath(path)
+                        .setAccessToken(mToken.getAccessToken())
+                        .setSort("-datecreated")
+                        .setPage(page + 1)
+                        .build();
+                mGetMyNotesTask = new CallServiceAsyncTask(getContext(), mLoadMoreCallback, mToken);
+                mGetMyNotesTask.execute(query);
+            }
+        };
+
+        mListView.addOnScrollListener(mScrollListener);
         refreshMyNotes();
 
         return inflated;
@@ -173,6 +195,10 @@ public class UserNotesFragment extends TokenFragment implements OnNotesListInter
         setLoading(false);
     }
 
+    private void onLoadedMore(List<Note> notes) {
+        mAdapter.append(notes);
+    }
+
     @Override
     public void onNoteAdded(Note note) {
         mAdapter.add(note);
@@ -185,6 +211,10 @@ public class UserNotesFragment extends TokenFragment implements OnNotesListInter
             mGetMyNotesTask = null;
             List<Note> notes = JsonHelper.getNotes(mGetMyStuffCallback.getResult().getResult());
             onNotesRetrieved(notes);
+        } else if (cb.equals(mLoadMoreCallback)) {
+            mGetMyNotesTask = null;
+            List<Note> notes = JsonHelper.getNotes(mLoadMoreCallback.getResult().getResult());
+            onLoadedMore(notes);
         }
     }
 

@@ -17,7 +17,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:paddingTop="@dimen/nav_header_vertical_spacing"
-        app:srcCompat="@drawable/ic_cake_white_48dp" />
+        app:srcCompat="@drawable/ic_food_apple_white_48dp" />
 
     <TextView
         android:layout_width="match_parent"

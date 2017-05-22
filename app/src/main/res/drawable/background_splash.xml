@@ -7,7 +7,7 @@
     <item>
         <bitmap
             android:gravity="center"
-            android:src="@drawable/ic_cake_white_48dp"/>
+            android:src="@drawable/ic_food_apple_white_48dp"/>
     </item>
 
 </layer-list>
