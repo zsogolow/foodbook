@@ -17,13 +17,13 @@ import foodbook.thinmint.constants.Constants;
  * Created by Zachery.Sogolow on 5/8/2017.
  */
 
-public class WebAPIConnect<T> {
+public class WebAPIConnect {
     private static final String PAGING_HEADER = "X-Pagination";
     private static final String SORTING_HEADER = "X-Sort";
 
     private String url = Constants.ThinMintAPI;
 
-    public WebAPIResult callService(Query query, String accessToken) {
+    public WebAPIResult get(Query query, String accessToken) {
         WebAPIResult result = new WebAPIResult();
 
         try {
@@ -71,7 +71,7 @@ public class WebAPIConnect<T> {
         return result;
     }
 
-    public WebAPIResult postService(String accessToken, String path, JSONObject data) {
+    public WebAPIResult post(String accessToken, String path, JSONObject data) {
         WebAPIResult result = new WebAPIResult();
 
         try {
@@ -106,11 +106,6 @@ public class WebAPIConnect<T> {
                 }
                 in.close();
 
-                String pagingHeader = con.getHeaderField(PAGING_HEADER);
-                String sortingHeader = con.getHeaderField(SORTING_HEADER);
-                result.setSortingInfo(WebAPIHelper.getSortingInfo(sortingHeader));
-                result.setPagingInfo(WebAPIHelper.getPagingInfo(pagingHeader));
-
                 result.setSuccess(true);
                 result.setResult(response.toString());
             } else {
@@ -127,7 +122,7 @@ public class WebAPIConnect<T> {
         return result;
     }
 
-    public WebAPIResult deleteService(Query query, String accessToken) {
+    public WebAPIResult delete(Query query, String accessToken) {
         WebAPIResult result = new WebAPIResult();
 
         try {
@@ -152,11 +147,6 @@ public class WebAPIConnect<T> {
                     response.append(inputLine);
                 }
                 in.close();
-
-                String pagingHeader = con.getHeaderField(PAGING_HEADER);
-                String sortingHeader = con.getHeaderField(SORTING_HEADER);
-                result.setSortingInfo(WebAPIHelper.getSortingInfo(sortingHeader));
-                result.setPagingInfo(WebAPIHelper.getPagingInfo(pagingHeader));
 
                 result.setSuccess(true);
                 result.setResult(response.toString());

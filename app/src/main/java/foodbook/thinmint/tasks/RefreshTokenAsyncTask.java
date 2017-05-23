@@ -64,7 +64,7 @@ public class RefreshTokenAsyncTask extends AsyncTask<String, String, TokenResult
 //                    .setAccessToken(mToken.getAccessToken())
                     .build();
 
-            WebAPIResult apiResult = new WebAPIConnect().callService(query, mToken.getAccessToken());
+            WebAPIResult apiResult = new WebAPIConnect().get(query, mToken.getAccessToken());
             User user = JsonHelper.getUser(apiResult.getResult());
             prefs.edit().putLong(Constants.USER_ID, user.getId()).apply();
             prefs.edit().putString(Constants.USER_NAME, user.getUsername()).apply();

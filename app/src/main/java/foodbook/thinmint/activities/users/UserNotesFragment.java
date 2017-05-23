@@ -1,12 +1,14 @@
 package foodbook.thinmint.activities.users;
 
 import android.content.Context;
+import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -166,8 +168,15 @@ public class UserNotesFragment extends TokenFragment implements OnNotesListInter
     }
 
     @Override
+    public void onLikeNoteClicked(View caller) {
+//        TextView hiddenNoteIdTextView = (TextView)caller.findViewById(R.id.hidden_note_id);
+//        String noteId = hiddenNoteIdTextView.getText().toString();
+//        ActivityStarter.startNoteActivityForResult(getActivity(), Long.parseLong(noteId));
+    }
+
+    @Override
     public void onNoteClicked(View caller) {
-        TextView hiddenNoteIdTextView = (TextView)caller.findViewById(R.id.hidden_note_id);
+        TextView hiddenNoteIdTextView = (TextView) caller.findViewById(R.id.hidden_note_id);
         String noteId = hiddenNoteIdTextView.getText().toString();
         ActivityStarter.startNoteActivityForResult(getActivity(), Long.parseLong(noteId));
     }

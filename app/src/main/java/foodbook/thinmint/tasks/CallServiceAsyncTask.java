@@ -2,7 +2,6 @@ package foodbook.thinmint.tasks;
 
 import android.content.Context;
 import android.os.AsyncTask;
-import android.os.SystemClock;
 
 import foodbook.thinmint.api.Query;
 import foodbook.thinmint.api.WebAPIConnect;
@@ -43,7 +42,7 @@ public class CallServiceAsyncTask extends AsyncTask<Query, String, WebAPIResult>
         }
 
         if (!TokenHelper.isTokenExpired(mToken)) {
-            result = connect.callService(query, mToken.getAccessToken());
+            result = connect.get(query, mToken.getAccessToken());
         }
 
         return result;

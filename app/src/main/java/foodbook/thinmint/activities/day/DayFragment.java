@@ -1,6 +1,7 @@
 package foodbook.thinmint.activities.day;
 
 import android.content.Context;
+import android.content.Intent;
 import android.support.annotation.Nullable;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
@@ -170,6 +171,13 @@ public class DayFragment extends TokenFragment implements OnNotesListInteraction
     public void onDetach() {
         super.onDetach();
         mListener = null;
+    }
+
+    @Override
+    public void onLikeNoteClicked(View caller) {
+//        TextView hiddenNoteIdTextView = (TextView) caller.findViewById(R.id.hidden_note_id);
+//        String noteId = hiddenNoteIdTextView.getText().toString();
+//        ActivityStarter.startNoteActivityForResult(getActivity(), Long.parseLong(noteId));
     }
 
     @Override

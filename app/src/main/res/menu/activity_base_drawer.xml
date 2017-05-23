@@ -2,15 +2,16 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
 
     <group android:checkableBehavior="single">
-        <item
-            android:id="@+id/nav_calendar"
-            android:icon="@drawable/calendar_today"
-            android:title="Daily" />
 
         <item
             android:id="@+id/nav_home"
             android:icon="@drawable/rocket"
             android:title="Feed" />
+
+        <item
+            android:id="@+id/nav_calendar"
+            android:icon="@drawable/calendar_today"
+            android:title="Calendar" />
 
 
         <item

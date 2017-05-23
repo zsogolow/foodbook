@@ -3,7 +3,6 @@ package foodbook.thinmint.tasks;
 import android.content.Context;
 import android.os.AsyncTask;
 
-import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.Map;
@@ -14,7 +13,6 @@ import foodbook.thinmint.constants.Constants;
 import foodbook.thinmint.idsrv.Token;
 import foodbook.thinmint.idsrv.TokenHelper;
 import foodbook.thinmint.idsrv.TokenResult;
-import foodbook.thinmint.models.domain.Note;
 
 /**
  * Created by Zachery.Sogolow on 5/9/2017.
@@ -49,7 +47,7 @@ public class PostServiceAsyncTask extends AsyncTask<String, String, WebAPIResult
 
         if (!TokenHelper.isTokenExpired(mToken)) {
             JSONObject jsonObject = new JSONObject(mMap);
-            result = connect.postService(mToken.getAccessToken(), path, jsonObject);
+            result = connect.post(mToken.getAccessToken(), path, jsonObject);
         }
 
         return result;

@@ -2,6 +2,7 @@ package foodbook.thinmint.activities.notes;
 
 import android.content.Context;
 import android.os.Bundle;
+import android.os.SystemClock;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.support.v4.widget.SwipeRefreshLayout;
@@ -14,13 +15,11 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
 
-import java.net.URLEncoder;
-import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
@@ -28,36 +27,32 @@ import foodbook.thinmint.IApiCallback;
 import foodbook.thinmint.IAsyncCallback;
 import foodbook.thinmint.R;
 import foodbook.thinmint.activities.ActivityStarter;
-import foodbook.thinmint.activities.MainActivity;
 import foodbook.thinmint.activities.TokenFragment;
 import foodbook.thinmint.activities.adapters.CommentsRecyclerAdapter;
+import foodbook.thinmint.activities.adapters.EndlessRecyclerViewScrollListener;
 import foodbook.thinmint.api.Query;
 import foodbook.thinmint.api.WebAPIResult;
 import foodbook.thinmint.models.JsonHelper;
 import foodbook.thinmint.models.domain.Comment;
-import foodbook.thinmint.models.domain.Note;
 import foodbook.thinmint.tasks.CallServiceAsyncTask;
 import foodbook.thinmint.tasks.CallServiceCallback;
-import foodbook.thinmint.tasks.DeleteServiceAsyncTask;
-import foodbook.thinmint.tasks.DeleteServiceCallback;
 import foodbook.thinmint.tasks.PostServiceAsyncTask;
 
 /**
  * A simple {@link Fragment} subclass.
  * Activities that contain this fragment must implement the
- * {@link OnNoteFragmentDataListener} interface
+ * {@link OnCommentsFragmentDataListener} interface
  * to handle interaction events.
- * Use the {@link NoteFragment#newInstance} factory method to
+ * Use the {@link CommentsFragment#newInstance} factory method to
  * create an instance of this fragment.
  */
-public class NoteFragment extends TokenFragment implements IApiCallback,
+public class CommentsFragment extends TokenFragment implements IApiCallback,
         CommentsRecyclerAdapter.ViewHolder.IOnCommentClickListener {
-
     private static final String ARG_NOTEID = "noteid";
 
     private long mNoteId;
 
-    private OnNoteFragmentDataListener mListener;
+    private OnCommentsFragmentDataListener mListener;
 
     private RecyclerView mListView;
     private SwipeRefreshLayout mSwipeRefreshLayout;
@@ -67,22 +62,16 @@ public class NoteFragment extends TokenFragment implements IApiCallback,
     private Button mAddCommentButton;
     private EditText mCommentText;
 
-    private TextView mNoteContents;
-    private TextView mNoteUser;
-    private TextView mNoteDate;
-    private TextView mCommentsText;
-    private TextView mHiddenUserSubject;
-
-    private CallServiceAsyncTask mGetNoteTask;
-    private CallServiceCallback mGetNoteCallback;
-
-    private DeleteServiceAsyncTask mDeleteServiceAsyncTask;
-    private DeleteServiceCallback mDeleteServiceCallback;
+    private CallServiceAsyncTask mGetCommentsTask;
+    private CallServiceCallback mGetCommentsCallback;
+    private CallServiceCallback mLoadMoreCallback;
 
     private PostServiceAsyncTask mAddCommentTask;
     private CallServiceCallback mAddCommentCallback;
 
-    public NoteFragment() {
+    private EndlessRecyclerViewScrollListener mScrollListener;
+
+    public CommentsFragment() {
         // Required empty public constructor
     }
 
@@ -93,8 +82,8 @@ public class NoteFragment extends TokenFragment implements IApiCallback,
      * @param noteid Parameter 1.
      * @return A new instance of fragment FeedFragment.
      */
-    public static NoteFragment newInstance(long noteid) {
-        NoteFragment fragment = new NoteFragment();
+    public static CommentsFragment newInstance(long noteid) {
+        CommentsFragment fragment = new CommentsFragment();
         Bundle args = new Bundle();
         args.putLong(ARG_NOTEID, noteid);
         fragment.setArguments(args);
@@ -111,8 +100,8 @@ public class NoteFragment extends TokenFragment implements IApiCallback,
         initToken();
         initUser();
 
-        mGetNoteCallback = new CallServiceCallback(this);
-        mDeleteServiceCallback = new DeleteServiceCallback(this);
+        mGetCommentsCallback = new CallServiceCallback(this);
+        mLoadMoreCallback = new CallServiceCallback(this);
         mAddCommentCallback = new CallServiceCallback(this);
     }
 
@@ -125,10 +114,10 @@ public class NoteFragment extends TokenFragment implements IApiCallback,
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
-        View inflated = inflater.inflate(R.layout.fragment_note, container, false);
+        View inflated = inflater.inflate(R.layout.fragment_comments, container, false);
 
         mListView = (RecyclerView) inflated.findViewById(R.id.activity_main_listview);
-        mSwipeRefreshLayout = (SwipeRefreshLayout) inflated.findViewById(R.id.activity_note_swipe_refresh_layout);
+        mSwipeRefreshLayout = (SwipeRefreshLayout) inflated.findViewById(R.id.activity_main_swipe_refresh_layout);
 
         mAddCommentButton = (Button) inflated.findViewById(R.id.add_comment_button);
         mCommentText = (EditText) inflated.findViewById(R.id.comment_edit_text);
@@ -147,21 +136,6 @@ public class NoteFragment extends TokenFragment implements IApiCallback,
             }
         });
 
-        mNoteContents = (TextView) inflated.findViewById(R.id.note_contents);
-        mNoteUser = (TextView) inflated.findViewById(R.id.note_user);
-        mNoteDate = (TextView) inflated.findViewById(R.id.note_date);
-        mCommentsText = (TextView) inflated.findViewById(R.id.note_comments);
-        mHiddenUserSubject = (TextView) inflated.findViewById(R.id.hidden_user_id);
-
-        mNoteUser.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                String subject = mHiddenUserSubject.getText().toString();
-                String username = mNoteUser.getText().toString();
-                ActivityStarter.startUserActivity(getActivity(), subject, username);
-            }
-        });
-
         // use a linear layout manager
         mLayoutManager = new LinearLayoutManager(getActivity());
         mListView.setLayoutManager(mLayoutManager);
@@ -172,13 +146,29 @@ public class NoteFragment extends TokenFragment implements IApiCallback,
         mSwipeRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
             @Override
             public void onRefresh() {
-                refreshNote();
+                refreshComments();
             }
         });
 
-        mListener.onNoteFragmentCreated(inflated);
+        mListener.onCommentsFragmentCreated(inflated);
 
-        refreshNote();
+        mScrollListener = new EndlessRecyclerViewScrollListener(mLayoutManager) {
+            @Override
+            public void onLoadMore(int page, int totalItemsCount, RecyclerView view) {
+
+                String path = String.format(Locale.US, "api/notes/%d/comments", mNoteId);
+
+                Query query = Query.builder()
+                        .setPath(path)
+//                .setAccessToken(mToken.getAccessToken())
+                        .setSort("-datecreated")
+                        .build();
+                mGetCommentsTask = new CallServiceAsyncTask(getContext(), mLoadMoreCallback, mToken);
+                mGetCommentsTask.execute(query);
+            }
+        };
+
+        refreshComments();
 
         return inflated;
     }
@@ -191,11 +181,11 @@ public class NoteFragment extends TokenFragment implements IApiCallback,
     @Override
     public void onAttach(Context context) {
         super.onAttach(context);
-        if (context instanceof OnNoteFragmentDataListener) {
-            mListener = (OnNoteFragmentDataListener) context;
+        if (context instanceof OnCommentsFragmentDataListener) {
+            mListener = (OnCommentsFragmentDataListener) context;
         } else {
             throw new RuntimeException(context.toString()
-                    + " must implement OnNoteFragmentDataListener");
+                    + " must implement OnCommentsFragmentDataListener");
         }
     }
 
@@ -205,52 +195,15 @@ public class NoteFragment extends TokenFragment implements IApiCallback,
         mListener = null;
     }
 
-    public void deleteNote() {
-        setLoading(true);
-        mDeleteServiceAsyncTask = new DeleteServiceAsyncTask(getContext(), mDeleteServiceCallback, mToken);
-        Query query = Query.builder()
-                .setPath("api/notes/" + mNoteId)
-                .build();
-        mDeleteServiceAsyncTask.execute(query);
-    }
-
     private void setLoading(boolean isLoading) {
         mSwipeRefreshLayout.setRefreshing(isLoading);
     }
 
-    private void onNoteRetrieved(Note note) {
-        setLoading(false);
-        mNoteContents.setText(note.getContent());
-        mNoteUser.setText(note.getUser().getUsername());
-
-        long nowInMillis = System.currentTimeMillis();
-        Date dateCreated = note.getDateCreated();
-
-        Calendar now = Calendar.getInstance();
-        Calendar created = Calendar.getInstance();
-        now.setTime(new Date(nowInMillis));
-        created.setTime(dateCreated);
-
-        boolean sameDay = now.get(Calendar.YEAR) == created.get(Calendar.YEAR) &&
-                now.get(Calendar.DAY_OF_YEAR) == created.get(Calendar.DAY_OF_YEAR);
-        boolean sameYear = now.get(Calendar.YEAR) == created.get(Calendar.YEAR);
-
-        DateFormat dateFormat = sameYear ? MainActivity.DATE_FORMAT : MainActivity.DATE_FORMAT_YEAR;
-        String dateString = sameDay ? MainActivity.TIME_FORMAT.format(dateCreated)
-                : dateFormat.format(dateCreated) + " at " + MainActivity.TIME_FORMAT.format(dateCreated);
-
-        mNoteDate.setText(dateString);
-        mCommentsText.setText(note.getComments().size() + " comments");
-        mHiddenUserSubject.setText(note.getUser().getSubject());
-
-        mAdapter.swap(note.getComments());
-    }
-
-    private void refreshNote() {
+    private void refreshComments() {
         setLoading(true);
-        mGetNoteTask = new CallServiceAsyncTask(getContext(), mGetNoteCallback, mToken);
+        mGetCommentsTask = new CallServiceAsyncTask(getContext(), mGetCommentsCallback, mToken);
 
-        String path = String.format(Locale.US, "api/notes/%d", mNoteId);
+        String path = String.format(Locale.US, "api/notes/%d/comments", mNoteId);
 
         Query query = Query.builder()
                 .setPath(path)
@@ -258,20 +211,43 @@ public class NoteFragment extends TokenFragment implements IApiCallback,
                 .setSort("-datecreated")
                 .build();
 
-        mGetNoteTask.execute(query);
+        mGetCommentsTask.execute(query);
     }
 
-    private void onNoteDeleted(boolean success) {
+    private void onCommentsRetrieved(List<Comment> comments) {
+        mAdapter.swap(comments);
         setLoading(false);
-        if (success) {
-            mListener.onNoteDeleted(mNoteId);
-        }
+    }
+
+    private void onLoadedMore(List<Comment> comments) {
+        mAdapter.append(comments);
     }
 
     private void onCommentAdded(Comment comment) {
         mAdapter.append(0, comment);
-        mCommentsText.setText(mAdapter.getItemCount() + " comments");
         setLoading(false);
+    }
+
+    @Override
+    public void callback(IAsyncCallback cb) {
+        if (cb.equals(mGetCommentsCallback)) {
+            mGetCommentsTask = null;
+            List<Comment> comments = JsonHelper.getComments(mGetCommentsCallback.getResult().getResult());
+            onCommentsRetrieved(comments);
+        } else if (cb.equals(mLoadMoreCallback)) {
+            mGetCommentsTask = null;
+            List<Comment> comments = JsonHelper.getComments(mLoadMoreCallback.getResult().getResult());
+            onLoadedMore(comments);
+        } else if (cb.equals(mAddCommentCallback)) {
+            mAddCommentTask = null;
+            WebAPIResult result = mAddCommentCallback.getResult();
+            if (result.isSuccess()) {
+                Comment addedComment = JsonHelper.getComment(mAddCommentCallback.getResult().getResult());
+                onCommentAdded(addedComment);
+                mListener.onCommentAdded(addedComment);
+                mCommentText.setText("");
+            }
+        }
     }
 
     @Override
@@ -288,41 +264,8 @@ public class NoteFragment extends TokenFragment implements IApiCallback,
 
     }
 
-    @Override
-    public void callback(IAsyncCallback cb) {
-        if (cb.equals(mGetNoteCallback)) {
-            mGetNoteTask = null;
-            Note note = JsonHelper.getNote(mGetNoteCallback.getResult().getResult());
-            onNoteRetrieved(note);
-            mListener.onNoteRetrieved(note);
-        } else if (cb.equals(mDeleteServiceCallback)) {
-            onNoteDeleted(mDeleteServiceCallback.getResult().isSuccess());
-        } else if (cb.equals(mAddCommentCallback)) {
-            mAddCommentTask = null;
-            WebAPIResult result = mAddCommentCallback.getResult();
-            if (result.isSuccess()) {
-                Comment addedComment = JsonHelper.getComment(mAddCommentCallback.getResult().getResult());
-                onCommentAdded(addedComment);
-                mCommentText.setText("");
-            }
-        }
-    }
-
-    /**
-     * This interface must be implemented by activities that contain this
-     * fragment to allow an interaction in this fragment to be communicated
-     * to the activity and potentially other fragments contained in that
-     * activity.
-     * <p>
-     * See the Android Training lesson <a href=
-     * "http://developer.android.com/training/basics/fragments/communicating.html"
-     * >Communicating with Other Fragments</a> for more information.
-     */
-    public interface OnNoteFragmentDataListener {
-        void onNoteFragmentCreated(View view);
-
-        void onNoteRetrieved(Note note);
-
-        void onNoteDeleted(long noteId);
+    public interface OnCommentsFragmentDataListener {
+        void onCommentsFragmentCreated(View view);
+        void onCommentAdded(Comment comment);
     }
 }

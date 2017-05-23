@@ -4,7 +4,6 @@ import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
 import android.annotation.TargetApi;
 import android.content.SharedPreferences;
-import android.content.SyncAdapterType;
 import android.preference.PreferenceManager;
 import android.support.v7.app.AppCompatActivity;
 
@@ -13,7 +12,6 @@ import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
 import android.text.TextUtils;
-import android.util.Log;
 import android.view.KeyEvent;
 import android.view.View;
 import android.view.View.OnClickListener;
@@ -238,7 +236,7 @@ public class LoginActivity extends AppCompatActivity {
                         .setPath("api/users/" + userInfo.getSubject())
 //                        .setAccessToken(mToken.getAccessToken())
                         .build();
-                WebAPIResult apiResult = new WebAPIConnect().callService(query, mToken.getAccessToken());
+                WebAPIResult apiResult = new WebAPIConnect().get(query, mToken.getAccessToken());
 
                 if (!apiResult.isSuccess()) {
                     JSONObject jsonObject = new JSONObject();
@@ -250,7 +248,7 @@ public class LoginActivity extends AppCompatActivity {
                     } catch (JSONException je) {
                     }
 
-                    WebAPIResult postResult = new WebAPIConnect().postService(mToken.getAccessToken(), "api/users", jsonObject);
+                    WebAPIResult postResult = new WebAPIConnect().post(mToken.getAccessToken(), "api/users", jsonObject);
                     User user = JsonHelper.getUser(postResult.getResult());
                     prefs.edit().putLong(Constants.USER_ID, user.getId()).apply();
                     prefs.edit().putString(Constants.USER_NAME, user.getUsername()).apply();

@@ -11,6 +11,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.TimeZone;
 
+import foodbook.thinmint.models.domain.Comment;
 import foodbook.thinmint.models.domain.EntityBase;
 import foodbook.thinmint.models.domain.Note;
 import foodbook.thinmint.models.domain.User;
@@ -44,7 +45,8 @@ public class JsonHelper {
     public static List<User> getUsers(String json) {
         List<User> users;
         try {
-            users = gson.fromJson(json, new TypeToken<List<User>>() {}.getType());
+            users = gson.fromJson(json, new TypeToken<List<User>>() {
+            }.getType());
             for (EntityBase base : users) {
                 updateDate(base);
             }
@@ -68,7 +70,8 @@ public class JsonHelper {
     public static List<Note> getNotes(String json) {
         List<Note> notes;
         try {
-            notes = gson.fromJson(json, new TypeToken<List<Note>>() {}.getType());
+            notes = gson.fromJson(json, new TypeToken<List<Note>>() {
+            }.getType());
             for (EntityBase base : notes) {
                 updateDate(base);
             }
@@ -77,6 +80,32 @@ public class JsonHelper {
         }
 
         return notes;
+    }
+
+    public static Comment getComment(String json) {
+        Comment comment;
+        try {
+            comment = gson.fromJson(json, Comment.class);
+            updateDate(comment);
+        } catch (JsonSyntaxException jse) {
+            comment = null;
+        }
+        return comment;
+    }
+
+
+    public static List<Comment> getComments(String json) {
+        List<Comment> comments;
+        try {
+            comments = gson.fromJson(json, new TypeToken<List<Comment>>() {
+            }.getType());
+            for (EntityBase base : comments) {
+                updateDate(base);
+            }
+        } catch (JsonSyntaxException jse) {
+            comments = null;
+        }
+        return comments;
     }
 
     private static List<Field> getAllFields(List<Field> fields, Class<?> type) {

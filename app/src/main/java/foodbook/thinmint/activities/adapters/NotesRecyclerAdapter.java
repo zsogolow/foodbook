@@ -17,7 +17,6 @@ import java.util.Locale;
 
 import foodbook.thinmint.R;
 import foodbook.thinmint.models.domain.Note;
-import foodbook.thinmint.models.domain.User;
 
 /**
  * Created by Zachery.Sogolow on 5/18/2017.
@@ -37,37 +36,47 @@ public class NotesRecyclerAdapter extends RecyclerView.Adapter<NotesRecyclerAdap
     public static class ViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
         // each data item is just a string in this case
         private LinearLayout mLinearLayout;
-        private Button mOpenButton;
+        private Button mLikeButton;
         private Button mCommentButton;
         private TextView mUserName;
+        private TextView mNoteComments;
         private ViewHolder.IOnNoteClickListener mListener;
 
         public ViewHolder(LinearLayout v, IOnNoteClickListener listener) {
             super(v);
             mLinearLayout = v;
-            mOpenButton = (Button) mLinearLayout.findViewById(R.id.open_button);
+            mLikeButton = (Button) mLinearLayout.findViewById(R.id.like_button);
             mCommentButton = (Button) mLinearLayout.findViewById(R.id.comment_button);
             mUserName = (TextView) mLinearLayout.findViewById(R.id.user_name);
+            mNoteComments = (TextView) mLinearLayout.findViewById(R.id.note_comments);
             mListener = listener;
-            mOpenButton.setOnClickListener(this);
+            mLikeButton.setOnClickListener(this);
             mCommentButton.setOnClickListener(this);
             mUserName.setOnClickListener(this);
+            mNoteComments.setOnClickListener(this);
+            mLinearLayout.setOnClickListener(this);
         }
 
         @Override
         public void onClick(View v) {
-            if (v.equals(mOpenButton)) {
-                mListener.onNoteClicked(mLinearLayout);
+            if (v.equals(mLikeButton)) {
+                mListener.onLikeNoteClicked(mLinearLayout);
             } else if (v.equals(mCommentButton)) {
                 mListener.onCommentsClicked(mLinearLayout);
             } else if (v.equals(mUserName)) {
                 mListener.onUserClicked(mLinearLayout);
+            } else { // if (v.equals(mNoteComments)) {
+                mListener.onNoteClicked(mLinearLayout);
             }
         }
 
         public interface IOnNoteClickListener {
             void onNoteClicked(View caller);
+
+            void onLikeNoteClicked(View caller);
+
             void onCommentsClicked(View caller);
+
             void onUserClicked(View caller);
         }
     }
@@ -122,6 +131,8 @@ public class NotesRecyclerAdapter extends RecyclerView.Adapter<NotesRecyclerAdap
                 .setText(dateString);
         ((TextView) holder.mLinearLayout.findViewById(R.id.note_contents))
                 .setText(mNotes.get(position).getContent());
+        ((TextView) holder.mLinearLayout.findViewById(R.id.note_comments))
+                .setText(mNotes.get(position).getComments().size() + " comments");
     }
 
     // Return the size of your dataset (invoked by the layout manager)

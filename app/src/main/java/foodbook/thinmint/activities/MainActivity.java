@@ -56,6 +56,7 @@ public class MainActivity extends TokenActivity implements
     private Date mCurrentDate;
 
     private DayFragment mDayFragment;
+    private FeedFragment mFeedFragment;
     private OnNotesListInteractionListener mCurrentFragment;
 
     private NavigationView mNavigationView;
@@ -134,12 +135,18 @@ public class MainActivity extends TokenActivity implements
                     String fragmentTag = fragmentManager.getBackStackEntryAt(fragmentManager.getBackStackEntryCount() - 1).getName();
                 } else if (fragmentManager.getBackStackEntryCount() == 0) {
                     try {
-                        DayFragment dayFragment = (DayFragment) fragmentManager.findFragmentByTag("DayFragment");
-                        if (dayFragment != null) {
-                            setActionBarTitle(DATE_FORMAT.format(mCurrentDate));
-                            toggleDayFragmentActions(true);
+                        FeedFragment feedFragment = (FeedFragment) fragmentManager.findFragmentByTag("FeedFragment");
+                        if (feedFragment  != null) {
+                            setActionBarTitle("Feed");
+                            toggleDayFragmentActions(false);
                             mNavigationView.getMenu().getItem(0).setChecked(true);
                         }
+//                        DayFragment dayFragment = (DayFragment) fragmentManager.findFragmentByTag("DayFragment");
+//                        if (dayFragment != null) {
+//                            setActionBarTitle(DATE_FORMAT.format(mCurrentDate));
+//                            toggleDayFragmentActions(true);
+//                            mNavigationView.getMenu().getItem(0).setChecked(true);
+//                        }
                     } catch (ClassCastException cce) {
                     }
                 }
@@ -174,7 +181,7 @@ public class MainActivity extends TokenActivity implements
         FragmentManager fragmentManager = getSupportFragmentManager();
         if (fragmentManager.getBackStackEntryCount() > 0) {
             fragmentManager.popBackStack(null, FragmentManager.POP_BACK_STACK_INCLUSIVE);
-            mCurrentFragment = mDayFragment;
+            mCurrentFragment = mFeedFragment;
         }
     }
 
@@ -252,13 +259,12 @@ public class MainActivity extends TokenActivity implements
     private void showDayFragment() {
         FragmentManager fragmentManager = getSupportFragmentManager();
         FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
+        fragmentTransaction.addToBackStack(null);
 
         // Replace whatever is in the fragment_container view with this fragment,
         // and add the transaction to the back stack
         mDayFragment = DayFragment.newInstance(mCurrentDate);
         fragmentTransaction.replace(R.id.fragment_container, mDayFragment, "DayFragment");
-
-        fragmentManager.popBackStack();
 
         // Commit the transaction
         fragmentTransaction.commit();
@@ -269,15 +275,16 @@ public class MainActivity extends TokenActivity implements
     private void showHomeFragment() {
         FragmentManager fragmentManager = getSupportFragmentManager();
         FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
-        fragmentTransaction.addToBackStack(null);
 
-        FeedFragment feedFragment = FeedFragment.newInstance("Hello home fragment");
-        fragmentTransaction.replace(R.id.fragment_container, feedFragment, "FeedFragment");
+        mFeedFragment = FeedFragment.newInstance("Hello home fragment");
+        fragmentTransaction.replace(R.id.fragment_container, mFeedFragment, "FeedFragment");
+
+        fragmentManager.popBackStack();
 
         // Commit the transaction
         fragmentTransaction.commit();
 
-        mCurrentFragment = feedFragment;
+        mCurrentFragment = mFeedFragment;
     }
 
     @Override
@@ -323,16 +330,6 @@ public class MainActivity extends TokenActivity implements
         mDayFragment.setDate(date);
         mCurrentDate = date;
     }
-//
-//    @Override
-//    public void showNote(long noteId) {
-//        startNoteActivity(noteId);
-//    }
-
-//    @Override
-//    public void showUser(String subject, String username) {
-//        startUserActivity(subject, username);
-//    }
 
     @Override
     public void onFeedFragmentCreated(View view) {

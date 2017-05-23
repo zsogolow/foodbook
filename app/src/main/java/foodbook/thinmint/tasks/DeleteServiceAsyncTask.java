@@ -42,7 +42,7 @@ public class DeleteServiceAsyncTask extends AsyncTask<Query, String, WebAPIResul
         }
 
         if (!TokenHelper.isTokenExpired(mToken)) {
-            result = connect.deleteService(query, mToken.getAccessToken());
+            result = connect.delete(query, mToken.getAccessToken());
         }
 
         return result;

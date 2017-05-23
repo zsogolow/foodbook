@@ -12,6 +12,7 @@
         android:orientation="vertical"
         android:paddingLeft="20dp"
         android:paddingRight="20dp"
+        android:focusableInTouchMode="true"
         android:paddingTop="@dimen/appbar_padding_top">
 
         <TextView
@@ -34,7 +35,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:hint="Note"
+                android:hint="Write note..."
                 android:inputType="textMultiLine"
                 android:textSize="18sp" />
         </android.support.design.widget.TextInputLayout>

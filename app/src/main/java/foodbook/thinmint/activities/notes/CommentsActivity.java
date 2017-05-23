@@ -1,6 +1,8 @@
 package foodbook.thinmint.activities.notes;
 
+import android.app.Activity;
 import android.content.DialogInterface;
+import android.content.Intent;
 import android.os.Bundle;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentTransaction;
@@ -12,10 +14,19 @@ import android.view.View;
 
 import foodbook.thinmint.R;
 import foodbook.thinmint.activities.ActivityStarter;
+import foodbook.thinmint.activities.MainActivity;
 import foodbook.thinmint.activities.TokenActivity;
+import foodbook.thinmint.models.JsonHelper;
+import foodbook.thinmint.models.domain.Comment;
 import foodbook.thinmint.models.domain.Note;
 
-public class CommentsActivity extends TokenActivity {
+public class CommentsActivity extends TokenActivity
+        implements CommentsFragment.OnCommentsFragmentDataListener{
+
+    public static final int ADD_COMMENT_REQUEST_CODE = 1;
+    public static final String ADD_COMMENT_EXTRA_ID = "created_id";
+
+    private CommentsFragment mCommentsFragment;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -32,6 +43,8 @@ public class CommentsActivity extends TokenActivity {
         long noteId = bundle.getLong("note_id");
 
         setActionBarTitle("Comments");
+
+        showCommentsFragment(noteId);
     }
 
     @Override
@@ -61,5 +74,27 @@ public class CommentsActivity extends TokenActivity {
         }
 
         return super.onOptionsItemSelected(item);
+    }
+
+    public void showCommentsFragment(long noteId) {
+        FragmentManager fragmentManager = getSupportFragmentManager();
+        FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
+
+        // Replace whatever is in the fragment_container view with this fragment,
+        // and add the transaction to the back stack
+        mCommentsFragment = CommentsFragment.newInstance(noteId);
+        fragmentTransaction.replace(R.id.fragment_container, mCommentsFragment, "Note");
+
+        // Commit the transaction
+        fragmentTransaction.commit();
+    }
+
+    @Override
+    public void onCommentsFragmentCreated(View view) {
+
+    }
+
+    @Override
+    public void onCommentAdded(Comment comment) {
     }
 }
