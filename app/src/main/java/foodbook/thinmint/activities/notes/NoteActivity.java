@@ -1,8 +1,12 @@
 package foodbook.thinmint.activities.notes;
 
+import android.app.Activity;
+import android.content.DialogInterface;
+import android.content.Intent;
 import android.os.Bundle;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentTransaction;
+import android.support.v7.app.AlertDialog;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
@@ -13,11 +17,14 @@ import java.net.URLEncoder;
 import foodbook.thinmint.IApiCallback;
 import foodbook.thinmint.IAsyncCallback;
 import foodbook.thinmint.R;
+import foodbook.thinmint.activities.MainActivity;
 import foodbook.thinmint.activities.TokenActivity;
 import foodbook.thinmint.models.JsonHelper;
 import foodbook.thinmint.models.domain.Note;
 import foodbook.thinmint.tasks.CallServiceAsyncTask;
 import foodbook.thinmint.tasks.CallServiceCallback;
+import foodbook.thinmint.tasks.DeleteServiceAsyncTask;
+import foodbook.thinmint.tasks.DeleteServiceCallback;
 
 public class NoteActivity extends TokenActivity implements NoteFragment.OnNoteFragmentDataListener {
 
@@ -32,12 +39,13 @@ public class NoteActivity extends TokenActivity implements NoteFragment.OnNoteFr
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         getSupportActionBar().setDisplayShowHomeEnabled(true);
 
-
         initToken();
         initUser();
 
         Bundle bundle = getIntent().getExtras();
         long noteId = bundle.getLong("note_id");
+
+        setActionBarTitle("Note");
 
         showNoteFragment(noteId);
     }
@@ -68,28 +76,45 @@ public class NoteActivity extends TokenActivity implements NoteFragment.OnNoteFr
 
         //noinspection SimplifiableIfStatement
         if (id == R.id.action_delete) {
+            attemptDelete();
             return true;
-        } else if (id == R.id.action_edit) {
-            return true;
-        } else if (id == R.id.action_save) {
+        }
+//        else if (id == R.id.action_edit) {
+//            return true;
+//        }
+        else if (id == R.id.action_save) {
             return true;
         }
 
         return super.onOptionsItemSelected(item);
     }
 
+    private void attemptDelete() {
+        new AlertDialog.Builder(this)
+                .setIcon(android.R.drawable.ic_dialog_alert)
+                .setTitle("Delete Note")
+                .setMessage("Are you sure you want to delete this note?")
+                .setPositiveButton("Yes", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        mNoteFragment.deleteNote();
+                    }
+
+                })
+                .setNegativeButton("Cancel", null)
+                .show();
+    }
+
     private void toggleNoteActions(boolean show) {
         if (mMenu != null) {
             MenuItem delete = mMenu.findItem(R.id.action_delete);
-            MenuItem edit = mMenu.findItem(R.id.action_edit);
+//            MenuItem edit = mMenu.findItem(R.id.action_edit);
             delete.setVisible(show);
-            edit.setVisible(show);
+//            edit.setVisible(show);
         }
     }
 
     public void showNoteFragment(long noteId) {
-        setActionBarTitle("Note");
-
         FragmentManager fragmentManager = getSupportFragmentManager();
         FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
 
@@ -113,5 +138,13 @@ public class NoteActivity extends TokenActivity implements NoteFragment.OnNoteFr
         } else {
             toggleNoteActions(true);
         }
+    }
+
+    @Override
+    public void onNoteDeleted(long noteId) {
+        Intent resultIntent = new Intent();
+        resultIntent.putExtra(MainActivity.DELETE_NOTE_EXTRA_ID, noteId);
+        setResult(Activity.RESULT_OK, resultIntent);
+        finish();
     }
 }

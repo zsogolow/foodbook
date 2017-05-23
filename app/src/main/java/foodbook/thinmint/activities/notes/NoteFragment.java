@@ -11,17 +11,25 @@ import android.view.ViewGroup;
 import android.widget.TextView;
 
 import java.net.URLEncoder;
+import java.text.DateFormat;
+import java.util.Calendar;
+import java.util.Date;
 import java.util.Locale;
 
 import foodbook.thinmint.IApiCallback;
 import foodbook.thinmint.IAsyncCallback;
 import foodbook.thinmint.R;
+import foodbook.thinmint.activities.ActivityStarter;
+import foodbook.thinmint.activities.MainActivity;
 import foodbook.thinmint.activities.TokenFragment;
 import foodbook.thinmint.api.Query;
+import foodbook.thinmint.api.WebAPIResult;
 import foodbook.thinmint.models.JsonHelper;
 import foodbook.thinmint.models.domain.Note;
 import foodbook.thinmint.tasks.CallServiceAsyncTask;
 import foodbook.thinmint.tasks.CallServiceCallback;
+import foodbook.thinmint.tasks.DeleteServiceAsyncTask;
+import foodbook.thinmint.tasks.DeleteServiceCallback;
 
 /**
  * A simple {@link Fragment} subclass.
@@ -42,10 +50,13 @@ public class NoteFragment extends TokenFragment implements IApiCallback {
     private TextView mNoteContents;
     private TextView mNoteUser;
     private TextView mNoteDate;
+    private TextView mHiddenUserSubject;
 
     private CallServiceAsyncTask mGetNoteTask;
     private CallServiceCallback mGetNoteCallback;
 
+    private DeleteServiceAsyncTask mDeleteServiceAsyncTask;
+    private DeleteServiceCallback mDeleteServiceCallback;
 
     public NoteFragment() {
         // Required empty public constructor
@@ -77,7 +88,7 @@ public class NoteFragment extends TokenFragment implements IApiCallback {
         initUser();
 
         mGetNoteCallback = new CallServiceCallback(this);
-
+        mDeleteServiceCallback = new DeleteServiceCallback(this);
     }
 
     @Override
@@ -95,6 +106,16 @@ public class NoteFragment extends TokenFragment implements IApiCallback {
         mNoteContents = (TextView) inflated.findViewById(R.id.note_contents);
         mNoteUser = (TextView) inflated.findViewById(R.id.note_user);
         mNoteDate = (TextView) inflated.findViewById(R.id.note_date);
+        mHiddenUserSubject = (TextView) inflated.findViewById(R.id.hidden_user_id);
+
+        mNoteUser.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                String subject = mHiddenUserSubject.getText().toString();
+                String username = mNoteUser.getText().toString();
+                ActivityStarter.startUserActivity(getActivity(), subject, username);
+            }
+        });
 
         mSwipeRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
             @Override
@@ -132,6 +153,15 @@ public class NoteFragment extends TokenFragment implements IApiCallback {
         mListener = null;
     }
 
+    public void deleteNote() {
+        setLoading(true);
+        mDeleteServiceAsyncTask = new DeleteServiceAsyncTask(getContext(), mDeleteServiceCallback, mToken);
+        Query query = Query.builder()
+                .setPath("api/notes/" + mNoteId)
+                .build();
+        mDeleteServiceAsyncTask.execute(query);
+    }
+
     private void setLoading(boolean isLoading) {
         mSwipeRefreshLayout.setRefreshing(isLoading);
     }
@@ -140,22 +170,47 @@ public class NoteFragment extends TokenFragment implements IApiCallback {
         setLoading(false);
         mNoteContents.setText(note.getContent());
         mNoteUser.setText(note.getUser().getUsername());
-        mNoteDate.setText(note.getDateCreated().toString());
+
+        long nowInMillis = System.currentTimeMillis();
+        Date dateCreated = note.getDateCreated();
+
+        Calendar now = Calendar.getInstance();
+        Calendar created = Calendar.getInstance();
+        now.setTime(new Date(nowInMillis));
+        created.setTime(dateCreated);
+
+        boolean sameDay = now.get(Calendar.YEAR) == created.get(Calendar.YEAR) &&
+                now.get(Calendar.DAY_OF_YEAR) == created.get(Calendar.DAY_OF_YEAR);
+        boolean sameYear = now.get(Calendar.YEAR) == created.get(Calendar.YEAR);
+
+        DateFormat dateFormat = sameYear ? MainActivity.DATE_FORMAT : MainActivity.DATE_FORMAT_YEAR;
+        String dateString = sameDay ? MainActivity.TIME_FORMAT.format(dateCreated)
+                : dateFormat.format(dateCreated) + " at " + MainActivity.TIME_FORMAT.format(dateCreated);
+
+        mNoteDate.setText(dateString);
+        mHiddenUserSubject.setText(note.getUser().getSubject());
     }
 
     private void refreshNote() {
         setLoading(true);
         mGetNoteTask = new CallServiceAsyncTask(getContext(), mGetNoteCallback, mToken);
 
-        String path = String.format(Locale.US,"api/notes/%d", mNoteId);
+        String path = String.format(Locale.US, "api/notes/%d", mNoteId);
 
         Query query = Query.builder()
                 .setPath(path)
-                .setAccessToken(mToken.getAccessToken())
+//                .setAccessToken(mToken.getAccessToken())
                 .setSort("-datecreated")
                 .build();
 
         mGetNoteTask.execute(query);
+    }
+
+    private void onNoteDeleted(boolean success) {
+        setLoading(false);
+        if (success) {
+            mListener.onNoteDeleted(mNoteId);
+        }
     }
 
     @Override
@@ -165,6 +220,8 @@ public class NoteFragment extends TokenFragment implements IApiCallback {
             Note note = JsonHelper.getNote(mGetNoteCallback.getResult().getResult());
             onNoteRetrieved(note);
             mListener.onNoteRetrieved(note);
+        } else if (cb.equals(mDeleteServiceCallback)) {
+            onNoteDeleted(mDeleteServiceCallback.getResult().isSuccess());
         }
     }
 
@@ -180,6 +237,9 @@ public class NoteFragment extends TokenFragment implements IApiCallback {
      */
     public interface OnNoteFragmentDataListener {
         void onNoteFragmentCreated(View view);
+
         void onNoteRetrieved(Note note);
+
+        void onNoteDeleted(long noteId);
     }
 }

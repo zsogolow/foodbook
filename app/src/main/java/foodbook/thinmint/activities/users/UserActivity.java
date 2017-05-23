@@ -1,5 +1,6 @@
 package foodbook.thinmint.activities.users;
 
+import android.app.Activity;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.preference.PreferenceManager;
@@ -24,11 +25,15 @@ import foodbook.thinmint.activities.TokenActivity;
 import foodbook.thinmint.activities.notes.NoteActivity;
 import foodbook.thinmint.constants.Constants;
 
+import static foodbook.thinmint.activities.MainActivity.DELETE_NOTE_EXTRA_ID;
+import static foodbook.thinmint.activities.MainActivity.DELETE_NOTE_REQUEST_CODE;
+
 public class UserActivity extends TokenActivity implements
         UserInfoFragment.OnUserInfoFragmentDataListener,
         UserNotesFragment.OnUserNotesFragmentDataListener {
 
     private FragmentPagerAdapter mFragmentPagerAdapter;
+    private ViewPager mPager;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -50,13 +55,28 @@ public class UserActivity extends TokenActivity implements
 
         mFragmentPagerAdapter = new MyPagerAdapter(getSupportFragmentManager(), subject);
 
-        ViewPager viewPager = (ViewPager) findViewById(R.id.view_pager);
-        viewPager.setAdapter(mFragmentPagerAdapter);
+        mPager = (ViewPager) findViewById(R.id.view_pager);
+        mPager.setAdapter(mFragmentPagerAdapter);
 
         TabLayout tabLayout = (TabLayout) findViewById(R.id.tabs);
-        tabLayout.setupWithViewPager(viewPager);
+        tabLayout.setupWithViewPager(mPager);
 
         setActionBarTitle(username);
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        switch (requestCode) {
+            case DELETE_NOTE_REQUEST_CODE:
+                if (resultCode == Activity.RESULT_OK) {
+                    long oldId = data.getLongExtra(DELETE_NOTE_EXTRA_ID, -1);
+
+                    // TODO refresh user notes here
+
+                    break;
+                }
+        }
     }
 
     @Override
@@ -109,19 +129,16 @@ public class UserActivity extends TokenActivity implements
     public void onUserNotesFragmentCreated(View view) {
 
     }
-
-    @Override
-    public void showNote(long noteId) {
-        startNoteActivity(noteId);
-    }
+//
+//    @Override
+//    public void showNote(long noteId) {
+//        startNoteActivity(noteId);
+//    }
 
     public static class MyPagerAdapter extends FragmentPagerAdapter {
         private static int NUM_ITEMS = 2;
         private static String[] NAMES = {"Notes", "Info"};
         private String mUserId;
-
-        private UserNotesFragment mUserNotesFragment;
-        private UserInfoFragment mUserInfoFragment;
 
         public MyPagerAdapter(FragmentManager fragmentManager, String userid) {
             super(fragmentManager);

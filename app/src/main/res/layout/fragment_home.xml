@@ -2,7 +2,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context="foodbook.thinmint.activities.home.FeedFragment">
+    tools:context="foodbook.thinmint.activities.feed.FeedFragment">
 
     <LinearLayout
         android:layout_width="match_parent"

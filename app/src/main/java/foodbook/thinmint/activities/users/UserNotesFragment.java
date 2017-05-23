@@ -20,6 +20,7 @@ import java.util.Locale;
 import foodbook.thinmint.IApiCallback;
 import foodbook.thinmint.IAsyncCallback;
 import foodbook.thinmint.R;
+import foodbook.thinmint.activities.ActivityStarter;
 import foodbook.thinmint.activities.TokenFragment;
 import foodbook.thinmint.activities.adapters.EndlessRecyclerViewScrollListener;
 import foodbook.thinmint.activities.common.OnNotesListInteractionListener;
@@ -127,7 +128,7 @@ public class UserNotesFragment extends TokenFragment implements OnNotesListInter
 
                 Query query = Query.builder()
                         .setPath(path)
-                        .setAccessToken(mToken.getAccessToken())
+//                        .setAccessToken(mToken.getAccessToken())
                         .setSort("-datecreated")
                         .setPage(page + 1)
                         .build();
@@ -168,7 +169,23 @@ public class UserNotesFragment extends TokenFragment implements OnNotesListInter
     public void onNoteClicked(View caller) {
         TextView hiddenNoteIdTextView = (TextView)caller.findViewById(R.id.hidden_note_id);
         String noteId = hiddenNoteIdTextView.getText().toString();
-        mListener.showNote(Long.parseLong(noteId));
+        ActivityStarter.startNoteActivityForResult(getActivity(), Long.parseLong(noteId));
+    }
+
+    @Override
+    public void onCommentsClicked(View caller) {
+        TextView hiddenNoteIdTextView = (TextView) caller.findViewById(R.id.hidden_note_id);
+        String noteId = hiddenNoteIdTextView.getText().toString();
+        ActivityStarter.startCommentsActivity(getActivity(), Long.parseLong(noteId));
+    }
+
+    @Override
+    public void onUserClicked(View caller) {
+//        TextView hiddenUserIdTextView = (TextView) caller.findViewById(R.id.hidden_user_id);
+//        TextView userNameTextView = (TextView) caller.findViewById(R.id.user_name);
+//        String userId = hiddenUserIdTextView.getText().toString();
+//        String username = userNameTextView.getText().toString();
+//        ActivityStarter.startUserActivity(getActivity(), userId, username);
     }
 
     private void setLoading(boolean isLoading) {
@@ -183,7 +200,7 @@ public class UserNotesFragment extends TokenFragment implements OnNotesListInter
 
         Query query = Query.builder()
                 .setPath(path)
-                .setAccessToken(mToken.getAccessToken())
+//                .setAccessToken(mToken.getAccessToken())
                 .setSort("-datecreated")
                 .build();
 
@@ -203,6 +220,16 @@ public class UserNotesFragment extends TokenFragment implements OnNotesListInter
     public void onNoteAdded(Note note) {
         mAdapter.add(note);
         setLoading(false);
+    }
+
+    @Override
+    public void onNoteAdded(long noteid) {
+        refreshMyNotes();
+    }
+
+    @Override
+    public void onNoteDeleted(long noteId) {
+        mAdapter.remove(noteId);
     }
 
     @Override
@@ -231,6 +258,6 @@ public class UserNotesFragment extends TokenFragment implements OnNotesListInter
     public interface OnUserNotesFragmentDataListener {
         void onUserNotesFragmentCreated(View view);
 
-        void showNote(long noteId);
+//        void showNote(long noteId);
     }
 }

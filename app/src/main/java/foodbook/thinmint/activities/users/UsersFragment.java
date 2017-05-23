@@ -22,6 +22,7 @@ import java.util.Locale;
 import foodbook.thinmint.IApiCallback;
 import foodbook.thinmint.IAsyncCallback;
 import foodbook.thinmint.R;
+import foodbook.thinmint.activities.ActivityStarter;
 import foodbook.thinmint.activities.TokenFragment;
 import foodbook.thinmint.activities.adapters.EndlessRecyclerViewScrollListener;
 import foodbook.thinmint.activities.adapters.UsersRecyclerAdapter;
@@ -127,7 +128,7 @@ public class UsersFragment extends TokenFragment implements IApiCallback,
             public void onLoadMore(int page, int totalItemsCount, RecyclerView view) {
                 Query query = Query.builder()
                         .setPath("api/users")
-                        .setAccessToken(mToken.getAccessToken())
+//                        .setAccessToken(mToken.getAccessToken())
                         .setSort("username")
                         .setPage(page + 1)
                         .build();
@@ -175,7 +176,7 @@ public class UsersFragment extends TokenFragment implements IApiCallback,
 
         Query query = Query.builder()
                 .setPath(path)
-                .setAccessToken(mToken.getAccessToken())
+//                .setAccessToken(mToken.getAccessToken())
                 .setSort("username")
                 .build();
 
@@ -200,7 +201,7 @@ public class UsersFragment extends TokenFragment implements IApiCallback,
         TextView usernameTextView = (TextView) caller.findViewById(R.id.user_name);
         String userSubject = hiddenUserSubjectTextView.getText().toString();
         String username = usernameTextView.getText().toString();
-        mListener.showUser(userSubject, username);
+        ActivityStarter.startUserActivity(getActivity(), userSubject, username);
     }
 
     @Override
@@ -218,7 +219,5 @@ public class UsersFragment extends TokenFragment implements IApiCallback,
 
     public interface OnUsersFragmentDataListener {
         void onUsersFragmentCreated(View view);
-
-        void showUser(String subject, String username);
     }
 }

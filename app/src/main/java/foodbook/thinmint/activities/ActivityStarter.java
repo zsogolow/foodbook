@@ -5,8 +5,11 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
+import android.view.inputmethod.InputMethodManager;
 
+import foodbook.thinmint.activities.notes.CommentsActivity;
 import foodbook.thinmint.activities.notes.CreateNoteActivity;
+import foodbook.thinmint.activities.notes.NoteActivity;
 import foodbook.thinmint.activities.users.UserActivity;
 import foodbook.thinmint.constants.Constants;
 
@@ -33,6 +36,35 @@ public class ActivityStarter {
         activity.startActivity(createNoteIntent);
     }
 
+    public static void startCreateNoteActivityForResult(Activity activity) {
+        Intent createNoteIntent = new Intent(activity, CreateNoteActivity.class);
+        activity.startActivityForResult(createNoteIntent, MainActivity.CREATE_NOTE_REQUEST_CODE);
+    }
+
+    public static void startNoteActivity(Activity activity, long noteId) {
+        Intent noteIntent = new Intent(activity, NoteActivity.class);
+        Bundle bundle = new Bundle();
+        bundle.putLong("note_id", noteId);
+        noteIntent.putExtras(bundle);
+        activity.startActivity(noteIntent);
+    }
+
+    public static void startNoteActivityForResult(Activity activity, long noteId) {
+        Intent noteIntent = new Intent(activity, NoteActivity.class);
+        Bundle bundle = new Bundle();
+        bundle.putLong("note_id", noteId);
+        noteIntent.putExtras(bundle);
+        activity.startActivityForResult(noteIntent, MainActivity.DELETE_NOTE_REQUEST_CODE);
+    }
+
+    public static void startCommentsActivity(Activity activity, long noteId) {
+        Intent noteIntent = new Intent(activity, CommentsActivity.class);
+        Bundle bundle = new Bundle();
+        bundle.putLong("note_id", noteId);
+        noteIntent.putExtras(bundle);
+        activity.startActivity(noteIntent);
+    }
+
     public static void startUserActivity(Activity activity, String userSubject, String username) {
         Intent userIntent = new Intent(activity, UserActivity.class);
         Bundle bundle = new Bundle();
@@ -48,5 +80,13 @@ public class ActivityStarter {
         Intent loginActivity = new Intent(activity, LoginActivity.class);
         activity.startActivity(loginActivity);
         activity.finish();
+    }
+
+    public static void hideSoftKeyboard(Activity activity) {
+        InputMethodManager inputMethodManager =
+                (InputMethodManager) activity.getSystemService(
+                        Activity.INPUT_METHOD_SERVICE);
+        inputMethodManager.hideSoftInputFromWindow(
+                activity.getCurrentFocus().getWindowToken(), 0);
     }
 }

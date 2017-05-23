@@ -29,6 +29,7 @@
         <activity android:name=".activities.users.UserActivity"
             android:theme="@style/AppTheme.NoActionBar" />
         <activity android:name=".activities.notes.NoteActivity" />
+        <activity android:name=".activities.notes.CommentsActivity" />
         <activity android:name=".activities.notes.CreateNoteActivity" />
     </application>
 

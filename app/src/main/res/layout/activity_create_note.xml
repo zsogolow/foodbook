@@ -8,24 +8,36 @@
 
     <LinearLayout
         android:layout_width="fill_parent"
-        android:layout_height="wrap_content"
+        android:layout_height="match_parent"
         android:orientation="vertical"
         android:paddingLeft="20dp"
         android:paddingRight="20dp"
         android:paddingTop="@dimen/appbar_padding_top">
 
+        <TextView
+            android:id="@+id/date"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="@dimen/activity_vertical_margin"
+            android:text="TextView"
+            android:textSize="30sp" />
+
         <android.support.design.widget.TextInputLayout
             android:id="@+id/input_layout_note_contents"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:gravity="top">
+            android:gravity="top"
+            android:orientation="horizontal">
 
             <EditText
                 android:id="@+id/edit_note_contents"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:hint="Note" />
-
+                android:layout_weight="1"
+                android:hint="Note"
+                android:inputType="textMultiLine"
+                android:textSize="18sp" />
         </android.support.design.widget.TextInputLayout>
     </LinearLayout>
+
 </FrameLayout>

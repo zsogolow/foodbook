@@ -1,4 +1,4 @@
-package foodbook.thinmint.activities.home;
+package foodbook.thinmint.activities.feed;
 
 import android.content.Context;
 import android.os.Bundle;
@@ -7,7 +7,6 @@ import android.support.v4.app.Fragment;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -19,6 +18,7 @@ import java.util.List;
 import foodbook.thinmint.IApiCallback;
 import foodbook.thinmint.IAsyncCallback;
 import foodbook.thinmint.R;
+import foodbook.thinmint.activities.ActivityStarter;
 import foodbook.thinmint.activities.TokenFragment;
 import foodbook.thinmint.activities.adapters.EndlessRecyclerViewScrollListener;
 import foodbook.thinmint.activities.adapters.NotesRecyclerAdapter;
@@ -121,12 +121,12 @@ public class FeedFragment extends TokenFragment implements IApiCallback, OnNotes
 
         mListener.onFeedFragmentCreated(inflated);
 
-         mScrollListener = new EndlessRecyclerViewScrollListener(mLayoutManager) {
+        mScrollListener = new EndlessRecyclerViewScrollListener(mLayoutManager) {
             @Override
             public void onLoadMore(int page, int totalItemsCount, RecyclerView view) {
                 Query query = Query.builder()
                         .setPath("api/notes")
-                        .setAccessToken(mToken.getAccessToken())
+//                        .setAccessToken(mToken.getAccessToken())
                         .setSort("-datecreated")
                         .setPage(page + 1)
                         .build();
@@ -168,7 +168,23 @@ public class FeedFragment extends TokenFragment implements IApiCallback, OnNotes
     public void onNoteClicked(View caller) {
         TextView hiddenNoteIdTextView = (TextView) caller.findViewById(R.id.hidden_note_id);
         String noteId = hiddenNoteIdTextView.getText().toString();
-        mListener.showNote(Long.parseLong(noteId));
+        ActivityStarter.startNoteActivityForResult(getActivity(), Long.parseLong(noteId));
+    }
+
+    @Override
+    public void onCommentsClicked(View caller) {
+        TextView hiddenNoteIdTextView = (TextView) caller.findViewById(R.id.hidden_note_id);
+        String noteId = hiddenNoteIdTextView.getText().toString();
+        ActivityStarter.startCommentsActivity(getActivity(), Long.parseLong(noteId));
+    }
+
+    @Override
+    public void onUserClicked(View caller) {
+        TextView hiddenUserIdTextView = (TextView) caller.findViewById(R.id.hidden_user_id);
+        TextView userNameTextView = (TextView) caller.findViewById(R.id.user_name);
+        String userId = hiddenUserIdTextView.getText().toString();
+        String username = userNameTextView.getText().toString();
+        ActivityStarter.startUserActivity(getActivity(), userId, username);
     }
 
     private void setLoading(boolean isLoading) {
@@ -186,7 +202,7 @@ public class FeedFragment extends TokenFragment implements IApiCallback, OnNotes
 
         Query query = Query.builder()
                 .setPath(path)
-                .setAccessToken(mToken.getAccessToken())
+//                .setAccessToken(mToken.getAccessToken())
                 .setSort("-datecreated")
                 .build();
 
@@ -209,6 +225,16 @@ public class FeedFragment extends TokenFragment implements IApiCallback, OnNotes
     }
 
     @Override
+    public void onNoteAdded(long noteid) {
+        refreshFeed();
+    }
+
+    @Override
+    public void onNoteDeleted(long noteId) {
+        mAdapter.remove(noteId);
+    }
+
+    @Override
     public void callback(IAsyncCallback cb) {
         if (cb.equals(mGetFeedCallback)) {
             mGetFeedTask = null;
@@ -224,6 +250,6 @@ public class FeedFragment extends TokenFragment implements IApiCallback, OnNotes
     public interface OnHomeFragmentDataListener {
         void onFeedFragmentCreated(View view);
 
-        void showNote(long noteId);
+//        void showNote(long noteId);
     }
 }

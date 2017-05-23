@@ -8,7 +8,7 @@ import java.net.URLEncoder;
 
 public class Query {
 
-    private String mAccessToken;
+//    private String mAccessToken;
     private String mPath;
     private String mFilter;
     private String mSort;
@@ -16,7 +16,7 @@ public class Query {
     private int mPageSize;
 
     private Query() {
-        mAccessToken = "";
+//        mAccessToken = "";
         mPath = "";
         mFilter = "";
         mSort = "";
@@ -65,9 +65,9 @@ public class Query {
         return new QueryBuilder();
     }
 
-    public String getAccessToken() {
-        return mAccessToken;
-    }
+//    public String getAccessToken() {
+//        return mAccessToken;
+//    }
 
     public String getPath() {
         return mPath;
@@ -93,10 +93,10 @@ public class Query {
 
         private Query mQuery = new Query();
 
-        public QueryBuilder setAccessToken(String token) {
-            this.mQuery.mAccessToken = token;
-            return this;
-        }
+//        public QueryBuilder setAccessToken(String token) {
+//            this.mQuery.mAccessToken = token;
+//            return this;
+//        }
 
         public QueryBuilder setPath(String path) {
             this.mQuery.mPath = path;

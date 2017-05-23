@@ -10,4 +10,6 @@ import foodbook.thinmint.models.domain.Note;
 
 public interface OnNotesListInteractionListener {
     void onNoteAdded(Note note);
+    void onNoteAdded(long noteId);
+    void onNoteDeleted(long noteId);
 }

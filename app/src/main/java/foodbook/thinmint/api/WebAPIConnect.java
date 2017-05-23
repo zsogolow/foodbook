@@ -23,7 +23,7 @@ public class WebAPIConnect<T> {
 
     private String url = Constants.ThinMintAPI;
 
-    public WebAPIResult callService(Query query) {
+    public WebAPIResult callService(Query query, String accessToken) {
         WebAPIResult result = new WebAPIResult();
 
         try {
@@ -33,7 +33,7 @@ public class WebAPIConnect<T> {
 
             HttpURLConnection con = (HttpURLConnection) obj.openConnection();
             con.setRequestMethod("GET");
-            con.setRequestProperty("Authorization", "Bearer " + query.getAccessToken());
+            con.setRequestProperty("Authorization", "Bearer " + accessToken);
 
             int responseCode = con.getResponseCode();
 
@@ -127,4 +127,50 @@ public class WebAPIConnect<T> {
         return result;
     }
 
+    public WebAPIResult deleteService(Query query, String accessToken) {
+        WebAPIResult result = new WebAPIResult();
+
+        try {
+
+            URL obj = new URL(url + query.toString());
+
+            HttpURLConnection con = (HttpURLConnection) obj.openConnection();
+            con.setRequestMethod("DELETE");
+            con.setRequestProperty("Authorization", "Bearer " + accessToken);
+
+            int responseCode = con.getResponseCode();
+
+            result.setStatusCode(responseCode);
+
+            if (responseCode < 400) {
+                BufferedReader in = new BufferedReader(
+                        new InputStreamReader(con.getInputStream()));
+                String inputLine;
+                StringBuffer response = new StringBuffer();
+
+                while ((inputLine = in.readLine()) != null) {
+                    response.append(inputLine);
+                }
+                in.close();
+
+                String pagingHeader = con.getHeaderField(PAGING_HEADER);
+                String sortingHeader = con.getHeaderField(SORTING_HEADER);
+                result.setSortingInfo(WebAPIHelper.getSortingInfo(sortingHeader));
+                result.setPagingInfo(WebAPIHelper.getPagingInfo(pagingHeader));
+
+                result.setSuccess(true);
+                result.setResult(response.toString());
+            } else {
+                String responseMessage = con.getResponseMessage();
+                result.setSuccess(false);
+                result.setResult(responseMessage);
+                result.setErrorMessage(responseMessage);
+            }
+        } catch (Exception e) {
+            result.setSuccess(false);
+            result.setErrorMessage("Exception: " + e.getMessage());
+        }
+
+        return result;
+    }
 }

@@ -23,6 +23,7 @@ import java.util.Locale;
 import foodbook.thinmint.IApiCallback;
 import foodbook.thinmint.IAsyncCallback;
 import foodbook.thinmint.R;
+import foodbook.thinmint.activities.ActivityStarter;
 import foodbook.thinmint.activities.MainActivity;
 import foodbook.thinmint.activities.TokenFragment;
 import foodbook.thinmint.activities.adapters.EndlessRecyclerViewScrollListener;
@@ -64,7 +65,7 @@ public class DayFragment extends TokenFragment implements OnNotesListInteraction
     public static DayFragment newInstance(Date date) {
         DayFragment fragment = new DayFragment();
         Bundle args = new Bundle();
-        args.putString(ARG_DATE, MainActivity.DATE_FORMAT.format(date));
+        args.putString(ARG_DATE, MainActivity.PARSABLE_DATE_FORMAT.format(date));
         fragment.setArguments(args);
         return fragment;
     }
@@ -75,7 +76,7 @@ public class DayFragment extends TokenFragment implements OnNotesListInteraction
         if (getArguments() != null) {
             String dateString = getArguments().getString(ARG_DATE);
             try {
-                mCurrentDate = MainActivity.DATE_FORMAT.parse(dateString);
+                mCurrentDate = MainActivity.PARSABLE_DATE_FORMAT.parse(dateString);
             } catch (ParseException pe) {
                 mCurrentDate = new Date(System.currentTimeMillis());
             }
@@ -135,7 +136,7 @@ public class DayFragment extends TokenFragment implements OnNotesListInteraction
 
                 Query query = Query.builder()
                         .setPath(path)
-                        .setAccessToken(mToken.getAccessToken())
+//                        .setAccessToken(mToken.getAccessToken())
                         .setSort("-datecreated")
                         .setFilter(rawQuery)
                         .setPage(page + 1)
@@ -175,7 +176,23 @@ public class DayFragment extends TokenFragment implements OnNotesListInteraction
     public void onNoteClicked(View caller) {
         TextView hiddenNoteIdTextView = (TextView) caller.findViewById(R.id.hidden_note_id);
         String noteId = hiddenNoteIdTextView.getText().toString();
-        mListener.showNote(Long.parseLong(noteId));
+        ActivityStarter.startNoteActivityForResult(getActivity(), Long.parseLong(noteId));
+    }
+
+    @Override
+    public void onCommentsClicked(View caller) {
+        TextView hiddenNoteIdTextView = (TextView) caller.findViewById(R.id.hidden_note_id);
+        String noteId = hiddenNoteIdTextView.getText().toString();
+        ActivityStarter.startCommentsActivity(getActivity(), Long.parseLong(noteId));
+    }
+
+    @Override
+    public void onUserClicked(View caller) {
+        TextView hiddenUserIdTextView = (TextView) caller.findViewById(R.id.hidden_user_id);
+        TextView userNameTextView = (TextView) caller.findViewById(R.id.user_name);
+        String userId = hiddenUserIdTextView.getText().toString();
+        String username = userNameTextView.getText().toString();
+        ActivityStarter.startUserActivity(getActivity(), userId, username);
     }
 
     private void refreshList() {
@@ -193,7 +210,7 @@ public class DayFragment extends TokenFragment implements OnNotesListInteraction
 
         Query query = Query.builder()
                 .setPath(path)
-                .setAccessToken(mToken.getAccessToken())
+//                .setAccessToken(mToken.getAccessToken())
                 .setSort("-datecreated")
                 .setFilter(rawQuery)
                 .build();
@@ -226,6 +243,16 @@ public class DayFragment extends TokenFragment implements OnNotesListInteraction
     }
 
     @Override
+    public void onNoteAdded(long noteid) {
+        refreshList();
+    }
+
+    @Override
+    public void onNoteDeleted(long noteId) {
+        mAdapter.remove(noteId);
+    }
+
+    @Override
     public void callback(IAsyncCallback cb) {
         if (cb.equals(mLoadingCallback)) {
             mLoadingTask = null;
@@ -243,7 +270,7 @@ public class DayFragment extends TokenFragment implements OnNotesListInteraction
 
         void selectDay(Date date);
 
-        void showNote(long noteId);
+//        void showNote(long noteId);
     }
 }
 

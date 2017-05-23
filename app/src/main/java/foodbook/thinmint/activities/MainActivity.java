@@ -1,5 +1,6 @@
 package foodbook.thinmint.activities;
 
+import android.app.Activity;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
@@ -19,7 +20,9 @@ import android.view.MenuItem;
 import android.widget.TextView;
 
 import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.Locale;
 
 import foodbook.thinmint.IApiCallback;
 import foodbook.thinmint.IAsyncCallback;
@@ -27,10 +30,9 @@ import foodbook.thinmint.R;
 import foodbook.thinmint.activities.common.OnNotesListInteractionListener;
 import foodbook.thinmint.activities.day.DatePickerFragment;
 import foodbook.thinmint.activities.day.DayFragment;
-import foodbook.thinmint.activities.home.FeedFragment;
+import foodbook.thinmint.activities.feed.FeedFragment;
 import foodbook.thinmint.activities.users.UserNotesFragment;
 import foodbook.thinmint.activities.users.UserInfoFragment;
-import foodbook.thinmint.activities.notes.NoteActivity;
 import foodbook.thinmint.activities.users.UsersFragment;
 import foodbook.thinmint.constants.Constants;
 
@@ -41,7 +43,15 @@ public class MainActivity extends TokenActivity implements
         UsersFragment.OnUsersFragmentDataListener {
     private static final String TAG = "MainActivity";
 
-    public static final DateFormat DATE_FORMAT = DateFormat.getDateInstance();
+    public static final int CREATE_NOTE_REQUEST_CODE = 0;
+    public static final int DELETE_NOTE_REQUEST_CODE = 1;
+    public static final String CREATE_NOTE_EXTRA_ID = "created_id";
+    public static final String DELETE_NOTE_EXTRA_ID = "deleted_id";
+
+    public static final DateFormat PARSABLE_DATE_FORMAT = DateFormat.getDateInstance();
+    public static final DateFormat DATE_FORMAT = new SimpleDateFormat("MMM d", Locale.US);
+    public static final DateFormat DATE_FORMAT_YEAR = new SimpleDateFormat("MMM d yyyy", Locale.US);
+    public static final DateFormat TIME_FORMAT = new SimpleDateFormat("h:mm a", Locale.US);
 
     private Date mCurrentDate;
 
@@ -58,7 +68,6 @@ public class MainActivity extends TokenActivity implements
         setContentView(R.layout.activity_main);
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
-
 
         initToken();
         initUser();
@@ -93,6 +102,26 @@ public class MainActivity extends TokenActivity implements
         MenuItem dailyItem = mNavigationView.getMenu().getItem(0);
         dailyItem.setChecked(true);
         onNavigationItemSelected(dailyItem);
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        switch (requestCode) {
+            case CREATE_NOTE_REQUEST_CODE:
+                if (resultCode == Activity.RESULT_OK) {
+                    long newId = data.getLongExtra(CREATE_NOTE_EXTRA_ID, -1);
+                    mCurrentFragment.onNoteAdded(newId);
+                    break;
+                }
+
+            case DELETE_NOTE_REQUEST_CODE:
+                if (resultCode == Activity.RESULT_OK) {
+                    long oldId = data.getLongExtra(DELETE_NOTE_EXTRA_ID, -1);
+                    mCurrentFragment.onNoteDeleted(oldId);
+                    break;
+                }
+        }
     }
 
     private FragmentManager.OnBackStackChangedListener getBackStackChangedListener() {
@@ -195,18 +224,12 @@ public class MainActivity extends TokenActivity implements
         return super.onOptionsItemSelected(item);
     }
 
-    private void startNoteActivity(long noteId) {
-        Intent userIntent = new Intent(getApplicationContext(), NoteActivity.class);
-
-        Bundle bundle = new Bundle();
-        bundle.putLong("note_id", noteId);
-        userIntent.putExtras(bundle);
-
-        startActivity(userIntent);
-    }
+//    private void startNoteActivity(long noteId) {
+//        ActivityStarter.startNoteActivity(MainActivity.this, noteId);
+//    }
 
     private void startCreateNoteActivity() {
-        ActivityStarter.startCreateNoteActivity(MainActivity.this);
+        ActivityStarter.startCreateNoteActivityForResult(MainActivity.this);
     }
 
     private void startUserActivity(String userSubject, String username) {
@@ -300,16 +323,16 @@ public class MainActivity extends TokenActivity implements
         mDayFragment.setDate(date);
         mCurrentDate = date;
     }
+//
+//    @Override
+//    public void showNote(long noteId) {
+//        startNoteActivity(noteId);
+//    }
 
-    @Override
-    public void showNote(long noteId) {
-        startNoteActivity(noteId);
-    }
-
-    @Override
-    public void showUser(String subject, String username) {
-        startUserActivity(subject, username);
-    }
+//    @Override
+//    public void showUser(String subject, String username) {
+//        startUserActivity(subject, username);
+//    }
 
     @Override
     public void onFeedFragmentCreated(View view) {

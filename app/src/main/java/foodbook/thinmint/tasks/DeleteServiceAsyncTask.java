@@ -2,7 +2,6 @@ package foodbook.thinmint.tasks;
 
 import android.content.Context;
 import android.os.AsyncTask;
-import android.os.SystemClock;
 
 import foodbook.thinmint.api.Query;
 import foodbook.thinmint.api.WebAPIConnect;
@@ -16,13 +15,13 @@ import foodbook.thinmint.idsrv.TokenResult;
  * Created by Zachery.Sogolow on 5/9/2017.
  */
 
-public class CallServiceAsyncTask extends AsyncTask<Query, String, WebAPIResult> {
+public class DeleteServiceAsyncTask extends AsyncTask<Query, String, WebAPIResult> {
 
     private Context mContext;
-    private CallServiceCallback mCallback;
+    private DeleteServiceCallback mCallback;
     private Token mToken;
 
-    public CallServiceAsyncTask(Context context, CallServiceCallback callback, Token token) {
+    public DeleteServiceAsyncTask(Context context, DeleteServiceCallback callback, Token token) {
         this.mContext = context;
         this.mCallback = callback;
         this.mToken = token;
@@ -43,7 +42,7 @@ public class CallServiceAsyncTask extends AsyncTask<Query, String, WebAPIResult>
         }
 
         if (!TokenHelper.isTokenExpired(mToken)) {
-            result = connect.callService(query, mToken.getAccessToken());
+            result = connect.deleteService(query, mToken.getAccessToken());
         }
 
         return result;

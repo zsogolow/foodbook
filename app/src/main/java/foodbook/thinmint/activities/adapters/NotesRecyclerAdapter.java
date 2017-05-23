@@ -4,6 +4,7 @@ import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
@@ -24,6 +25,7 @@ import foodbook.thinmint.models.domain.User;
 
 public class NotesRecyclerAdapter extends RecyclerView.Adapter<NotesRecyclerAdapter.ViewHolder> {
     private static final DateFormat DATE_FORMAT = new SimpleDateFormat("MMM d", Locale.US);
+    private static final DateFormat DATE_FORMAT_YEAR = new SimpleDateFormat("MMM d yyyy", Locale.US);
     private static final DateFormat TIME_FORMAT = new SimpleDateFormat("h:mm a", Locale.US);
 
     private List<Note> mNotes;
@@ -34,23 +36,39 @@ public class NotesRecyclerAdapter extends RecyclerView.Adapter<NotesRecyclerAdap
     // you provide access to all the views for a data item in a view holder
     public static class ViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
         // each data item is just a string in this case
-        public LinearLayout mLinearLayout;
+        private LinearLayout mLinearLayout;
+        private Button mOpenButton;
+        private Button mCommentButton;
+        private TextView mUserName;
         private ViewHolder.IOnNoteClickListener mListener;
 
         public ViewHolder(LinearLayout v, IOnNoteClickListener listener) {
             super(v);
             mLinearLayout = v;
+            mOpenButton = (Button) mLinearLayout.findViewById(R.id.open_button);
+            mCommentButton = (Button) mLinearLayout.findViewById(R.id.comment_button);
+            mUserName = (TextView) mLinearLayout.findViewById(R.id.user_name);
             mListener = listener;
-            mLinearLayout.setOnClickListener(this);
+            mOpenButton.setOnClickListener(this);
+            mCommentButton.setOnClickListener(this);
+            mUserName.setOnClickListener(this);
         }
 
         @Override
         public void onClick(View v) {
-            mListener.onNoteClicked(v);
+            if (v.equals(mOpenButton)) {
+                mListener.onNoteClicked(mLinearLayout);
+            } else if (v.equals(mCommentButton)) {
+                mListener.onCommentsClicked(mLinearLayout);
+            } else if (v.equals(mUserName)) {
+                mListener.onUserClicked(mLinearLayout);
+            }
         }
 
         public interface IOnNoteClickListener {
             void onNoteClicked(View caller);
+            void onCommentsClicked(View caller);
+            void onUserClicked(View caller);
         }
     }
 
@@ -85,10 +103,14 @@ public class NotesRecyclerAdapter extends RecyclerView.Adapter<NotesRecyclerAdap
         Calendar created = Calendar.getInstance();
         now.setTime(new Date(nowInMillis));
         created.setTime(dateCreated);
+
         boolean sameDay = now.get(Calendar.YEAR) == created.get(Calendar.YEAR) &&
                 now.get(Calendar.DAY_OF_YEAR) == created.get(Calendar.DAY_OF_YEAR);
+        boolean sameYear = now.get(Calendar.YEAR) == created.get(Calendar.YEAR);
 
-        String dateString = sameDay ? TIME_FORMAT.format(dateCreated) : DATE_FORMAT.format(dateCreated);
+        DateFormat dateFormat = sameYear ? DATE_FORMAT : DATE_FORMAT_YEAR;
+        String dateString = sameDay ? TIME_FORMAT.format(dateCreated)
+                : dateFormat.format(dateCreated) + " at " + TIME_FORMAT.format(dateCreated);
 
         ((TextView) holder.mLinearLayout.findViewById(R.id.hidden_user_id))
                 .setText(mNotes.get(position).getUser().getSubject());
@@ -108,19 +130,34 @@ public class NotesRecyclerAdapter extends RecyclerView.Adapter<NotesRecyclerAdap
         return mNotes.size();
     }
 
-    public void swap(List<Note> notes){
+    public void swap(List<Note> notes) {
         mNotes = notes;
         notifyDataSetChanged();
     }
 
-    public void append(List<Note> notes){
+    public void append(List<Note> notes) {
         mNotes.addAll(notes);
         notifyDataSetChanged();
     }
 
-    public void add(Note note){
+    public void add(Note note) {
         mNotes.add(0, note);
         notifyDataSetChanged();
+    }
+
+    public void remove(long noteId) {
+        int indexToRemove = -1;
+        for (int i = 0; i < mNotes.size(); i++) {
+            if (mNotes.get(i).getId() == noteId) {
+                indexToRemove = i;
+                break;
+            }
+        }
+
+        if (indexToRemove >= 0) {
+            mNotes.remove(indexToRemove);
+            notifyDataSetChanged();
+        }
     }
 }
 

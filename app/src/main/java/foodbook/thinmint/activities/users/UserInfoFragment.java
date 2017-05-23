@@ -138,7 +138,7 @@ public class UserInfoFragment extends TokenFragment implements IApiCallback {
 
         Query query = Query.builder()
                 .setPath(path)
-                .setAccessToken(mToken.getAccessToken())
+//                .setAccessToken(mToken.getAccessToken())
                 .build();
 
         mGetUserTask.execute(query);

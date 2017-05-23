@@ -1,6 +1,8 @@
 package foodbook.thinmint.activities.notes;
 
+import android.app.Activity;
 import android.content.DialogInterface;
+import android.content.Intent;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -9,6 +11,7 @@ import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.widget.EditText;
+import android.widget.TextView;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -19,6 +22,7 @@ import java.util.Map;
 import foodbook.thinmint.IApiCallback;
 import foodbook.thinmint.IAsyncCallback;
 import foodbook.thinmint.R;
+import foodbook.thinmint.activities.MainActivity;
 import foodbook.thinmint.activities.TokenActivity;
 import foodbook.thinmint.api.WebAPIResult;
 import foodbook.thinmint.models.JsonHelper;
@@ -49,7 +53,10 @@ public class CreateNoteActivity extends TokenActivity implements IApiCallback {
 
         mNoteContents = (EditText) findViewById(R.id.edit_note_contents);
 
-        setActionBarTitle("");
+        TextView dateText = (TextView) findViewById(R.id.date);
+        dateText.setText(MainActivity.DATE_FORMAT.format(new Date(System.currentTimeMillis())));
+
+        setActionBarTitle("Write Note");
     }
 
     @Override
@@ -70,7 +77,6 @@ public class CreateNoteActivity extends TokenActivity implements IApiCallback {
         //noinspection SimplifiableIfStatement
         if (id == R.id.action_save) {
             addNote();
-            finish();
             return true;
         }
 
@@ -87,7 +93,7 @@ public class CreateNoteActivity extends TokenActivity implements IApiCallback {
     public void onBackPressed() {
         new AlertDialog.Builder(this)
                 .setIcon(android.R.drawable.ic_dialog_alert)
-                .setTitle("Are you sure?")
+                .setTitle("Create Note")
                 .setMessage("Are you sure you want to exit without saving?")
                 .setPositiveButton("Yes", new DialogInterface.OnClickListener() {
                     @Override
@@ -118,7 +124,6 @@ public class CreateNoteActivity extends TokenActivity implements IApiCallback {
         mAddNoteTask.execute("api/notes");
     }
 
-
     @Override
     public void callback(IAsyncCallback cb) {
         if (cb.equals(mAddNoteCallback)) {
@@ -126,6 +131,9 @@ public class CreateNoteActivity extends TokenActivity implements IApiCallback {
             WebAPIResult result = mAddNoteCallback.getResult();
             if (result.isSuccess()) {
                 Note created = JsonHelper.getNote(result.getResult());
+                Intent resultIntent = new Intent();
+                resultIntent.putExtra(MainActivity.CREATE_NOTE_EXTRA_ID, created.getId());
+                setResult(Activity.RESULT_OK, resultIntent);
                 finish();
             }
         }
