@@ -19,7 +19,7 @@ import java.util.List;
 import foodbook.thinmint.IApiCallback;
 import foodbook.thinmint.IAsyncCallback;
 import foodbook.thinmint.R;
-import foodbook.thinmint.activities.ActivityStarter;
+import foodbook.thinmint.activities.ActivityHelper;
 import foodbook.thinmint.activities.TokenFragment;
 import foodbook.thinmint.activities.adapters.EndlessRecyclerViewScrollListener;
 import foodbook.thinmint.activities.adapters.NotesRecyclerAdapter;
@@ -97,11 +97,6 @@ public class FeedFragment extends TokenFragment implements IApiCallback, OnNotes
     }
 
     @Override
-    public void onResume() {
-        super.onResume();
-    }
-
-    @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
@@ -148,11 +143,6 @@ public class FeedFragment extends TokenFragment implements IApiCallback, OnNotes
     }
 
     @Override
-    public void onActivityCreated(@Nullable Bundle savedInstanceState) {
-        super.onActivityCreated(savedInstanceState);
-    }
-
-    @Override
     public void onAttach(Context context) {
         super.onAttach(context);
         if (context instanceof OnFeedFragmentDataListener) {
@@ -170,29 +160,24 @@ public class FeedFragment extends TokenFragment implements IApiCallback, OnNotes
     }
 
     @Override
-    public void onActivityResult(int requestCode, int resultCode, Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
-    }
-
-    @Override
     public void onLikeNoteClicked(View caller) {
 //        TextView hiddenNoteIdTextView = (TextView) caller.findViewById(R.id.hidden_note_id);
 //        String noteId = hiddenNoteIdTextView.getText().toString();
-//        ActivityStarter.startNoteActivityForResult(getActivity(), Long.parseLong(noteId));
+//        ActivityHelper.startNoteActivityForResult(getActivity(), Long.parseLong(noteId));
     }
 
     @Override
     public void onNoteClicked(View caller) {
         TextView hiddenNoteIdTextView = (TextView) caller.findViewById(R.id.hidden_note_id);
         String noteId = hiddenNoteIdTextView.getText().toString();
-        ActivityStarter.startNoteActivityForResult(getActivity(), Long.parseLong(noteId), RequestCodes.DELETE_NOTE_REQUEST_CODE);
+        ActivityHelper.startNoteActivityForResult(getActivity(), Long.parseLong(noteId), RequestCodes.DELETE_NOTE_REQUEST_CODE);
     }
 
     @Override
     public void onCommentClicked(View caller) {
         TextView hiddenNoteIdTextView = (TextView) caller.findViewById(R.id.hidden_note_id);
         String noteId = hiddenNoteIdTextView.getText().toString();
-        ActivityStarter.startNoteActivityForResult(getActivity(), Long.parseLong(noteId), RequestCodes.DELETE_NOTE_REQUEST_CODE);
+        ActivityHelper.startNoteActivityForResult(getActivity(), Long.parseLong(noteId), RequestCodes.DELETE_NOTE_REQUEST_CODE);
     }
 
     @Override
@@ -201,7 +186,7 @@ public class FeedFragment extends TokenFragment implements IApiCallback, OnNotes
         TextView userNameTextView = (TextView) caller.findViewById(R.id.user_name);
         String userId = hiddenUserIdTextView.getText().toString();
         String username = userNameTextView.getText().toString();
-        ActivityStarter.startUserActivity(getActivity(), userId, username);
+        ActivityHelper.startUserActivity(getActivity(), userId, username);
     }
 
     private void setLoading(boolean isLoading) {
@@ -232,12 +217,12 @@ public class FeedFragment extends TokenFragment implements IApiCallback, OnNotes
     }
 
     private void onLoadedMore(List<Note> notes) {
-        mAdapter.append(notes);
+        mAdapter.addAll(notes);
     }
 
     @Override
     public void onNoteAdded(Note note) {
-        mAdapter.add(note);
+        mAdapter.add(0, note);
         setLoading(false);
     }
 
@@ -272,7 +257,5 @@ public class FeedFragment extends TokenFragment implements IApiCallback, OnNotes
 
     public interface OnFeedFragmentDataListener {
         void onFeedFragmentCreated(View view);
-
-        void showLoadingProgress(boolean show);
     }
 }

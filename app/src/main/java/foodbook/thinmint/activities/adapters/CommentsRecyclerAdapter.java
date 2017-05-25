@@ -17,13 +17,16 @@ import java.util.Locale;
 import foodbook.thinmint.R;
 import foodbook.thinmint.activities.MainActivity;
 import foodbook.thinmint.models.domain.Comment;
+import foodbook.thinmint.models.domain.Note;
 import foodbook.thinmint.models.domain.User;
 
 /**
  * Created by Zachery.Sogolow on 5/18/2017.
  */
 
-public class CommentsRecyclerAdapter extends RecyclerView.Adapter<CommentsRecyclerAdapter.ViewHolder> {
+public class CommentsRecyclerAdapter extends RecyclerView.Adapter<CommentsRecyclerAdapter.ViewHolder>
+        implements IRecyclerAdapter<Comment> {
+
     private static final DateFormat DATE_FORMAT = new SimpleDateFormat("MMM d", Locale.US);
     private static final DateFormat DATE_FORMAT_YEAR = new SimpleDateFormat("MMM d yyyy", Locale.US);
     private static final DateFormat TIME_FORMAT = new SimpleDateFormat("h:mm a", Locale.US);
@@ -116,19 +119,38 @@ public class CommentsRecyclerAdapter extends RecyclerView.Adapter<CommentsRecycl
         return mComments.size();
     }
 
+    @Override
     public void swap(List<Comment> comments) {
         mComments = comments;
         notifyDataSetChanged();
     }
 
-    public void append(int location, Comment comment) {
-        mComments.add(location, comment);
+    @Override
+    public void add(int index, Comment comment) {
+        mComments.add(index, comment);
         notifyDataSetChanged();
     }
 
-    public void append(List<Comment> comments) {
+    @Override
+    public void addAll(List<Comment> comments) {
         mComments.addAll(comments);
         notifyDataSetChanged();
+    }
+
+    @Override
+    public void remove(long commentId) {
+        int indexToRemove = -1;
+        for (int i = 0; i < mComments.size(); i++) {
+            if (mComments.get(i).getId() == commentId) {
+                indexToRemove = i;
+                break;
+            }
+        }
+
+        if (indexToRemove >= 0) {
+            mComments.remove(indexToRemove);
+            notifyDataSetChanged();
+        }
     }
 }
 

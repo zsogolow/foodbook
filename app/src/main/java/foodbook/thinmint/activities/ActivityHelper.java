@@ -5,11 +5,9 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
-import android.support.v4.app.Fragment;
 import android.view.inputmethod.InputMethodManager;
 
 import foodbook.thinmint.activities.common.RequestCodes;
-import foodbook.thinmint.activities.notes.CommentsActivity;
 import foodbook.thinmint.activities.notes.CreateNoteActivity;
 import foodbook.thinmint.activities.notes.NoteActivity;
 import foodbook.thinmint.activities.users.UserActivity;
@@ -19,7 +17,7 @@ import foodbook.thinmint.constants.Constants;
  * Created by Zachery.Sogolow on 5/10/2017.
  */
 
-public class ActivityStarter {
+public class ActivityHelper {
 
     public static void startLogin(Activity activity) {
         Intent loginActivity = new Intent(activity, LoginActivity.class);
@@ -57,22 +55,6 @@ public class ActivityStarter {
         bundle.putLong("note_id", noteId);
         noteIntent.putExtras(bundle);
         activity.startActivityForResult(noteIntent, requestCode);
-    }
-
-    public static void startNoteActivityForResult(Fragment fragment, long noteId, int requestCode) {
-        Intent noteIntent = new Intent(fragment.getActivity(), NoteActivity.class);
-        Bundle bundle = new Bundle();
-        bundle.putLong("note_id", noteId);
-        noteIntent.putExtras(bundle);
-        fragment.startActivityForResult(noteIntent, requestCode);
-    }
-
-    public static void startCommentsActivity(Activity activity, long noteId) {
-        Intent noteIntent = new Intent(activity, CommentsActivity.class);
-        Bundle bundle = new Bundle();
-        bundle.putLong("note_id", noteId);
-        noteIntent.putExtras(bundle);
-        activity.startActivity(noteIntent);
     }
 
     public static void startUserActivity(Activity activity, String userSubject, String username) {

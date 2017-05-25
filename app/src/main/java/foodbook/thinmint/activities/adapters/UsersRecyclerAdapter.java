@@ -17,14 +17,15 @@ import foodbook.thinmint.models.domain.User;
  * Created by Zachery.Sogolow on 5/18/2017.
  */
 
-public class UsersRecyclerAdapter extends RecyclerView.Adapter<UsersRecyclerAdapter.ViewHolder> {
+public class UsersRecyclerAdapter extends RecyclerView.Adapter<UsersRecyclerAdapter.ViewHolder>
+        implements IRecyclerAdapter<User> {
     private List<User> mUsers;
     private ViewHolder.IOnUserClickListener mListener;
 
     // Provide a reference to the views for each data item
     // Complex data items may need more than one view per item, and
     // you provide access to all the views for a data item in a view holder
-    public static class ViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener{
+    public static class ViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
         // each data item is just a string in this case
         public LinearLayout mLinearLayout;
         private IOnUserClickListener mListener;
@@ -81,16 +82,38 @@ public class UsersRecyclerAdapter extends RecyclerView.Adapter<UsersRecyclerAdap
         return mUsers.size();
     }
 
-    public void swap(List<User> users){
+    @Override
+    public void swap(List<User> users) {
         mUsers = users;
-//        mUsers.clear();
-//        mUsers.addAll(users);
         notifyDataSetChanged();
     }
 
-    public void append(List<User> users){
+    @Override
+    public void add(int index, User user) {
+        mUsers.add(index, user);
+        notifyDataSetChanged();
+    }
+
+    @Override
+    public void addAll(List<User> users) {
         mUsers.addAll(users);
         notifyDataSetChanged();
+    }
+
+    @Override
+    public void remove(long userId) {
+        int indexToRemove = -1;
+        for (int i = 0; i < mUsers.size(); i++) {
+            if (mUsers.get(i).getId() == userId) {
+                indexToRemove = i;
+                break;
+            }
+        }
+
+        if (indexToRemove >= 0) {
+            mUsers.remove(indexToRemove);
+            notifyDataSetChanged();
+        }
     }
 }
 

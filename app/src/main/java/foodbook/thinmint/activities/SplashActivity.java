@@ -41,10 +41,10 @@ public class SplashActivity extends AppCompatActivity {
                 mRefreshTask = new RefreshTokenAsyncTask(token);
                 mRefreshTask.execute();
             } else {
-                ActivityStarter.finishLogin(this);
+                ActivityHelper.finishLogin(this);
             }
         } else {
-            ActivityStarter.startLogin(this);
+            ActivityHelper.startLogin(this);
         }
     }
 
@@ -89,9 +89,9 @@ public class SplashActivity extends AppCompatActivity {
         protected void onPostExecute(TokenResult result) {
             mRefreshTask = null;
             if (result.isSuccess()) {
-                ActivityStarter.finishLogin(SplashActivity.this);
+                ActivityHelper.finishLogin(SplashActivity.this);
             } else {
-                ActivityStarter.startLogin(SplashActivity.this);
+                ActivityHelper.startLogin(SplashActivity.this);
             }
         }
 

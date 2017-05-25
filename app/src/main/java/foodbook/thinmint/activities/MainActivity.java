@@ -1,12 +1,8 @@
 package foodbook.thinmint.activities;
 
-import android.animation.Animator;
-import android.animation.AnimatorListenerAdapter;
-import android.annotation.TargetApi;
 import android.app.Activity;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.os.Build;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.support.design.widget.FloatingActionButton;
@@ -131,51 +127,6 @@ public class MainActivity extends TokenActivity implements
         }
     }
 
-    private FragmentManager.OnBackStackChangedListener getBackStackChangedListener() {
-        final FragmentManager.OnBackStackChangedListener listener = new FragmentManager.OnBackStackChangedListener() {
-            public void onBackStackChanged() {
-                // Update your UI here.
-                FragmentManager fragmentManager = getSupportFragmentManager();
-
-                if (fragmentManager.getBackStackEntryCount() > 0) {
-                    String fragmentTag = fragmentManager.getBackStackEntryAt(fragmentManager.getBackStackEntryCount() - 1).getName();
-                } else if (fragmentManager.getBackStackEntryCount() == 0) {
-                    try {
-                        FeedFragment feedFragment = (FeedFragment) fragmentManager.findFragmentByTag("FeedFragment");
-                        if (feedFragment  != null) {
-                            setActionBarTitle("Feed");
-                            toggleDayFragmentActions(false);
-                            mNavigationView.getMenu().getItem(0).setChecked(true);
-                        }
-//                        DayFragment dayFragment = (DayFragment) fragmentManager.findFragmentByTag("DayFragment");
-//                        if (dayFragment != null) {
-//                            setActionBarTitle(DATE_FORMAT.format(mCurrentDate));
-//                            toggleDayFragmentActions(true);
-//                            mNavigationView.getMenu().getItem(0).setChecked(true);
-//                        }
-                    } catch (ClassCastException cce) {
-                    }
-                }
-            }
-        };
-
-        return listener;
-    }
-
-    private void showDatePicker() {
-        DatePickerFragment newFragment = new DatePickerFragment();
-        newFragment.setDate(mCurrentDate);
-        newFragment.show(getSupportFragmentManager(), "datePicker");
-    }
-
-    private void logout() {
-        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
-        prefs.edit().putString(Constants.ACCESS_TOKEN_PREFERENCE_KEY, "").apply();
-        Intent loginActivity = new Intent(getApplicationContext(), LoginActivity.class);
-        startActivity(loginActivity);
-        finish();
-    }
-
     @Override
     public void onBackPressed() {
         if (mDrawerLayout.isDrawerOpen(GravityCompat.START)) {
@@ -188,15 +139,6 @@ public class MainActivity extends TokenActivity implements
         if (fragmentManager.getBackStackEntryCount() > 0) {
             fragmentManager.popBackStack(null, FragmentManager.POP_BACK_STACK_INCLUSIVE);
             mCurrentFragment = mFeedFragment;
-        }
-    }
-
-    private void toggleDayFragmentActions(boolean show) {
-        if (mMenu != null) {
-            MenuItem selectDay = mMenu.findItem(R.id.action_date);
-            MenuItem selectToday = mMenu.findItem(R.id.action_go_to_today);
-            selectDay.setVisible(show);
-            selectToday.setVisible(show);
         }
     }
 
@@ -237,16 +179,100 @@ public class MainActivity extends TokenActivity implements
         return super.onOptionsItemSelected(item);
     }
 
-//    private void startNoteActivity(long noteId) {
-//        ActivityStarter.startNoteActivity(MainActivity.this, noteId);
-//    }
+    @Override
+    public boolean onNavigationItemSelected(MenuItem item) {
+        // Handle navigation view item clicks here.
+        int id = item.getItemId();
+
+        if (id == R.id.nav_calendar) {
+
+            setActionBarTitle(DATE_FORMAT.format(mCurrentDate));
+            toggleDayFragmentActions(true);
+            showDayFragment();
+
+        } else if (id == R.id.nav_home) {
+
+            setActionBarTitle("Feed");
+            toggleDayFragmentActions(false);
+            showHomeFragment();
+
+        } else if (id == R.id.nav_my_stuff) {
+
+            startUserActivity(mUserSubject, mUserName);
+
+        } else if (id == R.id.nav_users) {
+
+            setActionBarTitle("Users");
+            toggleDayFragmentActions(false);
+            showUsersFragment();
+
+        }
+
+        mDrawerLayout.closeDrawer(GravityCompat.START);
+        return true;
+    }
+
+    // Private Helpers
+    private FragmentManager.OnBackStackChangedListener getBackStackChangedListener() {
+        final FragmentManager.OnBackStackChangedListener listener = new FragmentManager.OnBackStackChangedListener() {
+            public void onBackStackChanged() {
+                // Update your UI here.
+                FragmentManager fragmentManager = getSupportFragmentManager();
+
+                if (fragmentManager.getBackStackEntryCount() > 0) {
+                    String fragmentTag = fragmentManager.getBackStackEntryAt(fragmentManager.getBackStackEntryCount() - 1).getName();
+                } else if (fragmentManager.getBackStackEntryCount() == 0) {
+                    try {
+                        FeedFragment feedFragment = (FeedFragment) fragmentManager.findFragmentByTag("FeedFragment");
+                        if (feedFragment  != null) {
+                            setActionBarTitle("Feed");
+                            toggleDayFragmentActions(false);
+                            mNavigationView.getMenu().getItem(0).setChecked(true);
+                        }
+//                        DayFragment dayFragment = (DayFragment) fragmentManager.findFragmentByTag("DayFragment");
+//                        if (dayFragment != null) {
+//                            setActionBarTitle(DATE_FORMAT.format(mCurrentDate));
+//                            toggleDayFragmentActions(true);
+//                            mNavigationView.getMenu().getItem(0).setChecked(true);
+//                        }
+                    } catch (ClassCastException cce) {
+                    }
+                }
+            }
+        };
+
+        return listener;
+    }
+
+    private void showDatePicker() {
+        DatePickerFragment newFragment = new DatePickerFragment();
+        newFragment.setDate(mCurrentDate);
+        newFragment.show(getSupportFragmentManager(), "datePicker");
+    }
+
+    private void toggleDayFragmentActions(boolean show) {
+        if (mMenu != null) {
+            MenuItem selectDay = mMenu.findItem(R.id.action_date);
+            MenuItem selectToday = mMenu.findItem(R.id.action_go_to_today);
+            selectDay.setVisible(show);
+            selectToday.setVisible(show);
+        }
+    }
+
+    private void logout() {
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+        prefs.edit().putString(Constants.ACCESS_TOKEN_PREFERENCE_KEY, "").apply();
+        Intent loginActivity = new Intent(getApplicationContext(), LoginActivity.class);
+        startActivity(loginActivity);
+        finish();
+    }
 
     private void startCreateNoteActivity() {
-        ActivityStarter.startCreateNoteActivityForResult(MainActivity.this);
+        ActivityHelper.startCreateNoteActivityForResult(MainActivity.this);
     }
 
     private void startUserActivity(String userSubject, String username) {
-        ActivityStarter.startUserActivity(MainActivity.this, userSubject, username);
+        ActivityHelper.startUserActivity(MainActivity.this, userSubject, username);
     }
 
     private void showUsersFragment() {
@@ -294,39 +320,6 @@ public class MainActivity extends TokenActivity implements
     }
 
     @Override
-    public boolean onNavigationItemSelected(MenuItem item) {
-        // Handle navigation view item clicks here.
-        int id = item.getItemId();
-
-        if (id == R.id.nav_calendar) {
-
-            setActionBarTitle(DATE_FORMAT.format(mCurrentDate));
-            toggleDayFragmentActions(true);
-            showDayFragment();
-
-        } else if (id == R.id.nav_home) {
-
-            setActionBarTitle("Feed");
-            toggleDayFragmentActions(false);
-            showHomeFragment();
-
-        } else if (id == R.id.nav_my_stuff) {
-
-            startUserActivity(mUserSubject, mUserName);
-
-        } else if (id == R.id.nav_users) {
-
-            setActionBarTitle("Users");
-            toggleDayFragmentActions(false);
-            showUsersFragment();
-
-        }
-
-        mDrawerLayout.closeDrawer(GravityCompat.START);
-        return true;
-    }
-
-    @Override
     public void onDayFragmentCreated(View view) {
     }
 
@@ -355,46 +348,5 @@ public class MainActivity extends TokenActivity implements
 
     @Override
     public void callback(IAsyncCallback cb) {
-    }
-
-    @Override
-    public void showLoadingProgress(boolean show) {
-        showLoading(show);
-    }
-
-    /**
-     * Shows the progress UI and hides the login form.
-     */
-    @TargetApi(Build.VERSION_CODES.HONEYCOMB_MR2)
-    private void showLoading(final boolean show) {
-        // On Honeycomb MR2 we have the ViewPropertyAnimator APIs, which allow
-        // for very easy animations. If available, use these APIs to fade-in
-        // the progress spinner.
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB_MR2) {
-            int shortAnimTime = getResources().getInteger(android.R.integer.config_shortAnimTime);
-
-            mContentView.setVisibility(show ? View.GONE : View.VISIBLE);
-            mContentView.animate().setDuration(shortAnimTime).alpha(
-                    show ? 0 : 1).setListener(new AnimatorListenerAdapter() {
-                @Override
-                public void onAnimationEnd(Animator animation) {
-                    mContentView.setVisibility(show ? View.GONE : View.VISIBLE);
-                }
-            });
-
-            mProgressView.setVisibility(show ? View.VISIBLE : View.GONE);
-            mProgressView.animate().setDuration(shortAnimTime).alpha(
-                    show ? 1 : 0).setListener(new AnimatorListenerAdapter() {
-                @Override
-                public void onAnimationEnd(Animator animation) {
-                    mProgressView.setVisibility(show ? View.VISIBLE : View.GONE);
-                }
-            });
-        } else {
-            // The ViewPropertyAnimator APIs are not available, so simply show
-            // and hide the relevant UI components.
-            mProgressView.setVisibility(show ? View.VISIBLE : View.GONE);
-            mContentView.setVisibility(show ? View.GONE : View.VISIBLE);
-        }
     }
 }

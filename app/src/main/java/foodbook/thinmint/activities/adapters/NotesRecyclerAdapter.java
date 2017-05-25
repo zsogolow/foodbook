@@ -22,7 +22,8 @@ import foodbook.thinmint.models.domain.Note;
  * Created by Zachery.Sogolow on 5/18/2017.
  */
 
-public class NotesRecyclerAdapter extends RecyclerView.Adapter<NotesRecyclerAdapter.ViewHolder> {
+public class NotesRecyclerAdapter extends RecyclerView.Adapter<NotesRecyclerAdapter.ViewHolder>
+        implements IRecyclerAdapter<Note> {
     private static final DateFormat DATE_FORMAT = new SimpleDateFormat("MMM d", Locale.US);
     private static final DateFormat DATE_FORMAT_YEAR = new SimpleDateFormat("MMM d yyyy", Locale.US);
     private static final DateFormat TIME_FORMAT = new SimpleDateFormat("h:mm a", Locale.US);
@@ -141,21 +142,25 @@ public class NotesRecyclerAdapter extends RecyclerView.Adapter<NotesRecyclerAdap
         return mNotes.size();
     }
 
+    @Override
     public void swap(List<Note> notes) {
         mNotes = notes;
         notifyDataSetChanged();
     }
 
-    public void append(List<Note> notes) {
+    @Override
+    public void add(int index, Note note) {
+        mNotes.add(index, note);
+        notifyDataSetChanged();
+    }
+
+    @Override
+    public void addAll(List<Note> notes) {
         mNotes.addAll(notes);
         notifyDataSetChanged();
     }
 
-    public void add(Note note) {
-        mNotes.add(0, note);
-        notifyDataSetChanged();
-    }
-
+    @Override
     public void remove(long noteId) {
         int indexToRemove = -1;
         for (int i = 0; i < mNotes.size(); i++) {

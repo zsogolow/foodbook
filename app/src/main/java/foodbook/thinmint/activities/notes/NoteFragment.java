@@ -26,7 +26,7 @@ import java.util.Map;
 import foodbook.thinmint.IApiCallback;
 import foodbook.thinmint.IAsyncCallback;
 import foodbook.thinmint.R;
-import foodbook.thinmint.activities.ActivityStarter;
+import foodbook.thinmint.activities.ActivityHelper;
 import foodbook.thinmint.activities.MainActivity;
 import foodbook.thinmint.activities.TokenFragment;
 import foodbook.thinmint.activities.adapters.CommentsRecyclerAdapter;
@@ -141,7 +141,7 @@ public class NoteFragment extends TokenFragment implements IApiCallback,
                 map.put("datecreated", dateFormat.format(new Date(System.currentTimeMillis())));
                 mAddCommentTask = new PostAsyncTask(getContext(), mAddCommentCallback, mToken, map);
                 mAddCommentTask.execute("api/comments");
-                ActivityStarter.hideSoftKeyboard(getActivity());
+                ActivityHelper.hideSoftKeyboard(getActivity());
             }
         });
 
@@ -156,7 +156,7 @@ public class NoteFragment extends TokenFragment implements IApiCallback,
             public void onClick(View v) {
                 String subject = mHiddenUserSubject.getText().toString();
                 String username = mNoteUser.getText().toString();
-                ActivityStarter.startUserActivity(getActivity(), subject, username);
+                ActivityHelper.startUserActivity(getActivity(), subject, username);
             }
         });
 
@@ -203,17 +203,23 @@ public class NoteFragment extends TokenFragment implements IApiCallback,
         mListener = null;
     }
 
-    public void deleteNote() {
-        setLoading(true);
-        mDeleteServiceAsyncTask = new DeleteAsyncTask(getContext(), mDeleteServiceCallback, mToken);
-        Query query = Query.builder()
-                .setPath("api/notes/" + mNoteId)
-                .build();
-        mDeleteServiceAsyncTask.execute(query);
-    }
-
     private void setLoading(boolean isLoading) {
         mSwipeRefreshLayout.setRefreshing(isLoading);
+    }
+
+    private void refreshNote() {
+        setLoading(true);
+        mGetNoteTask = new GetAsyncTask(getContext(), mGetNoteCallback, mToken);
+
+        String path = String.format(Locale.US, "api/notes/%d", mNoteId);
+
+        Query query = Query.builder()
+                .setPath(path)
+//                .setAccessToken(mToken.getAccessToken())
+                .setSort("-datecreated")
+                .build();
+
+        mGetNoteTask.execute(query);
     }
 
     private void onNoteRetrieved(Note note) {
@@ -244,21 +250,6 @@ public class NoteFragment extends TokenFragment implements IApiCallback,
         mAdapter.swap(note.getComments());
     }
 
-    private void refreshNote() {
-        setLoading(true);
-        mGetNoteTask = new GetAsyncTask(getContext(), mGetNoteCallback, mToken);
-
-        String path = String.format(Locale.US, "api/notes/%d", mNoteId);
-
-        Query query = Query.builder()
-                .setPath(path)
-//                .setAccessToken(mToken.getAccessToken())
-                .setSort("-datecreated")
-                .build();
-
-        mGetNoteTask.execute(query);
-    }
-
     private void onNoteDeleted(boolean success) {
         setLoading(false);
         if (success) {
@@ -267,9 +258,10 @@ public class NoteFragment extends TokenFragment implements IApiCallback,
     }
 
     private void onCommentAdded(Comment comment) {
-        mAdapter.append(0, comment);
+        mAdapter.add(0, comment);
         mCommentsText.setText(mAdapter.getItemCount() + " comments");
         setLoading(false);
+        mCommentText.setText("");
     }
 
     @Override
@@ -278,9 +270,8 @@ public class NoteFragment extends TokenFragment implements IApiCallback,
         TextView userNameTextView = (TextView) caller.findViewById(R.id.user_name);
         String userId = hiddenUserIdTextView.getText().toString();
         String username = userNameTextView.getText().toString();
-        ActivityStarter.startUserActivity(getActivity(), userId, username);
+        ActivityHelper.startUserActivity(getActivity(), userId, username);
     }
-
 
     @Override
     public void callback(IAsyncCallback cb) {
@@ -290,28 +281,28 @@ public class NoteFragment extends TokenFragment implements IApiCallback,
             onNoteRetrieved(note);
             mListener.onNoteRetrieved(note);
         } else if (cb.equals(mDeleteServiceCallback)) {
-            onNoteDeleted(mDeleteServiceCallback.getResult().isSuccess());
+            mDeleteServiceAsyncTask = null;
+            boolean success = mDeleteServiceCallback.getResult().isSuccess();
+            onNoteDeleted(success);
         } else if (cb.equals(mAddCommentCallback)) {
             mAddCommentTask = null;
             WebAPIResult result = mAddCommentCallback.getResult();
             if (result.isSuccess()) {
                 Comment addedComment = JsonHelper.getComment(mAddCommentCallback.getResult().getResult());
                 onCommentAdded(addedComment);
-                mCommentText.setText("");
             }
         }
     }
 
-    /**
-     * This interface must be implemented by activities that contain this
-     * fragment to allow an interaction in this fragment to be communicated
-     * to the activity and potentially other fragments contained in that
-     * activity.
-     * <p>
-     * See the Android Training lesson <a href=
-     * "http://developer.android.com/training/basics/fragments/communicating.html"
-     * >Communicating with Other Fragments</a> for more information.
-     */
+    public void deleteNote() {
+        setLoading(true);
+        mDeleteServiceAsyncTask = new DeleteAsyncTask(getContext(), mDeleteServiceCallback, mToken);
+        Query query = Query.builder()
+                .setPath("api/notes/" + mNoteId)
+                .build();
+        mDeleteServiceAsyncTask.execute(query);
+    }
+
     public interface OnNoteFragmentDataListener {
         void onNoteFragmentCreated(View view);
 

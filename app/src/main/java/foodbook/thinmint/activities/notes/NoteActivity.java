@@ -70,11 +70,7 @@ public class NoteActivity extends TokenActivity implements NoteFragment.OnNoteFr
         if (id == R.id.action_delete) {
             attemptDelete();
             return true;
-        }
-//        else if (id == R.id.action_edit) {
-//            return true;
-//        }
-        else if (id == R.id.action_save) {
+        } else if (id == R.id.action_save) {
             return true;
         }
 
@@ -100,13 +96,11 @@ public class NoteActivity extends TokenActivity implements NoteFragment.OnNoteFr
     private void toggleNoteActions(boolean show) {
         if (mMenu != null) {
             MenuItem delete = mMenu.findItem(R.id.action_delete);
-//            MenuItem edit = mMenu.findItem(R.id.action_edit);
             delete.setVisible(show);
-//            edit.setVisible(show);
         }
     }
 
-    public void showNoteFragment(long noteId) {
+    private void showNoteFragment(long noteId) {
         FragmentManager fragmentManager = getSupportFragmentManager();
         FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
 
@@ -142,9 +136,5 @@ public class NoteActivity extends TokenActivity implements NoteFragment.OnNoteFr
 
     @Override
     public void onCommentAdded(Comment comment) {
-        Intent resultIntent = new Intent();
-        resultIntent.putExtra(RequestCodes.ADD_COMMENT_EXTRA_ID, comment.getId());
-        resultIntent.putExtra(RequestCodes.ADD_COMMENT_EXTRA_NOTE_ID, comment.getNoteId());
-        setResult(Activity.RESULT_OK, resultIntent);
     }
 }

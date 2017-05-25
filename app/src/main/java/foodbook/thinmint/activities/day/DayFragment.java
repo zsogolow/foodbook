@@ -1,7 +1,6 @@
 package foodbook.thinmint.activities.day;
 
 import android.content.Context;
-import android.content.Intent;
 import android.support.annotation.Nullable;
 import android.os.Bundle;
 import android.support.v4.widget.SwipeRefreshLayout;
@@ -22,7 +21,7 @@ import java.util.Locale;
 import foodbook.thinmint.IApiCallback;
 import foodbook.thinmint.IAsyncCallback;
 import foodbook.thinmint.R;
-import foodbook.thinmint.activities.ActivityStarter;
+import foodbook.thinmint.activities.ActivityHelper;
 import foodbook.thinmint.activities.MainActivity;
 import foodbook.thinmint.activities.TokenFragment;
 import foodbook.thinmint.activities.adapters.EndlessRecyclerViewScrollListener;
@@ -36,9 +35,6 @@ import foodbook.thinmint.models.domain.Note;
 import foodbook.thinmint.tasks.AsyncCallback;
 import foodbook.thinmint.tasks.GetAsyncTask;
 
-/**
- * A placeholder fragment containing a simple view.
- */
 public class DayFragment extends TokenFragment implements OnNotesListInteractionListener,
         NotesRecyclerAdapter.ViewHolder.IOnNoteClickListener, IApiCallback {
     private static final String ARG_DATE = "date";
@@ -86,16 +82,6 @@ public class DayFragment extends TokenFragment implements OnNotesListInteraction
 
         mLoadingCallback = new AsyncCallback<WebAPIResult>(this);
         mLoadMoreCallback = new AsyncCallback<WebAPIResult>(this);
-    }
-
-    @Override
-    public void onResume() {
-        super.onResume();
-    }
-
-    @Override
-    public void onActivityCreated(@Nullable Bundle savedInstanceState) {
-        super.onActivityCreated(savedInstanceState);
     }
 
     @Override
@@ -172,29 +158,24 @@ public class DayFragment extends TokenFragment implements OnNotesListInteraction
     }
 
     @Override
-    public void onActivityResult(int requestCode, int resultCode, Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
-    }
-
-    @Override
     public void onLikeNoteClicked(View caller) {
 //        TextView hiddenNoteIdTextView = (TextView) caller.findViewById(R.id.hidden_note_id);
 //        String noteId = hiddenNoteIdTextView.getText().toString();
-//        ActivityStarter.startNoteActivityForResult(getActivity(), Long.parseLong(noteId));
+//        ActivityHelper.startNoteActivityForResult(getActivity(), Long.parseLong(noteId));
     }
 
     @Override
     public void onNoteClicked(View caller) {
         TextView hiddenNoteIdTextView = (TextView) caller.findViewById(R.id.hidden_note_id);
         String noteId = hiddenNoteIdTextView.getText().toString();
-        ActivityStarter.startNoteActivityForResult(getActivity(), Long.parseLong(noteId), RequestCodes.DELETE_NOTE_REQUEST_CODE);
+        ActivityHelper.startNoteActivityForResult(getActivity(), Long.parseLong(noteId), RequestCodes.DELETE_NOTE_REQUEST_CODE);
     }
 
     @Override
     public void onCommentClicked(View caller) {
         TextView hiddenNoteIdTextView = (TextView) caller.findViewById(R.id.hidden_note_id);
         String noteId = hiddenNoteIdTextView.getText().toString();
-        ActivityStarter.startNoteActivityForResult(getActivity(), Long.parseLong(noteId), RequestCodes.DELETE_NOTE_REQUEST_CODE);
+        ActivityHelper.startNoteActivityForResult(getActivity(), Long.parseLong(noteId), RequestCodes.DELETE_NOTE_REQUEST_CODE);
     }
 
     @Override
@@ -203,7 +184,7 @@ public class DayFragment extends TokenFragment implements OnNotesListInteraction
         TextView userNameTextView = (TextView) caller.findViewById(R.id.user_name);
         String userId = hiddenUserIdTextView.getText().toString();
         String username = userNameTextView.getText().toString();
-        ActivityStarter.startUserActivity(getActivity(), userId, username);
+        ActivityHelper.startUserActivity(getActivity(), userId, username);
     }
 
     private void refreshList() {
@@ -233,28 +214,23 @@ public class DayFragment extends TokenFragment implements OnNotesListInteraction
         mSwipeRefreshLayout.setRefreshing(isLoading);
     }
 
-    public void setDate(Date date) {
-        mCurrentDate = date;
-        refreshList();
-    }
-
     private void onNotesRetrieved(List<Note> notes) {
         mAdapter.swap(notes);
         setLoading(false);
     }
 
     private void onLoadedMore(List<Note> notes) {
-        mAdapter.append(notes);
+        mAdapter.addAll(notes);
     }
 
     @Override
     public void onNoteAdded(Note note) {
-        mAdapter.add(note);
+        mAdapter.add(0, note);
         setLoading(false);
     }
 
     @Override
-    public void onNoteAdded(long noteid) {
+    public void onNoteAdded(long noteId) {
         refreshList();
     }
 
@@ -281,12 +257,15 @@ public class DayFragment extends TokenFragment implements OnNotesListInteraction
         }
     }
 
+    public void setDate(Date date) {
+        mCurrentDate = date;
+        refreshList();
+    }
+
     public interface OnDayFragmentDataListener {
         void onDayFragmentCreated(View view);
 
         void selectDay(Date date);
-
-//        void showNote(long noteId);
     }
 }
 

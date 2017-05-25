@@ -38,13 +38,13 @@ public class UserProfileFragment extends Fragment {
      * Use this factory method to create a new instance of
      * this fragment using the provided parameters.
      *
-     * @param userid Parameter 1.
+     * @param userId Parameter 1.
      * @return A new instance of fragment UserProfileFragment.
      */
-    public static UserProfileFragment newInstance(String userid) {
+    public static UserProfileFragment newInstance(String userId) {
         UserProfileFragment fragment = new UserProfileFragment();
         Bundle args = new Bundle();
-        args.putString(ARG_USERID, userid);
+        args.putString(ARG_USERID, userId);
         fragment.setArguments(args);
         return fragment;
     }

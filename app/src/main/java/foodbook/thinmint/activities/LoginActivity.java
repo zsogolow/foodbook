@@ -83,7 +83,7 @@ public class LoginActivity extends AppCompatActivity {
         mEmailSignInButton.setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View view) {
-                ActivityStarter.hideSoftKeyboard(LoginActivity.this);
+                ActivityHelper.hideSoftKeyboard(LoginActivity.this);
                 attemptLogin();
             }
         });
@@ -92,18 +92,7 @@ public class LoginActivity extends AppCompatActivity {
         mLoginFormView = findViewById(R.id.login_form);
         mProgressView = findViewById(R.id.login_progress);
     }
-//
-//    private void finishLogin() {
-//        Intent mainActivity = new Intent(getApplicationContext(), MainActivity1.class);
-//        startActivity(mainActivity);
-//        finish();
-//    }
 
-    /**
-     * Attempts to sign in or register the account specified by the login form.
-     * If there are form errors (invalid email, missing fields, etc.), the
-     * errors are presented and no actual login attempt is made.
-     */
     private void attemptLogin() {
         if (mAuthTask != null) {
             return;
@@ -199,10 +188,6 @@ public class LoginActivity extends AppCompatActivity {
         }
     }
 
-    /**
-     * Represents an asynchronous login/registration task used to authenticate
-     * the user.
-     */
     private class UserLoginTask extends AsyncTask<String, String, TokenResult> {
         private static final String CLIENT_ID = "android";
         private static final String CLIENT_SECRET = "secret";
@@ -265,7 +250,7 @@ public class LoginActivity extends AppCompatActivity {
         @Override
         protected void onPostExecute(final TokenResult result) {
             if (result.isSuccess()) {
-                ActivityStarter.finishLogin(LoginActivity.this);
+                ActivityHelper.finishLogin(LoginActivity.this);
             } else if (!result.isSuccess()) {
                 mLoginErrorView.setError("Username or password is incorrect");
                 mLoginErrorView.setText("Username or password is incorrect");

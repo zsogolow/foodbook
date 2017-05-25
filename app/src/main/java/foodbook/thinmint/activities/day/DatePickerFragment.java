@@ -35,7 +35,7 @@ public class DatePickerFragment extends DialogFragment
             mDayCallback = (DayFragment.OnDayFragmentDataListener) activity;
         } catch (ClassCastException e) {
             throw new ClassCastException(activity.toString()
-                    + " must implement OnHeadlineSelectedListener");
+                    + " must implement DayFragment.OnDayFragmentDataListener");
         }
     }
 

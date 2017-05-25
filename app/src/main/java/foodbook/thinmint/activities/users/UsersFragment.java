@@ -18,7 +18,7 @@ import java.util.List;
 import foodbook.thinmint.IApiCallback;
 import foodbook.thinmint.IAsyncCallback;
 import foodbook.thinmint.R;
-import foodbook.thinmint.activities.ActivityStarter;
+import foodbook.thinmint.activities.ActivityHelper;
 import foodbook.thinmint.activities.TokenFragment;
 import foodbook.thinmint.activities.adapters.EndlessRecyclerViewScrollListener;
 import foodbook.thinmint.activities.adapters.UsersRecyclerAdapter;
@@ -139,11 +139,6 @@ public class UsersFragment extends TokenFragment implements IApiCallback,
     }
 
     @Override
-    public void onActivityCreated(@Nullable Bundle savedInstanceState) {
-        super.onActivityCreated(savedInstanceState);
-    }
-
-    @Override
     public void onAttach(Context context) {
         super.onAttach(context);
         if (context instanceof OnUsersFragmentDataListener) {
@@ -181,15 +176,12 @@ public class UsersFragment extends TokenFragment implements IApiCallback,
 
     private void onUsersRetrieved(List<User> users) {
         mAdapter.swap(users);
-//        mListView.setAdapter(mAdapter);
-//        mAdapter.notifyDataSetChanged();
         setLoading(false);
     }
 
     private void onLoadedMore(List<User> users) {
-        mAdapter.append(users);
+        mAdapter.addAll(users);
     }
-
 
     @Override
     public void onUserClicked(View caller) {
@@ -197,7 +189,7 @@ public class UsersFragment extends TokenFragment implements IApiCallback,
         TextView usernameTextView = (TextView) caller.findViewById(R.id.user_name);
         String userSubject = hiddenUserSubjectTextView.getText().toString();
         String username = usernameTextView.getText().toString();
-        ActivityStarter.startUserActivity(getActivity(), userSubject, username);
+        ActivityHelper.startUserActivity(getActivity(), userSubject, username);
     }
 
     @Override

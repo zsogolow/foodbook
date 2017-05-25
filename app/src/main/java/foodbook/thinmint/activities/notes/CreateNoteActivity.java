@@ -31,7 +31,6 @@ import foodbook.thinmint.tasks.PostAsyncTask;
 
 public class CreateNoteActivity extends TokenActivity implements IApiCallback {
 
-
     private PostAsyncTask mAddNoteTask;
     private AsyncCallback<WebAPIResult> mAddNoteCallback;
 
@@ -75,7 +74,7 @@ public class CreateNoteActivity extends TokenActivity implements IApiCallback {
 
         //noinspection SimplifiableIfStatement
         if (id == R.id.action_save) {
-            addNote();
+            saveNote();
             return true;
         }
 
@@ -105,15 +104,12 @@ public class CreateNoteActivity extends TokenActivity implements IApiCallback {
                 .show();
     }
 
-    private void addNote() {
+    private void saveNote() {
         Note note = new Note();
         note.setContent(mNoteContents.getText().toString());
         note.setDateCreated(new Date(System.currentTimeMillis()));
         note.setUserId(mUserId);
-        saveNote(note);
-    }
 
-    private void saveNote(Note note) {
         SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss Z", Locale.US);
         Map<String, Object> map = new HashMap<>();
         map.put("content", note.getContent());
@@ -123,6 +119,13 @@ public class CreateNoteActivity extends TokenActivity implements IApiCallback {
         mAddNoteTask.execute("api/notes");
     }
 
+    private void onNoteCreated(Note created) {
+        Intent resultIntent = new Intent();
+        resultIntent.putExtra(RequestCodes.CREATE_NOTE_EXTRA_ID, created.getId());
+        setResult(Activity.RESULT_OK, resultIntent);
+        finish();
+    }
+
     @Override
     public void callback(IAsyncCallback cb) {
         if (cb.equals(mAddNoteCallback)) {
@@ -130,10 +133,7 @@ public class CreateNoteActivity extends TokenActivity implements IApiCallback {
             WebAPIResult result = mAddNoteCallback.getResult();
             if (result.isSuccess()) {
                 Note created = JsonHelper.getNote(result.getResult());
-                Intent resultIntent = new Intent();
-                resultIntent.putExtra(RequestCodes.CREATE_NOTE_EXTRA_ID, created.getId());
-                setResult(Activity.RESULT_OK, resultIntent);
-                finish();
+                onNoteCreated(created);
             }
         }
     }
