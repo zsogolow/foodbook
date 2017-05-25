@@ -24,6 +24,7 @@ import foodbook.thinmint.activities.TokenFragment;
 import foodbook.thinmint.activities.adapters.EndlessRecyclerViewScrollListener;
 import foodbook.thinmint.activities.adapters.NotesRecyclerAdapter;
 import foodbook.thinmint.activities.common.OnNotesListInteractionListener;
+import foodbook.thinmint.activities.common.RequestCodes;
 import foodbook.thinmint.api.Query;
 import foodbook.thinmint.models.JsonHelper;
 import foodbook.thinmint.models.domain.Note;
@@ -33,7 +34,7 @@ import foodbook.thinmint.tasks.CallServiceCallback;
 /**
  * A simple {@link Fragment} subclass.
  * Activities that contain this fragment must implement the
- * {@link OnHomeFragmentDataListener} interface
+ * {@link OnFeedFragmentDataListener} interface
  * to handle interaction events.
  * Use the {@link FeedFragment#newInstance} factory method to
  * create an instance of this fragment.
@@ -46,7 +47,7 @@ public class FeedFragment extends TokenFragment implements IApiCallback, OnNotes
 
     private String mParam1;
 
-    private OnHomeFragmentDataListener mListener;
+    private OnFeedFragmentDataListener mListener;
 
     private RecyclerView mListView;
     private SwipeRefreshLayout mSwipeRefreshLayout;
@@ -90,6 +91,8 @@ public class FeedFragment extends TokenFragment implements IApiCallback, OnNotes
 
         mGetFeedCallback = new CallServiceCallback(this);
         mLoadMoreCallback = new CallServiceCallback(this);
+
+        //mListener.showProgress(true);
     }
 
     @Override
@@ -151,11 +154,11 @@ public class FeedFragment extends TokenFragment implements IApiCallback, OnNotes
     @Override
     public void onAttach(Context context) {
         super.onAttach(context);
-        if (context instanceof OnHomeFragmentDataListener) {
-            mListener = (OnHomeFragmentDataListener) context;
+        if (context instanceof OnFeedFragmentDataListener) {
+            mListener = (OnFeedFragmentDataListener) context;
         } else {
             throw new RuntimeException(context.toString()
-                    + " must implement OnHomeFragmentDataListener");
+                    + " must implement OnFeedFragmentDataListener");
         }
     }
 
@@ -163,6 +166,11 @@ public class FeedFragment extends TokenFragment implements IApiCallback, OnNotes
     public void onDetach() {
         super.onDetach();
         mListener = null;
+    }
+
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
     }
 
     @Override
@@ -176,14 +184,14 @@ public class FeedFragment extends TokenFragment implements IApiCallback, OnNotes
     public void onNoteClicked(View caller) {
         TextView hiddenNoteIdTextView = (TextView) caller.findViewById(R.id.hidden_note_id);
         String noteId = hiddenNoteIdTextView.getText().toString();
-        ActivityStarter.startNoteActivityForResult(getActivity(), Long.parseLong(noteId));
+        ActivityStarter.startNoteActivityForResult(getActivity(), Long.parseLong(noteId), RequestCodes.DELETE_NOTE_REQUEST_CODE);
     }
 
     @Override
-    public void onCommentsClicked(View caller) {
+    public void onCommentClicked(View caller) {
         TextView hiddenNoteIdTextView = (TextView) caller.findViewById(R.id.hidden_note_id);
         String noteId = hiddenNoteIdTextView.getText().toString();
-        ActivityStarter.startCommentsActivity(getActivity(), Long.parseLong(noteId));
+        ActivityStarter.startNoteActivityForResult(getActivity(), Long.parseLong(noteId), RequestCodes.DELETE_NOTE_REQUEST_CODE);
     }
 
     @Override
@@ -243,11 +251,17 @@ public class FeedFragment extends TokenFragment implements IApiCallback, OnNotes
     }
 
     @Override
+    public void onCommentAdded(long noteId, long commentId) {
+
+    }
+
+    @Override
     public void callback(IAsyncCallback cb) {
         if (cb.equals(mGetFeedCallback)) {
             mGetFeedTask = null;
             List<Note> notes = JsonHelper.getNotes(mGetFeedCallback.getResult().getResult());
             onNotesRetrieved(notes);
+//            mListener.showProgress(false);
         } else if (cb.equals(mLoadMoreCallback)) {
             mGetFeedTask = null;
             List<Note> notes = JsonHelper.getNotes(mLoadMoreCallback.getResult().getResult());
@@ -255,9 +269,9 @@ public class FeedFragment extends TokenFragment implements IApiCallback, OnNotes
         }
     }
 
-    public interface OnHomeFragmentDataListener {
+    public interface OnFeedFragmentDataListener {
         void onFeedFragmentCreated(View view);
 
-//        void showNote(long noteId);
+        void showLoadingProgress(boolean show);
     }
 }

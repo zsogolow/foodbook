@@ -8,6 +8,7 @@ import android.support.v4.app.Fragment;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -30,6 +31,8 @@ import foodbook.thinmint.activities.TokenFragment;
 import foodbook.thinmint.activities.adapters.EndlessRecyclerViewScrollListener;
 import foodbook.thinmint.activities.common.OnNotesListInteractionListener;
 import foodbook.thinmint.activities.adapters.NotesRecyclerAdapter;
+import foodbook.thinmint.activities.common.RequestCodes;
+import foodbook.thinmint.activities.notes.NoteActivity;
 import foodbook.thinmint.activities.users.UsersFragment;
 import foodbook.thinmint.api.Query;
 import foodbook.thinmint.models.JsonHelper;
@@ -174,6 +177,11 @@ public class DayFragment extends TokenFragment implements OnNotesListInteraction
     }
 
     @Override
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+    }
+
+    @Override
     public void onLikeNoteClicked(View caller) {
 //        TextView hiddenNoteIdTextView = (TextView) caller.findViewById(R.id.hidden_note_id);
 //        String noteId = hiddenNoteIdTextView.getText().toString();
@@ -184,14 +192,14 @@ public class DayFragment extends TokenFragment implements OnNotesListInteraction
     public void onNoteClicked(View caller) {
         TextView hiddenNoteIdTextView = (TextView) caller.findViewById(R.id.hidden_note_id);
         String noteId = hiddenNoteIdTextView.getText().toString();
-        ActivityStarter.startNoteActivityForResult(getActivity(), Long.parseLong(noteId));
+        ActivityStarter.startNoteActivityForResult(getActivity(), Long.parseLong(noteId), RequestCodes.DELETE_NOTE_REQUEST_CODE);
     }
 
     @Override
-    public void onCommentsClicked(View caller) {
+    public void onCommentClicked(View caller) {
         TextView hiddenNoteIdTextView = (TextView) caller.findViewById(R.id.hidden_note_id);
         String noteId = hiddenNoteIdTextView.getText().toString();
-        ActivityStarter.startCommentsActivity(getActivity(), Long.parseLong(noteId));
+        ActivityStarter.startNoteActivityForResult(getActivity(), Long.parseLong(noteId), RequestCodes.DELETE_NOTE_REQUEST_CODE);
     }
 
     @Override
@@ -258,6 +266,11 @@ public class DayFragment extends TokenFragment implements OnNotesListInteraction
     @Override
     public void onNoteDeleted(long noteId) {
         mAdapter.remove(noteId);
+    }
+
+    @Override
+    public void onCommentAdded(long noteId, long commentId) {
+
     }
 
     @Override

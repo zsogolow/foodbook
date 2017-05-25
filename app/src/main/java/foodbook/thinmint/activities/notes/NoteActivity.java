@@ -19,7 +19,9 @@ import foodbook.thinmint.IAsyncCallback;
 import foodbook.thinmint.R;
 import foodbook.thinmint.activities.MainActivity;
 import foodbook.thinmint.activities.TokenActivity;
+import foodbook.thinmint.activities.common.RequestCodes;
 import foodbook.thinmint.models.JsonHelper;
+import foodbook.thinmint.models.domain.Comment;
 import foodbook.thinmint.models.domain.Note;
 import foodbook.thinmint.tasks.CallServiceAsyncTask;
 import foodbook.thinmint.tasks.CallServiceCallback;
@@ -143,8 +145,16 @@ public class NoteActivity extends TokenActivity implements NoteFragment.OnNoteFr
     @Override
     public void onNoteDeleted(long noteId) {
         Intent resultIntent = new Intent();
-        resultIntent.putExtra(MainActivity.DELETE_NOTE_EXTRA_ID, noteId);
+        resultIntent.putExtra(RequestCodes.DELETE_NOTE_EXTRA_ID, noteId);
         setResult(Activity.RESULT_OK, resultIntent);
         finish();
+    }
+
+    @Override
+    public void onCommentAdded(Comment comment) {
+        Intent resultIntent = new Intent();
+        resultIntent.putExtra(RequestCodes.ADD_COMMENT_EXTRA_ID, comment.getId());
+        resultIntent.putExtra(RequestCodes.ADD_COMMENT_EXTRA_NOTE_ID, comment.getNoteId());
+        setResult(Activity.RESULT_OK, resultIntent);
     }
 }

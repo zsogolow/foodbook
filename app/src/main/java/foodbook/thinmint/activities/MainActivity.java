@@ -1,8 +1,12 @@
 package foodbook.thinmint.activities;
 
+import android.animation.Animator;
+import android.animation.AnimatorListenerAdapter;
+import android.annotation.TargetApi;
 import android.app.Activity;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.os.Build;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.support.design.widget.FloatingActionButton;
@@ -28,6 +32,7 @@ import foodbook.thinmint.IApiCallback;
 import foodbook.thinmint.IAsyncCallback;
 import foodbook.thinmint.R;
 import foodbook.thinmint.activities.common.OnNotesListInteractionListener;
+import foodbook.thinmint.activities.common.RequestCodes;
 import foodbook.thinmint.activities.day.DatePickerFragment;
 import foodbook.thinmint.activities.day.DayFragment;
 import foodbook.thinmint.activities.feed.FeedFragment;
@@ -38,15 +43,11 @@ import foodbook.thinmint.constants.Constants;
 
 public class MainActivity extends TokenActivity implements
         IApiCallback, NavigationView.OnNavigationItemSelectedListener,
-        DayFragment.OnDayFragmentDataListener, FeedFragment.OnHomeFragmentDataListener,
+        DayFragment.OnDayFragmentDataListener, FeedFragment.OnFeedFragmentDataListener,
         UserNotesFragment.OnUserNotesFragmentDataListener, UserInfoFragment.OnUserInfoFragmentDataListener,
         UsersFragment.OnUsersFragmentDataListener {
-    private static final String TAG = "MainActivity";
 
-    public static final int CREATE_NOTE_REQUEST_CODE = 0;
-    public static final int DELETE_NOTE_REQUEST_CODE = 1;
-    public static final String CREATE_NOTE_EXTRA_ID = "created_id";
-    public static final String DELETE_NOTE_EXTRA_ID = "deleted_id";
+    private static final String TAG = "MainActivity";
 
     public static final DateFormat PARSABLE_DATE_FORMAT = DateFormat.getDateInstance();
     public static final DateFormat DATE_FORMAT = new SimpleDateFormat("MMM d", Locale.US);
@@ -62,6 +63,9 @@ public class MainActivity extends TokenActivity implements
     private NavigationView mNavigationView;
     private DrawerLayout mDrawerLayout;
     private Menu mMenu;
+
+    private View mProgressView;
+    private View mContentView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -99,6 +103,8 @@ public class MainActivity extends TokenActivity implements
         getSupportFragmentManager()
                 .addOnBackStackChangedListener(getBackStackChangedListener());
 
+        mContentView = findViewById(R.id.fragment_container);
+        mProgressView = findViewById(R.id.loading_progress);
 
         MenuItem dailyItem = mNavigationView.getMenu().getItem(0);
         dailyItem.setChecked(true);
@@ -109,16 +115,16 @@ public class MainActivity extends TokenActivity implements
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
         switch (requestCode) {
-            case CREATE_NOTE_REQUEST_CODE:
+            case RequestCodes.CREATE_NOTE_REQUEST_CODE:
                 if (resultCode == Activity.RESULT_OK) {
-                    long newId = data.getLongExtra(CREATE_NOTE_EXTRA_ID, -1);
+                    long newId = data.getLongExtra(RequestCodes.CREATE_NOTE_EXTRA_ID, -1);
                     mCurrentFragment.onNoteAdded(newId);
                     break;
                 }
 
-            case DELETE_NOTE_REQUEST_CODE:
+            case RequestCodes.DELETE_NOTE_REQUEST_CODE:
                 if (resultCode == Activity.RESULT_OK) {
-                    long oldId = data.getLongExtra(DELETE_NOTE_EXTRA_ID, -1);
+                    long oldId = data.getLongExtra(RequestCodes.DELETE_NOTE_EXTRA_ID, -1);
                     mCurrentFragment.onNoteDeleted(oldId);
                     break;
                 }
@@ -349,5 +355,46 @@ public class MainActivity extends TokenActivity implements
 
     @Override
     public void callback(IAsyncCallback cb) {
+    }
+
+    @Override
+    public void showLoadingProgress(boolean show) {
+        showLoading(show);
+    }
+
+    /**
+     * Shows the progress UI and hides the login form.
+     */
+    @TargetApi(Build.VERSION_CODES.HONEYCOMB_MR2)
+    private void showLoading(final boolean show) {
+        // On Honeycomb MR2 we have the ViewPropertyAnimator APIs, which allow
+        // for very easy animations. If available, use these APIs to fade-in
+        // the progress spinner.
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB_MR2) {
+            int shortAnimTime = getResources().getInteger(android.R.integer.config_shortAnimTime);
+
+            mContentView.setVisibility(show ? View.GONE : View.VISIBLE);
+            mContentView.animate().setDuration(shortAnimTime).alpha(
+                    show ? 0 : 1).setListener(new AnimatorListenerAdapter() {
+                @Override
+                public void onAnimationEnd(Animator animation) {
+                    mContentView.setVisibility(show ? View.GONE : View.VISIBLE);
+                }
+            });
+
+            mProgressView.setVisibility(show ? View.VISIBLE : View.GONE);
+            mProgressView.animate().setDuration(shortAnimTime).alpha(
+                    show ? 1 : 0).setListener(new AnimatorListenerAdapter() {
+                @Override
+                public void onAnimationEnd(Animator animation) {
+                    mProgressView.setVisibility(show ? View.VISIBLE : View.GONE);
+                }
+            });
+        } else {
+            // The ViewPropertyAnimator APIs are not available, so simply show
+            // and hide the relevant UI components.
+            mProgressView.setVisibility(show ? View.VISIBLE : View.GONE);
+            mContentView.setVisibility(show ? View.GONE : View.VISIBLE);
+        }
     }
 }

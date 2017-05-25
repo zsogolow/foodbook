@@ -62,7 +62,7 @@ public class NotesRecyclerAdapter extends RecyclerView.Adapter<NotesRecyclerAdap
             if (v.equals(mLikeButton)) {
                 mListener.onLikeNoteClicked(mLinearLayout);
             } else if (v.equals(mCommentButton)) {
-                mListener.onCommentsClicked(mLinearLayout);
+                mListener.onCommentClicked(mLinearLayout);
             } else if (v.equals(mUserName)) {
                 mListener.onUserClicked(mLinearLayout);
             } else { // if (v.equals(mNoteComments)) {
@@ -75,7 +75,7 @@ public class NotesRecyclerAdapter extends RecyclerView.Adapter<NotesRecyclerAdap
 
             void onLikeNoteClicked(View caller);
 
-            void onCommentsClicked(View caller);
+            void onCommentClicked(View caller);
 
             void onUserClicked(View caller);
         }

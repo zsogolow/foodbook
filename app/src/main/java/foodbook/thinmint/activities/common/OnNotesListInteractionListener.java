@@ -12,4 +12,5 @@ public interface OnNotesListInteractionListener {
     void onNoteAdded(Note note);
     void onNoteAdded(long noteId);
     void onNoteDeleted(long noteId);
+    void onCommentAdded(long noteId, long commentId);
 }

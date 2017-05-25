@@ -24,6 +24,7 @@ import foodbook.thinmint.IAsyncCallback;
 import foodbook.thinmint.R;
 import foodbook.thinmint.activities.MainActivity;
 import foodbook.thinmint.activities.TokenActivity;
+import foodbook.thinmint.activities.common.RequestCodes;
 import foodbook.thinmint.api.WebAPIResult;
 import foodbook.thinmint.models.JsonHelper;
 import foodbook.thinmint.models.domain.Note;
@@ -132,7 +133,7 @@ public class CreateNoteActivity extends TokenActivity implements IApiCallback {
             if (result.isSuccess()) {
                 Note created = JsonHelper.getNote(result.getResult());
                 Intent resultIntent = new Intent();
-                resultIntent.putExtra(MainActivity.CREATE_NOTE_EXTRA_ID, created.getId());
+                resultIntent.putExtra(RequestCodes.CREATE_NOTE_EXTRA_ID, created.getId());
                 setResult(Activity.RESULT_OK, resultIntent);
                 finish();
             }

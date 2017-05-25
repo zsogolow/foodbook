@@ -283,10 +283,6 @@ public class NoteFragment extends TokenFragment implements IApiCallback,
         ActivityStarter.startUserActivity(getActivity(), userId, username);
     }
 
-    @Override
-    public void onCommentClicked(View caller) {
-
-    }
 
     @Override
     public void callback(IAsyncCallback cb) {
@@ -324,5 +320,7 @@ public class NoteFragment extends TokenFragment implements IApiCallback,
         void onNoteRetrieved(Note note);
 
         void onNoteDeleted(long noteId);
+
+        void onCommentAdded(Comment comment);
     }
 }

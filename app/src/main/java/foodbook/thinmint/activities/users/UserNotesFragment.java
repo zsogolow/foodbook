@@ -23,10 +23,13 @@ import foodbook.thinmint.IApiCallback;
 import foodbook.thinmint.IAsyncCallback;
 import foodbook.thinmint.R;
 import foodbook.thinmint.activities.ActivityStarter;
+import foodbook.thinmint.activities.MainActivity;
 import foodbook.thinmint.activities.TokenFragment;
 import foodbook.thinmint.activities.adapters.EndlessRecyclerViewScrollListener;
 import foodbook.thinmint.activities.common.OnNotesListInteractionListener;
 import foodbook.thinmint.activities.adapters.NotesRecyclerAdapter;
+import foodbook.thinmint.activities.common.RequestCodes;
+import foodbook.thinmint.activities.notes.NoteActivity;
 import foodbook.thinmint.api.Query;
 import foodbook.thinmint.models.JsonHelper;
 import foodbook.thinmint.models.domain.Note;
@@ -168,6 +171,11 @@ public class UserNotesFragment extends TokenFragment implements OnNotesListInter
     }
 
     @Override
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+    }
+
+    @Override
     public void onLikeNoteClicked(View caller) {
 //        TextView hiddenNoteIdTextView = (TextView)caller.findViewById(R.id.hidden_note_id);
 //        String noteId = hiddenNoteIdTextView.getText().toString();
@@ -178,14 +186,14 @@ public class UserNotesFragment extends TokenFragment implements OnNotesListInter
     public void onNoteClicked(View caller) {
         TextView hiddenNoteIdTextView = (TextView) caller.findViewById(R.id.hidden_note_id);
         String noteId = hiddenNoteIdTextView.getText().toString();
-        ActivityStarter.startNoteActivityForResult(getActivity(), Long.parseLong(noteId));
+        ActivityStarter.startNoteActivityForResult(getActivity(), Long.parseLong(noteId), RequestCodes.DELETE_NOTE_REQUEST_CODE);
     }
 
     @Override
-    public void onCommentsClicked(View caller) {
+    public void onCommentClicked(View caller) {
         TextView hiddenNoteIdTextView = (TextView) caller.findViewById(R.id.hidden_note_id);
         String noteId = hiddenNoteIdTextView.getText().toString();
-        ActivityStarter.startCommentsActivity(getActivity(), Long.parseLong(noteId));
+        ActivityStarter.startNoteActivityForResult(getActivity(), Long.parseLong(noteId), RequestCodes.DELETE_NOTE_REQUEST_CODE);
     }
 
     @Override
@@ -239,6 +247,11 @@ public class UserNotesFragment extends TokenFragment implements OnNotesListInter
     @Override
     public void onNoteDeleted(long noteId) {
         mAdapter.remove(noteId);
+    }
+
+    @Override
+    public void onCommentAdded(long noteId, long commentId) {
+
     }
 
     @Override

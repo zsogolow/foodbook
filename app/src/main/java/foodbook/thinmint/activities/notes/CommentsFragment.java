@@ -259,11 +259,6 @@ public class CommentsFragment extends TokenFragment implements IApiCallback,
         ActivityStarter.startUserActivity(getActivity(), userId, username);
     }
 
-    @Override
-    public void onCommentClicked(View caller) {
-
-    }
-
     public interface OnCommentsFragmentDataListener {
         void onCommentsFragmentCreated(View view);
         void onCommentAdded(Comment comment);

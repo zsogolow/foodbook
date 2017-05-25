@@ -22,11 +22,9 @@ import foodbook.thinmint.R;
 import foodbook.thinmint.activities.ActivityStarter;
 import foodbook.thinmint.activities.LoginActivity;
 import foodbook.thinmint.activities.TokenActivity;
+import foodbook.thinmint.activities.common.RequestCodes;
 import foodbook.thinmint.activities.notes.NoteActivity;
 import foodbook.thinmint.constants.Constants;
-
-import static foodbook.thinmint.activities.MainActivity.DELETE_NOTE_EXTRA_ID;
-import static foodbook.thinmint.activities.MainActivity.DELETE_NOTE_REQUEST_CODE;
 
 public class UserActivity extends TokenActivity implements
         UserInfoFragment.OnUserInfoFragmentDataListener,
@@ -68,9 +66,9 @@ public class UserActivity extends TokenActivity implements
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
         switch (requestCode) {
-            case DELETE_NOTE_REQUEST_CODE:
+            case RequestCodes.DELETE_NOTE_REQUEST_CODE:
                 if (resultCode == Activity.RESULT_OK) {
-                    long oldId = data.getLongExtra(DELETE_NOTE_EXTRA_ID, -1);
+                    long oldId = data.getLongExtra(RequestCodes.DELETE_NOTE_EXTRA_ID, -1);
 
                     // TODO refresh user notes here
 

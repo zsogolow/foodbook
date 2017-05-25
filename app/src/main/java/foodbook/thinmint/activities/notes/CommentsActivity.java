@@ -23,9 +23,6 @@ import foodbook.thinmint.models.domain.Note;
 public class CommentsActivity extends TokenActivity
         implements CommentsFragment.OnCommentsFragmentDataListener{
 
-    public static final int ADD_COMMENT_REQUEST_CODE = 1;
-    public static final String ADD_COMMENT_EXTRA_ID = "created_id";
-
     private CommentsFragment mCommentsFragment;
 
     @Override

@@ -5,8 +5,10 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
+import android.support.v4.app.Fragment;
 import android.view.inputmethod.InputMethodManager;
 
+import foodbook.thinmint.activities.common.RequestCodes;
 import foodbook.thinmint.activities.notes.CommentsActivity;
 import foodbook.thinmint.activities.notes.CreateNoteActivity;
 import foodbook.thinmint.activities.notes.NoteActivity;
@@ -38,7 +40,7 @@ public class ActivityStarter {
 
     public static void startCreateNoteActivityForResult(Activity activity) {
         Intent createNoteIntent = new Intent(activity, CreateNoteActivity.class);
-        activity.startActivityForResult(createNoteIntent, MainActivity.CREATE_NOTE_REQUEST_CODE);
+        activity.startActivityForResult(createNoteIntent, RequestCodes.CREATE_NOTE_REQUEST_CODE);
     }
 
     public static void startNoteActivity(Activity activity, long noteId) {
@@ -49,12 +51,20 @@ public class ActivityStarter {
         activity.startActivity(noteIntent);
     }
 
-    public static void startNoteActivityForResult(Activity activity, long noteId) {
+    public static void startNoteActivityForResult(Activity activity, long noteId, int requestCode) {
         Intent noteIntent = new Intent(activity, NoteActivity.class);
         Bundle bundle = new Bundle();
         bundle.putLong("note_id", noteId);
         noteIntent.putExtras(bundle);
-        activity.startActivityForResult(noteIntent, MainActivity.DELETE_NOTE_REQUEST_CODE);
+        activity.startActivityForResult(noteIntent, requestCode);
+    }
+
+    public static void startNoteActivityForResult(Fragment fragment, long noteId, int requestCode) {
+        Intent noteIntent = new Intent(fragment.getActivity(), NoteActivity.class);
+        Bundle bundle = new Bundle();
+        bundle.putLong("note_id", noteId);
+        noteIntent.putExtras(bundle);
+        fragment.startActivityForResult(noteIntent, requestCode);
     }
 
     public static void startCommentsActivity(Activity activity, long noteId) {

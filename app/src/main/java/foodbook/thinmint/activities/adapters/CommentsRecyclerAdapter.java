@@ -45,7 +45,6 @@ public class CommentsRecyclerAdapter extends RecyclerView.Adapter<CommentsRecycl
             mLinearLayout = v;
             mUserName = (TextView) mLinearLayout.findViewById(R.id.user_name);
             mListener = listener;
-            mLinearLayout.setOnClickListener(this);
             mUserName.setOnClickListener(this);
         }
 
@@ -53,15 +52,11 @@ public class CommentsRecyclerAdapter extends RecyclerView.Adapter<CommentsRecycl
         public void onClick(View v) {
             if (v.equals(mUserName)) {
                 mListener.onUserClicked(mLinearLayout);
-            } else {
-                mListener.onCommentClicked(mLinearLayout);
             }
         }
 
         public interface IOnCommentClickListener {
             void onUserClicked(View caller);
-
-            void onCommentClicked(View caller);
         }
     }
 
