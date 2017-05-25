@@ -3,7 +3,10 @@ package foodbook.thinmint.tasks;
 import android.content.Context;
 import android.os.AsyncTask;
 
-import foodbook.thinmint.api.Query;
+import org.json.JSONObject;
+
+import java.util.Map;
+
 import foodbook.thinmint.api.WebAPIConnect;
 import foodbook.thinmint.api.WebAPIResult;
 import foodbook.thinmint.constants.Constants;
@@ -15,24 +18,25 @@ import foodbook.thinmint.idsrv.TokenResult;
  * Created by Zachery.Sogolow on 5/9/2017.
  */
 
-public class DeleteServiceAsyncTask extends AsyncTask<Query, String, WebAPIResult> {
+public class PostAsyncTask extends AsyncTask<String, String, WebAPIResult> {
 
     private Context mContext;
-    private DeleteServiceCallback mCallback;
+    private AsyncCallback<WebAPIResult> mCallback;
     private Token mToken;
+    private Map mMap;
 
-    public DeleteServiceAsyncTask(Context context, DeleteServiceCallback callback, Token token) {
+    public PostAsyncTask(Context context, AsyncCallback<WebAPIResult> callback, Token token, Map map) {
         this.mContext = context;
         this.mCallback = callback;
         this.mToken = token;
+        this.mMap = map;
     }
 
     @Override
-    protected WebAPIResult doInBackground(Query... params) { // params[0] is path
+    protected WebAPIResult doInBackground(String... params) { // params[0] is path
         WebAPIResult result = null;
-        Query query = params[0];
+        String path = params[0];
         WebAPIConnect connect = new WebAPIConnect();
-        publishProgress("Getting data...");
 
         if (TokenHelper.isTokenExpired(mToken)) {
             TokenResult tokenResult = mToken.getRefreshToken(Constants.CLIENT_ID, Constants.CLIENT_SECRET);
@@ -42,7 +46,8 @@ public class DeleteServiceAsyncTask extends AsyncTask<Query, String, WebAPIResul
         }
 
         if (!TokenHelper.isTokenExpired(mToken)) {
-            result = connect.delete(query, mToken.getAccessToken());
+            JSONObject jsonObject = new JSONObject(mMap);
+            result = connect.post(mToken.getAccessToken(), path, jsonObject);
         }
 
         return result;

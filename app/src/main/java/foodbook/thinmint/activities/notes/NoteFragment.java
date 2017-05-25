@@ -14,7 +14,6 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
 
-import java.net.URLEncoder;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -36,11 +35,10 @@ import foodbook.thinmint.api.WebAPIResult;
 import foodbook.thinmint.models.JsonHelper;
 import foodbook.thinmint.models.domain.Comment;
 import foodbook.thinmint.models.domain.Note;
-import foodbook.thinmint.tasks.CallServiceAsyncTask;
-import foodbook.thinmint.tasks.CallServiceCallback;
-import foodbook.thinmint.tasks.DeleteServiceAsyncTask;
-import foodbook.thinmint.tasks.DeleteServiceCallback;
-import foodbook.thinmint.tasks.PostServiceAsyncTask;
+import foodbook.thinmint.tasks.AsyncCallback;
+import foodbook.thinmint.tasks.GetAsyncTask;
+import foodbook.thinmint.tasks.DeleteAsyncTask;
+import foodbook.thinmint.tasks.PostAsyncTask;
 
 /**
  * A simple {@link Fragment} subclass.
@@ -73,14 +71,14 @@ public class NoteFragment extends TokenFragment implements IApiCallback,
     private TextView mCommentsText;
     private TextView mHiddenUserSubject;
 
-    private CallServiceAsyncTask mGetNoteTask;
-    private CallServiceCallback mGetNoteCallback;
+    private GetAsyncTask mGetNoteTask;
+    private AsyncCallback<WebAPIResult> mGetNoteCallback;
 
-    private DeleteServiceAsyncTask mDeleteServiceAsyncTask;
-    private DeleteServiceCallback mDeleteServiceCallback;
+    private DeleteAsyncTask mDeleteServiceAsyncTask;
+    private AsyncCallback<WebAPIResult> mDeleteServiceCallback;
 
-    private PostServiceAsyncTask mAddCommentTask;
-    private CallServiceCallback mAddCommentCallback;
+    private PostAsyncTask mAddCommentTask;
+    private AsyncCallback<WebAPIResult> mAddCommentCallback;
 
     public NoteFragment() {
         // Required empty public constructor
@@ -111,9 +109,9 @@ public class NoteFragment extends TokenFragment implements IApiCallback,
         initToken();
         initUser();
 
-        mGetNoteCallback = new CallServiceCallback(this);
-        mDeleteServiceCallback = new DeleteServiceCallback(this);
-        mAddCommentCallback = new CallServiceCallback(this);
+        mGetNoteCallback = new AsyncCallback<WebAPIResult>(this);
+        mDeleteServiceCallback = new AsyncCallback<WebAPIResult>(this);
+        mAddCommentCallback = new AsyncCallback<WebAPIResult>(this);
     }
 
     @Override
@@ -141,7 +139,7 @@ public class NoteFragment extends TokenFragment implements IApiCallback,
                 map.put("userid", mUserId);
                 map.put("text", mCommentText.getText().toString());
                 map.put("datecreated", dateFormat.format(new Date(System.currentTimeMillis())));
-                mAddCommentTask = new PostServiceAsyncTask(getContext(), mAddCommentCallback, mToken, map);
+                mAddCommentTask = new PostAsyncTask(getContext(), mAddCommentCallback, mToken, map);
                 mAddCommentTask.execute("api/comments");
                 ActivityStarter.hideSoftKeyboard(getActivity());
             }
@@ -207,7 +205,7 @@ public class NoteFragment extends TokenFragment implements IApiCallback,
 
     public void deleteNote() {
         setLoading(true);
-        mDeleteServiceAsyncTask = new DeleteServiceAsyncTask(getContext(), mDeleteServiceCallback, mToken);
+        mDeleteServiceAsyncTask = new DeleteAsyncTask(getContext(), mDeleteServiceCallback, mToken);
         Query query = Query.builder()
                 .setPath("api/notes/" + mNoteId)
                 .build();
@@ -248,7 +246,7 @@ public class NoteFragment extends TokenFragment implements IApiCallback,
 
     private void refreshNote() {
         setLoading(true);
-        mGetNoteTask = new CallServiceAsyncTask(getContext(), mGetNoteCallback, mToken);
+        mGetNoteTask = new GetAsyncTask(getContext(), mGetNoteCallback, mToken);
 
         String path = String.format(Locale.US, "api/notes/%d", mNoteId);
 

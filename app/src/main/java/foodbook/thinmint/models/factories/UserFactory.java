@@ -12,7 +12,6 @@ import java.util.List;
 import java.util.Map;
 
 import foodbook.thinmint.models.domain.User;
-import foodbook.thinmint.tasks.UserInfoCallback;
 
 /**
  * Created by ZachS on 5/14/2017.

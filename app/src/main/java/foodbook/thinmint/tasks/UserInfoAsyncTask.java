@@ -16,10 +16,10 @@ public class UserInfoAsyncTask extends AsyncTask<String, String, UserInfoResult>
     private ProgressDialog pd;
 
     private Context mContext;
-    private UserInfoCallback mCallback;
+    private AsyncCallback<UserInfoResult> mCallback;
     private Token objTkn;
 
-    public UserInfoAsyncTask(Context context, UserInfoCallback callback, Token token) {
+    public UserInfoAsyncTask(Context context, AsyncCallback<UserInfoResult> callback, Token token) {
         mContext = context;
         mCallback = callback;
         objTkn = token;

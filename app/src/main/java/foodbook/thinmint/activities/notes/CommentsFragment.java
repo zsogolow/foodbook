@@ -2,7 +2,6 @@ package foodbook.thinmint.activities.notes;
 
 import android.content.Context;
 import android.os.Bundle;
-import android.os.SystemClock;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.support.v4.widget.SwipeRefreshLayout;
@@ -34,9 +33,9 @@ import foodbook.thinmint.api.Query;
 import foodbook.thinmint.api.WebAPIResult;
 import foodbook.thinmint.models.JsonHelper;
 import foodbook.thinmint.models.domain.Comment;
-import foodbook.thinmint.tasks.CallServiceAsyncTask;
-import foodbook.thinmint.tasks.CallServiceCallback;
-import foodbook.thinmint.tasks.PostServiceAsyncTask;
+import foodbook.thinmint.tasks.AsyncCallback;
+import foodbook.thinmint.tasks.GetAsyncTask;
+import foodbook.thinmint.tasks.PostAsyncTask;
 
 /**
  * A simple {@link Fragment} subclass.
@@ -62,12 +61,12 @@ public class CommentsFragment extends TokenFragment implements IApiCallback,
     private Button mAddCommentButton;
     private EditText mCommentText;
 
-    private CallServiceAsyncTask mGetCommentsTask;
-    private CallServiceCallback mGetCommentsCallback;
-    private CallServiceCallback mLoadMoreCallback;
+    private GetAsyncTask mGetCommentsTask;
+    private AsyncCallback<WebAPIResult> mGetCommentsCallback;
+    private AsyncCallback<WebAPIResult> mLoadMoreCallback;
 
-    private PostServiceAsyncTask mAddCommentTask;
-    private CallServiceCallback mAddCommentCallback;
+    private PostAsyncTask mAddCommentTask;
+    private AsyncCallback<WebAPIResult> mAddCommentCallback;
 
     private EndlessRecyclerViewScrollListener mScrollListener;
 
@@ -100,9 +99,9 @@ public class CommentsFragment extends TokenFragment implements IApiCallback,
         initToken();
         initUser();
 
-        mGetCommentsCallback = new CallServiceCallback(this);
-        mLoadMoreCallback = new CallServiceCallback(this);
-        mAddCommentCallback = new CallServiceCallback(this);
+        mGetCommentsCallback = new AsyncCallback<WebAPIResult>(this);
+        mLoadMoreCallback = new AsyncCallback<WebAPIResult>(this);
+        mAddCommentCallback = new AsyncCallback<WebAPIResult>(this);
     }
 
     @Override
@@ -130,7 +129,7 @@ public class CommentsFragment extends TokenFragment implements IApiCallback,
                 map.put("userid", mUserId);
                 map.put("text", mCommentText.getText().toString());
                 map.put("datecreated", dateFormat.format(new Date(System.currentTimeMillis())));
-                mAddCommentTask = new PostServiceAsyncTask(getContext(), mAddCommentCallback, mToken, map);
+                mAddCommentTask = new PostAsyncTask(getContext(), mAddCommentCallback, mToken, map);
                 mAddCommentTask.execute("api/comments");
                 ActivityStarter.hideSoftKeyboard(getActivity());
             }
@@ -163,7 +162,7 @@ public class CommentsFragment extends TokenFragment implements IApiCallback,
 //                .setAccessToken(mToken.getAccessToken())
                         .setSort("-datecreated")
                         .build();
-                mGetCommentsTask = new CallServiceAsyncTask(getContext(), mLoadMoreCallback, mToken);
+                mGetCommentsTask = new GetAsyncTask(getContext(), mLoadMoreCallback, mToken);
                 mGetCommentsTask.execute(query);
             }
         };
@@ -201,7 +200,7 @@ public class CommentsFragment extends TokenFragment implements IApiCallback,
 
     private void refreshComments() {
         setLoading(true);
-        mGetCommentsTask = new CallServiceAsyncTask(getContext(), mGetCommentsCallback, mToken);
+        mGetCommentsTask = new GetAsyncTask(getContext(), mGetCommentsCallback, mToken);
 
         String path = String.format(Locale.US, "api/notes/%d/comments", mNoteId);
 

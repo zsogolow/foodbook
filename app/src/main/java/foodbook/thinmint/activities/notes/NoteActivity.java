@@ -12,21 +12,11 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 
-import java.net.URLEncoder;
-
-import foodbook.thinmint.IApiCallback;
-import foodbook.thinmint.IAsyncCallback;
 import foodbook.thinmint.R;
-import foodbook.thinmint.activities.MainActivity;
 import foodbook.thinmint.activities.TokenActivity;
 import foodbook.thinmint.activities.common.RequestCodes;
-import foodbook.thinmint.models.JsonHelper;
 import foodbook.thinmint.models.domain.Comment;
 import foodbook.thinmint.models.domain.Note;
-import foodbook.thinmint.tasks.CallServiceAsyncTask;
-import foodbook.thinmint.tasks.CallServiceCallback;
-import foodbook.thinmint.tasks.DeleteServiceAsyncTask;
-import foodbook.thinmint.tasks.DeleteServiceCallback;
 
 public class NoteActivity extends TokenActivity implements NoteFragment.OnNoteFragmentDataListener {
 

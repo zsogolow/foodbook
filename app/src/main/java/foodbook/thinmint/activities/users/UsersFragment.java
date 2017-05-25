@@ -10,14 +10,10 @@ import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.LinearLayout;
 import android.widget.TextView;
 
-import java.net.URLEncoder;
-import java.security.InvalidAlgorithmParameterException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Locale;
 
 import foodbook.thinmint.IApiCallback;
 import foodbook.thinmint.IAsyncCallback;
@@ -27,11 +23,11 @@ import foodbook.thinmint.activities.TokenFragment;
 import foodbook.thinmint.activities.adapters.EndlessRecyclerViewScrollListener;
 import foodbook.thinmint.activities.adapters.UsersRecyclerAdapter;
 import foodbook.thinmint.api.Query;
+import foodbook.thinmint.api.WebAPIResult;
 import foodbook.thinmint.models.JsonHelper;
-import foodbook.thinmint.models.domain.Note;
 import foodbook.thinmint.models.domain.User;
-import foodbook.thinmint.tasks.CallServiceAsyncTask;
-import foodbook.thinmint.tasks.CallServiceCallback;
+import foodbook.thinmint.tasks.AsyncCallback;
+import foodbook.thinmint.tasks.GetAsyncTask;
 
 /**
  * A simple {@link Fragment} subclass.
@@ -54,9 +50,9 @@ public class UsersFragment extends TokenFragment implements IApiCallback,
     private UsersRecyclerAdapter mAdapter;
     private LinearLayoutManager mLayoutManager;
 
-    private CallServiceAsyncTask mGetUsersTask;
-    private CallServiceCallback mGetUsersCallback;
-    private CallServiceCallback mLoadMoreCallback;
+    private GetAsyncTask mGetUsersTask;
+    private AsyncCallback<WebAPIResult> mGetUsersCallback;
+    private AsyncCallback<WebAPIResult> mLoadMoreCallback;
 
     private EndlessRecyclerViewScrollListener mScrollListener;
 
@@ -89,8 +85,8 @@ public class UsersFragment extends TokenFragment implements IApiCallback,
         initToken();
         initUser();
 
-        mGetUsersCallback = new CallServiceCallback(this);
-        mLoadMoreCallback = new CallServiceCallback(this);
+        mGetUsersCallback = new AsyncCallback<WebAPIResult>(this);
+        mLoadMoreCallback = new AsyncCallback<WebAPIResult>(this);
     }
 
     @Override
@@ -132,7 +128,7 @@ public class UsersFragment extends TokenFragment implements IApiCallback,
                         .setSort("username")
                         .setPage(page + 1)
                         .build();
-                mGetUsersTask = new CallServiceAsyncTask(getContext(), mLoadMoreCallback, mToken);
+                mGetUsersTask = new GetAsyncTask(getContext(), mLoadMoreCallback, mToken);
                 mGetUsersTask.execute(query);
             }
         };
@@ -170,7 +166,7 @@ public class UsersFragment extends TokenFragment implements IApiCallback,
 
     private void refreshUsers() {
         setLoading(true);
-        mGetUsersTask = new CallServiceAsyncTask(getContext(), mGetUsersCallback, mToken);
+        mGetUsersTask = new GetAsyncTask(getContext(), mGetUsersCallback, mToken);
 
         String path = "api/users";
 

@@ -15,13 +15,13 @@ import foodbook.thinmint.idsrv.TokenResult;
  * Created by Zachery.Sogolow on 5/9/2017.
  */
 
-public class CallServiceAsyncTask extends AsyncTask<Query, String, WebAPIResult> {
+public class GetAsyncTask extends AsyncTask<Query, String, WebAPIResult> {
 
     private Context mContext;
-    private CallServiceCallback mCallback;
+    private AsyncCallback<WebAPIResult> mCallback;
     private Token mToken;
 
-    public CallServiceAsyncTask(Context context, CallServiceCallback callback, Token token) {
+    public GetAsyncTask(Context context, AsyncCallback<WebAPIResult> callback, Token token) {
         this.mContext = context;
         this.mCallback = callback;
         this.mToken = token;

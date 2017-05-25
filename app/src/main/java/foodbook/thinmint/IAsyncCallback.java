@@ -12,4 +12,5 @@ public interface IAsyncCallback<T> {
     void onPostExecute(AsyncTask task);
     void onCancelled(AsyncTask task);
     void onError(String err);
+    T getResult();
 }

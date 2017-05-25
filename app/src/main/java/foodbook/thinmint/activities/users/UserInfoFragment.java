@@ -10,7 +10,6 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
-import java.net.URLEncoder;
 import java.util.Locale;
 
 import foodbook.thinmint.IApiCallback;
@@ -18,10 +17,11 @@ import foodbook.thinmint.IAsyncCallback;
 import foodbook.thinmint.R;
 import foodbook.thinmint.activities.TokenFragment;
 import foodbook.thinmint.api.Query;
+import foodbook.thinmint.api.WebAPIResult;
 import foodbook.thinmint.models.JsonHelper;
 import foodbook.thinmint.models.domain.User;
-import foodbook.thinmint.tasks.CallServiceAsyncTask;
-import foodbook.thinmint.tasks.CallServiceCallback;
+import foodbook.thinmint.tasks.AsyncCallback;
+import foodbook.thinmint.tasks.GetAsyncTask;
 
 /**
  * A simple {@link Fragment} subclass.
@@ -41,8 +41,8 @@ public class UserInfoFragment extends TokenFragment implements IApiCallback {
     private SwipeRefreshLayout mSwipeRefreshLayout;
     private TextView mUserName;
 
-    private CallServiceAsyncTask mGetUserTask;
-    private CallServiceCallback mGetUserCallback;
+    private GetAsyncTask mGetUserTask;
+    private AsyncCallback<WebAPIResult> mGetUserCallback;
 
     public UserInfoFragment() {
         // Required empty public constructor
@@ -74,7 +74,7 @@ public class UserInfoFragment extends TokenFragment implements IApiCallback {
         initToken();
         initUser();
 
-        mGetUserCallback = new CallServiceCallback(this);
+        mGetUserCallback = new AsyncCallback<WebAPIResult>(this);
     }
 
     @Override
@@ -132,7 +132,7 @@ public class UserInfoFragment extends TokenFragment implements IApiCallback {
 
     private void refreshUser() {
         setLoading(true);
-        mGetUserTask = new CallServiceAsyncTask(getContext(), mGetUserCallback, mToken);
+        mGetUserTask = new GetAsyncTask(getContext(), mGetUserCallback, mToken);
 
         String path = String.format(Locale.US, "api/users/%s", mUserId);
 

@@ -4,9 +4,7 @@ import android.app.Activity;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.support.v7.app.AlertDialog;
-import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
@@ -28,14 +26,14 @@ import foodbook.thinmint.activities.common.RequestCodes;
 import foodbook.thinmint.api.WebAPIResult;
 import foodbook.thinmint.models.JsonHelper;
 import foodbook.thinmint.models.domain.Note;
-import foodbook.thinmint.tasks.CallServiceCallback;
-import foodbook.thinmint.tasks.PostServiceAsyncTask;
+import foodbook.thinmint.tasks.AsyncCallback;
+import foodbook.thinmint.tasks.PostAsyncTask;
 
 public class CreateNoteActivity extends TokenActivity implements IApiCallback {
 
 
-    private PostServiceAsyncTask mAddNoteTask;
-    private CallServiceCallback mAddNoteCallback;
+    private PostAsyncTask mAddNoteTask;
+    private AsyncCallback<WebAPIResult> mAddNoteCallback;
 
     private EditText mNoteContents;
 
@@ -50,7 +48,7 @@ public class CreateNoteActivity extends TokenActivity implements IApiCallback {
         initToken();
         initUser();
 
-        mAddNoteCallback = new CallServiceCallback(this);
+        mAddNoteCallback = new AsyncCallback<WebAPIResult>(this);
 
         mNoteContents = (EditText) findViewById(R.id.edit_note_contents);
 
@@ -121,7 +119,7 @@ public class CreateNoteActivity extends TokenActivity implements IApiCallback {
         map.put("content", note.getContent());
         map.put("userid", note.getUserId());
         map.put("datecreated", dateFormat.format(note.getDateCreated()));
-        mAddNoteTask = new PostServiceAsyncTask(this, mAddNoteCallback, mToken, map);
+        mAddNoteTask = new PostAsyncTask(this, mAddNoteCallback, mToken, map);
         mAddNoteTask.execute("api/notes");
     }
 

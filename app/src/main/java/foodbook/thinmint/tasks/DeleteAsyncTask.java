@@ -3,10 +3,7 @@ package foodbook.thinmint.tasks;
 import android.content.Context;
 import android.os.AsyncTask;
 
-import org.json.JSONObject;
-
-import java.util.Map;
-
+import foodbook.thinmint.api.Query;
 import foodbook.thinmint.api.WebAPIConnect;
 import foodbook.thinmint.api.WebAPIResult;
 import foodbook.thinmint.constants.Constants;
@@ -18,25 +15,24 @@ import foodbook.thinmint.idsrv.TokenResult;
  * Created by Zachery.Sogolow on 5/9/2017.
  */
 
-public class PostServiceAsyncTask extends AsyncTask<String, String, WebAPIResult> {
+public class DeleteAsyncTask extends AsyncTask<Query, String, WebAPIResult> {
 
     private Context mContext;
-    private CallServiceCallback mCallback;
+    private AsyncCallback<WebAPIResult> mCallback;
     private Token mToken;
-    private Map mMap;
 
-    public PostServiceAsyncTask(Context context, CallServiceCallback callback, Token token, Map map) {
+    public DeleteAsyncTask(Context context, AsyncCallback<WebAPIResult> callback, Token token) {
         this.mContext = context;
         this.mCallback = callback;
         this.mToken = token;
-        this.mMap = map;
     }
 
     @Override
-    protected WebAPIResult doInBackground(String... params) { // params[0] is path
+    protected WebAPIResult doInBackground(Query... params) { // params[0] is path
         WebAPIResult result = null;
-        String path = params[0];
+        Query query = params[0];
         WebAPIConnect connect = new WebAPIConnect();
+        publishProgress("Getting data...");
 
         if (TokenHelper.isTokenExpired(mToken)) {
             TokenResult tokenResult = mToken.getRefreshToken(Constants.CLIENT_ID, Constants.CLIENT_SECRET);
@@ -46,8 +42,7 @@ public class PostServiceAsyncTask extends AsyncTask<String, String, WebAPIResult
         }
 
         if (!TokenHelper.isTokenExpired(mToken)) {
-            JSONObject jsonObject = new JSONObject(mMap);
-            result = connect.post(mToken.getAccessToken(), path, jsonObject);
+            result = connect.delete(query, mToken.getAccessToken());
         }
 
         return result;

@@ -8,13 +8,11 @@ import android.support.v4.app.Fragment;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
-import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
@@ -23,18 +21,17 @@ import foodbook.thinmint.IApiCallback;
 import foodbook.thinmint.IAsyncCallback;
 import foodbook.thinmint.R;
 import foodbook.thinmint.activities.ActivityStarter;
-import foodbook.thinmint.activities.MainActivity;
 import foodbook.thinmint.activities.TokenFragment;
 import foodbook.thinmint.activities.adapters.EndlessRecyclerViewScrollListener;
 import foodbook.thinmint.activities.common.OnNotesListInteractionListener;
 import foodbook.thinmint.activities.adapters.NotesRecyclerAdapter;
 import foodbook.thinmint.activities.common.RequestCodes;
-import foodbook.thinmint.activities.notes.NoteActivity;
 import foodbook.thinmint.api.Query;
+import foodbook.thinmint.api.WebAPIResult;
 import foodbook.thinmint.models.JsonHelper;
 import foodbook.thinmint.models.domain.Note;
-import foodbook.thinmint.tasks.CallServiceAsyncTask;
-import foodbook.thinmint.tasks.CallServiceCallback;
+import foodbook.thinmint.tasks.AsyncCallback;
+import foodbook.thinmint.tasks.GetAsyncTask;
 
 /**
  * A simple {@link Fragment} subclass.
@@ -57,9 +54,9 @@ public class UserNotesFragment extends TokenFragment implements OnNotesListInter
     private NotesRecyclerAdapter mAdapter;
     private LinearLayoutManager mLayoutManager;
 
-    private CallServiceAsyncTask mGetMyNotesTask;
-    private CallServiceCallback mGetMyStuffCallback;
-    private CallServiceCallback mLoadMoreCallback;
+    private GetAsyncTask mGetMyNotesTask;
+    private AsyncCallback<WebAPIResult> mGetMyStuffCallback;
+    private AsyncCallback<WebAPIResult> mLoadMoreCallback;
 
     private EndlessRecyclerViewScrollListener mScrollListener;
 
@@ -92,8 +89,8 @@ public class UserNotesFragment extends TokenFragment implements OnNotesListInter
         initUser();
         initToken();
 
-        mGetMyStuffCallback = new CallServiceCallback(this);
-        mLoadMoreCallback = new CallServiceCallback(this);
+        mGetMyStuffCallback = new AsyncCallback<WebAPIResult>(this);
+        mLoadMoreCallback = new AsyncCallback<WebAPIResult>(this);
     }
 
     @Override
@@ -137,7 +134,7 @@ public class UserNotesFragment extends TokenFragment implements OnNotesListInter
                         .setSort("-datecreated")
                         .setPage(page + 1)
                         .build();
-                mGetMyNotesTask = new CallServiceAsyncTask(getContext(), mLoadMoreCallback, mToken);
+                mGetMyNotesTask = new GetAsyncTask(getContext(), mLoadMoreCallback, mToken);
                 mGetMyNotesTask.execute(query);
             }
         };
@@ -211,7 +208,7 @@ public class UserNotesFragment extends TokenFragment implements OnNotesListInter
 
     private void refreshMyNotes() {
         setLoading(true);
-        mGetMyNotesTask = new CallServiceAsyncTask(getContext(), mGetMyStuffCallback, mToken);
+        mGetMyNotesTask = new GetAsyncTask(getContext(), mGetMyStuffCallback, mToken);
 
         String path = String.format(Locale.US, "api/users/%s/notes", mUserId);
 

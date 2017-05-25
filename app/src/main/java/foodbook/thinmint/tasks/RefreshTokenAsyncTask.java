@@ -28,10 +28,10 @@ public class RefreshTokenAsyncTask extends AsyncTask<String, String, TokenResult
     private ProgressDialog pd;
 
     private Context mContext;
-    private TokenResultCallback mCallback;
+    private AsyncCallback<TokenResult> mCallback;
     private Token mToken;
 
-    public RefreshTokenAsyncTask(Context context, TokenResultCallback callback, Token token) {
+    public RefreshTokenAsyncTask(Context context, AsyncCallback<TokenResult> callback, Token token) {
         this.mContext = context;
         this.mCallback = callback;
         this.mToken = token;

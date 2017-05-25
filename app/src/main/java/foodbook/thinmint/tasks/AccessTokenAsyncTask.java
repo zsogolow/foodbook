@@ -22,11 +22,11 @@ public class AccessTokenAsyncTask extends AsyncTask<String, String, TokenResult>
     private ProgressDialog pd;
 
     private Context mContext;
-    private TokenResultCallback mCallback;
+    private AsyncCallback<TokenResult> mCallback;
     private Token mToken;
 
 
-    public AccessTokenAsyncTask(Context context, TokenResultCallback callback, Token token) {
+    public AccessTokenAsyncTask(Context context, AsyncCallback<TokenResult> callback, Token token) {
         mContext = context;
         mCallback = callback;
         mToken = token;

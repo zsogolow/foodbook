@@ -4,17 +4,14 @@ import android.content.Context;
 import android.content.Intent;
 import android.support.annotation.Nullable;
 import android.os.Bundle;
-import android.support.v4.app.Fragment;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
-import java.net.URLEncoder;
 import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -32,14 +29,12 @@ import foodbook.thinmint.activities.adapters.EndlessRecyclerViewScrollListener;
 import foodbook.thinmint.activities.common.OnNotesListInteractionListener;
 import foodbook.thinmint.activities.adapters.NotesRecyclerAdapter;
 import foodbook.thinmint.activities.common.RequestCodes;
-import foodbook.thinmint.activities.notes.NoteActivity;
-import foodbook.thinmint.activities.users.UsersFragment;
 import foodbook.thinmint.api.Query;
+import foodbook.thinmint.api.WebAPIResult;
 import foodbook.thinmint.models.JsonHelper;
 import foodbook.thinmint.models.domain.Note;
-import foodbook.thinmint.models.domain.User;
-import foodbook.thinmint.tasks.CallServiceAsyncTask;
-import foodbook.thinmint.tasks.CallServiceCallback;
+import foodbook.thinmint.tasks.AsyncCallback;
+import foodbook.thinmint.tasks.GetAsyncTask;
 
 /**
  * A placeholder fragment containing a simple view.
@@ -57,9 +52,9 @@ public class DayFragment extends TokenFragment implements OnNotesListInteraction
     private NotesRecyclerAdapter mAdapter;
     private LinearLayoutManager mLayoutManager;
 
-    private CallServiceAsyncTask mLoadingTask;
-    private CallServiceCallback mLoadingCallback;
-    private CallServiceCallback mLoadMoreCallback;
+    private GetAsyncTask mLoadingTask;
+    private AsyncCallback<WebAPIResult> mLoadingCallback;
+    private AsyncCallback<WebAPIResult> mLoadMoreCallback;
 
     private EndlessRecyclerViewScrollListener mScrollListener;
 
@@ -89,8 +84,8 @@ public class DayFragment extends TokenFragment implements OnNotesListInteraction
         initToken();
         initUser();
 
-        mLoadingCallback = new CallServiceCallback(this);
-        mLoadMoreCallback = new CallServiceCallback(this);
+        mLoadingCallback = new AsyncCallback<WebAPIResult>(this);
+        mLoadMoreCallback = new AsyncCallback<WebAPIResult>(this);
     }
 
     @Override
@@ -146,7 +141,7 @@ public class DayFragment extends TokenFragment implements OnNotesListInteraction
                         .setPage(page + 1)
                         .build();
 
-                mLoadingTask = new CallServiceAsyncTask(getContext(), mLoadMoreCallback, mToken);
+                mLoadingTask = new GetAsyncTask(getContext(), mLoadMoreCallback, mToken);
                 mLoadingTask.execute(query);
             }
         };
@@ -214,7 +209,7 @@ public class DayFragment extends TokenFragment implements OnNotesListInteraction
     private void refreshList() {
         setLoading(true);
 
-        mLoadingTask = new CallServiceAsyncTask(getContext(), mLoadingCallback, mToken);
+        mLoadingTask = new GetAsyncTask(getContext(), mLoadingCallback, mToken);
 
         Calendar calendar = Calendar.getInstance();
         calendar.setTime(mCurrentDate);

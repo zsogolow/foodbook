@@ -26,10 +26,11 @@ import foodbook.thinmint.activities.adapters.NotesRecyclerAdapter;
 import foodbook.thinmint.activities.common.OnNotesListInteractionListener;
 import foodbook.thinmint.activities.common.RequestCodes;
 import foodbook.thinmint.api.Query;
+import foodbook.thinmint.api.WebAPIResult;
 import foodbook.thinmint.models.JsonHelper;
 import foodbook.thinmint.models.domain.Note;
-import foodbook.thinmint.tasks.CallServiceAsyncTask;
-import foodbook.thinmint.tasks.CallServiceCallback;
+import foodbook.thinmint.tasks.AsyncCallback;
+import foodbook.thinmint.tasks.GetAsyncTask;
 
 /**
  * A simple {@link Fragment} subclass.
@@ -54,9 +55,9 @@ public class FeedFragment extends TokenFragment implements IApiCallback, OnNotes
     private NotesRecyclerAdapter mAdapter;
     private LinearLayoutManager mLayoutManager;
 
-    private CallServiceAsyncTask mGetFeedTask;
-    private CallServiceCallback mGetFeedCallback;
-    private CallServiceCallback mLoadMoreCallback;
+    private GetAsyncTask mGetFeedTask;
+    private AsyncCallback<WebAPIResult> mGetFeedCallback;
+    private AsyncCallback<WebAPIResult> mLoadMoreCallback;
 
     private EndlessRecyclerViewScrollListener mScrollListener;
 
@@ -89,8 +90,8 @@ public class FeedFragment extends TokenFragment implements IApiCallback, OnNotes
         initToken();
         initUser();
 
-        mGetFeedCallback = new CallServiceCallback(this);
-        mLoadMoreCallback = new CallServiceCallback(this);
+        mGetFeedCallback = new AsyncCallback<WebAPIResult>(this);
+        mLoadMoreCallback = new AsyncCallback<WebAPIResult>(this);
 
         //mListener.showProgress(true);
     }
@@ -134,7 +135,7 @@ public class FeedFragment extends TokenFragment implements IApiCallback, OnNotes
                         .setSort("-datecreated")
                         .setPage(page + 1)
                         .build();
-                mGetFeedTask = new CallServiceAsyncTask(getContext(), mLoadMoreCallback, mToken);
+                mGetFeedTask = new GetAsyncTask(getContext(), mLoadMoreCallback, mToken);
                 mGetFeedTask.execute(query);
             }
         };
@@ -212,7 +213,7 @@ public class FeedFragment extends TokenFragment implements IApiCallback, OnNotes
 
         mScrollListener.resetState();
 
-        mGetFeedTask = new CallServiceAsyncTask(getContext(), mGetFeedCallback, mToken);
+        mGetFeedTask = new GetAsyncTask(getContext(), mGetFeedCallback, mToken);
 
         String path = "api/notes";
 
