@@ -79,7 +79,7 @@ public class DayActivity extends TokenActivity
                     String action = data.getStringExtra(RequestCodes.NOTE_EXTRA_ACTION);
                     long id = data.getLongExtra(RequestCodes.NOTE_EXTRA_ID, -1);
                     if (action.equals(RequestCodes.COMMENT_NOTE_ACTION)) {
-                        // todo
+                        mDayFragment.onCommentAdded(id, 0);
                     } else if (action.equals(RequestCodes.DELETE_NOTE_ACTION)) {
                         mDayFragment.onNoteDeleted(id);
                     } else if (action.equals(RequestCodes.CREATE_NOTE_ACTION)) {

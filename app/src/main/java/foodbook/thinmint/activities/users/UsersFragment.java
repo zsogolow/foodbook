@@ -2,7 +2,6 @@ package foodbook.thinmint.activities.users;
 
 import android.content.Context;
 import android.os.Bundle;
-import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.widget.LinearLayoutManager;
@@ -21,7 +20,8 @@ import foodbook.thinmint.R;
 import foodbook.thinmint.activities.ActivityHelper;
 import foodbook.thinmint.activities.TokenFragment;
 import foodbook.thinmint.activities.adapters.EndlessRecyclerViewScrollListener;
-import foodbook.thinmint.activities.adapters.UsersRecyclerAdapter;
+import foodbook.thinmint.activities.adapters.users.IOnUserClickListener;
+import foodbook.thinmint.activities.adapters.users.UsersRecyclerAdapter;
 import foodbook.thinmint.api.Query;
 import foodbook.thinmint.api.WebAPIResult;
 import foodbook.thinmint.models.JsonHelper;
@@ -37,8 +37,7 @@ import foodbook.thinmint.tasks.GetAsyncTask;
  * Use the {@link UsersFragment#newInstance} factory method to
  * create an instance of this fragment.
  */
-public class UsersFragment extends TokenFragment implements IApiCallback,
-        UsersRecyclerAdapter.ViewHolder.IOnUserClickListener {
+public class UsersFragment extends TokenFragment implements IApiCallback, IOnUserClickListener {
     private static final String ARG_USERID = "userid";
 
     private String mUserId;

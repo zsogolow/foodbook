@@ -23,9 +23,9 @@ import foodbook.thinmint.R;
 import foodbook.thinmint.activities.ActivityHelper;
 import foodbook.thinmint.activities.TokenFragment;
 import foodbook.thinmint.activities.adapters.EndlessRecyclerViewScrollListener;
+import foodbook.thinmint.activities.adapters.notes.IOnNoteClickListener;
 import foodbook.thinmint.activities.common.OnNotesListInteractionListener;
-import foodbook.thinmint.activities.adapters.NotesRecyclerAdapter;
-import foodbook.thinmint.activities.common.RequestCodes;
+import foodbook.thinmint.activities.adapters.notes.NotesRecyclerAdapter;
 import foodbook.thinmint.api.Query;
 import foodbook.thinmint.api.WebAPIResult;
 import foodbook.thinmint.models.JsonHelper;
@@ -42,7 +42,7 @@ import foodbook.thinmint.tasks.GetAsyncTask;
  * create an instance of this fragment.
  */
 public class UserNotesFragment extends TokenFragment implements OnNotesListInteractionListener,
-        NotesRecyclerAdapter.ViewHolder.IOnNoteClickListener, IApiCallback {
+        IOnNoteClickListener, IApiCallback {
     private static final String ARG_USERID = "userid";
 
     private String mUserId;
@@ -53,6 +53,9 @@ public class UserNotesFragment extends TokenFragment implements OnNotesListInter
     private SwipeRefreshLayout mSwipeRefreshLayout;
     private NotesRecyclerAdapter mAdapter;
     private LinearLayoutManager mLayoutManager;
+
+    private GetAsyncTask mGetNoteTask;
+    private AsyncCallback<WebAPIResult> mGetNoteCallback;
 
     private GetAsyncTask mGetMyNotesTask;
     private AsyncCallback<WebAPIResult> mGetMyStuffCallback;
@@ -89,13 +92,10 @@ public class UserNotesFragment extends TokenFragment implements OnNotesListInter
         initUser();
         initToken();
 
+        mGetNoteCallback = new AsyncCallback<>(this);
+
         mGetMyStuffCallback = new AsyncCallback<WebAPIResult>(this);
         mLoadMoreCallback = new AsyncCallback<WebAPIResult>(this);
-    }
-
-    @Override
-    public void onResume() {
-        super.onResume();
     }
 
     @Override
@@ -226,6 +226,11 @@ public class UserNotesFragment extends TokenFragment implements OnNotesListInter
         setLoading(false);
     }
 
+    private void onNoteRetrieved(Note note) {
+        mAdapter.replace(note);
+        setLoading(false);
+    }
+
     private void onLoadedMore(List<Note> notes) {
         mAdapter.addAll(notes);
     }
@@ -248,7 +253,14 @@ public class UserNotesFragment extends TokenFragment implements OnNotesListInter
 
     @Override
     public void onCommentAdded(long noteId, long commentId) {
+        mGetNoteTask = new GetAsyncTask(getContext(), mGetNoteCallback, mToken);
+        String path = "api/notes/" + noteId;
 
+        Query query = Query.builder()
+                .setPath(path)
+                .build();
+
+        mGetNoteTask.execute(query);
     }
 
     @Override
@@ -261,6 +273,10 @@ public class UserNotesFragment extends TokenFragment implements OnNotesListInter
             mGetMyNotesTask = null;
             List<Note> notes = JsonHelper.getNotes(mLoadMoreCallback.getResult().getResult());
             onLoadedMore(notes);
+        }else if (cb.equals(mGetNoteCallback)) {
+            mGetNoteTask = null;
+            Note note = JsonHelper.getNote(mGetNoteCallback.getResult().getResult());
+            onNoteRetrieved(note);
         }
     }
 

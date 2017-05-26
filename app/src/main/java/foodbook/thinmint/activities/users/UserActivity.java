@@ -18,13 +18,14 @@ import foodbook.thinmint.R;
 import foodbook.thinmint.activities.ActivityHelper;
 import foodbook.thinmint.activities.TokenActivity;
 import foodbook.thinmint.activities.common.RequestCodes;
+import foodbook.thinmint.activities.feed.FeedFragment;
 import foodbook.thinmint.activities.notes.NoteActivity;
 
 public class UserActivity extends TokenActivity implements
         UserInfoFragment.OnUserInfoFragmentDataListener,
         UserNotesFragment.OnUserNotesFragmentDataListener {
 
-    private FragmentPagerAdapter mFragmentPagerAdapter;
+    private MyPagerAdapter mFragmentPagerAdapter;
     private ViewPager mPager;
 
     @Override
@@ -55,6 +56,31 @@ public class UserActivity extends TokenActivity implements
 
         setActionBarTitle(username);
     }
+
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+
+        switch (requestCode) {
+            case RequestCodes.NOTE_REQUEST_CODE:
+                if (resultCode == Activity.RESULT_OK) {
+                    UserNotesFragment notesFragment = mFragmentPagerAdapter.mNotesFragment;
+
+                    String action = data.getStringExtra(RequestCodes.NOTE_EXTRA_ACTION);
+                    long id = data.getLongExtra(RequestCodes.NOTE_EXTRA_ID, -1);
+                    if (action.equals(RequestCodes.COMMENT_NOTE_ACTION)) {
+                        notesFragment.onCommentAdded(id, 0);
+                    } else if (action.equals(RequestCodes.DELETE_NOTE_ACTION)) {
+                        notesFragment.onNoteDeleted(id);
+                    } else if (action.equals(RequestCodes.CREATE_NOTE_ACTION)) {
+                        notesFragment.onNoteAdded(id);
+                    }
+                }
+                break;
+        }
+    }
+
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -101,6 +127,7 @@ public class UserActivity extends TokenActivity implements
         private static int NUM_ITEMS = 2;
         private static String[] NAMES = {"Notes", "Info"};
         private String mUserId;
+        public UserNotesFragment mNotesFragment;
 
         public MyPagerAdapter(FragmentManager fragmentManager, String userid) {
             super(fragmentManager);
@@ -118,7 +145,8 @@ public class UserActivity extends TokenActivity implements
         public Fragment getItem(int position) {
             switch (position) {
                 case 0:
-                    return UserNotesFragment.newInstance(mUserId);
+                    mNotesFragment = UserNotesFragment.newInstance(mUserId);
+                    return mNotesFragment;
                 case 1:
                     return UserInfoFragment.newInstance(mUserId);
                 default:

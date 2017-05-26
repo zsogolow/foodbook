@@ -25,9 +25,9 @@ import foodbook.thinmint.activities.ActivityHelper;
 import foodbook.thinmint.activities.MainActivity;
 import foodbook.thinmint.activities.TokenFragment;
 import foodbook.thinmint.activities.adapters.EndlessRecyclerViewScrollListener;
+import foodbook.thinmint.activities.adapters.notes.IOnNoteClickListener;
 import foodbook.thinmint.activities.common.OnNotesListInteractionListener;
-import foodbook.thinmint.activities.adapters.NotesRecyclerAdapter;
-import foodbook.thinmint.activities.common.RequestCodes;
+import foodbook.thinmint.activities.adapters.notes.NotesRecyclerAdapter;
 import foodbook.thinmint.api.Query;
 import foodbook.thinmint.api.WebAPIResult;
 import foodbook.thinmint.models.JsonHelper;
@@ -36,7 +36,7 @@ import foodbook.thinmint.tasks.AsyncCallback;
 import foodbook.thinmint.tasks.GetAsyncTask;
 
 public class DayFragment extends TokenFragment implements OnNotesListInteractionListener,
-        NotesRecyclerAdapter.ViewHolder.IOnNoteClickListener, IApiCallback {
+        IOnNoteClickListener, IApiCallback {
     private static final String ARG_DATE = "date";
 
     private Date mCurrentDate;
@@ -47,6 +47,9 @@ public class DayFragment extends TokenFragment implements OnNotesListInteraction
     private SwipeRefreshLayout mSwipeRefreshLayout;
     private NotesRecyclerAdapter mAdapter;
     private LinearLayoutManager mLayoutManager;
+
+    private GetAsyncTask mGetNoteTask;
+    private AsyncCallback<WebAPIResult> mGetNoteCallback;
 
     private GetAsyncTask mLoadingTask;
     private AsyncCallback<WebAPIResult> mLoadingCallback;
@@ -79,6 +82,8 @@ public class DayFragment extends TokenFragment implements OnNotesListInteraction
 
         initToken();
         initUser();
+
+        mGetNoteCallback = new AsyncCallback<>(this);
 
         mLoadingCallback = new AsyncCallback<WebAPIResult>(this);
         mLoadMoreCallback = new AsyncCallback<WebAPIResult>(this);
@@ -219,6 +224,11 @@ public class DayFragment extends TokenFragment implements OnNotesListInteraction
         setLoading(false);
     }
 
+    private void onNoteRetrieved(Note note) {
+        mAdapter.replace(note);
+        setLoading(false);
+    }
+
     private void onLoadedMore(List<Note> notes) {
         mAdapter.addAll(notes);
     }
@@ -241,7 +251,14 @@ public class DayFragment extends TokenFragment implements OnNotesListInteraction
 
     @Override
     public void onCommentAdded(long noteId, long commentId) {
+        mGetNoteTask = new GetAsyncTask(getContext(), mGetNoteCallback, mToken);
+        String path = "api/notes/" + noteId;
 
+        Query query = Query.builder()
+                .setPath(path)
+                .build();
+
+        mGetNoteTask.execute(query);
     }
 
     @Override
@@ -254,6 +271,10 @@ public class DayFragment extends TokenFragment implements OnNotesListInteraction
             mLoadingTask = null;
             List<Note> notes = JsonHelper.getNotes(mLoadMoreCallback.getResult().getResult());
             onLoadedMore(notes);
+        } else if (cb.equals(mGetNoteCallback)) {
+            mGetNoteTask = null;
+            Note note = JsonHelper.getNote(mGetNoteCallback.getResult().getResult());
+            onNoteRetrieved(note);
         }
     }
 

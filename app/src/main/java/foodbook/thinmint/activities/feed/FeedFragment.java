@@ -3,7 +3,6 @@ package foodbook.thinmint.activities.feed;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
-import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.widget.LinearLayoutManager;
@@ -22,9 +21,9 @@ import foodbook.thinmint.R;
 import foodbook.thinmint.activities.ActivityHelper;
 import foodbook.thinmint.activities.TokenFragment;
 import foodbook.thinmint.activities.adapters.EndlessRecyclerViewScrollListener;
-import foodbook.thinmint.activities.adapters.NotesRecyclerAdapter;
+import foodbook.thinmint.activities.adapters.notes.IOnNoteClickListener;
+import foodbook.thinmint.activities.adapters.notes.NotesRecyclerAdapter;
 import foodbook.thinmint.activities.common.OnNotesListInteractionListener;
-import foodbook.thinmint.activities.common.RequestCodes;
 import foodbook.thinmint.api.Query;
 import foodbook.thinmint.api.WebAPIResult;
 import foodbook.thinmint.models.JsonHelper;
@@ -40,8 +39,8 @@ import foodbook.thinmint.tasks.GetAsyncTask;
  * Use the {@link FeedFragment#newInstance} factory method to
  * create an instance of this fragment.
  */
-public class FeedFragment extends TokenFragment implements IApiCallback, OnNotesListInteractionListener,
-        NotesRecyclerAdapter.ViewHolder.IOnNoteClickListener {
+public class FeedFragment extends TokenFragment implements OnNotesListInteractionListener,
+        IOnNoteClickListener, IApiCallback {
     private static final String TAG = "FeedFragment";
 
     private static final String ARG_PARAM1 = "param1";
@@ -97,8 +96,6 @@ public class FeedFragment extends TokenFragment implements IApiCallback, OnNotes
 
         mGetFeedCallback = new AsyncCallback<>(this);
         mLoadMoreCallback = new AsyncCallback<>(this);
-
-        //mListener.showProgress(true);
     }
 
     @Override
@@ -214,7 +211,6 @@ public class FeedFragment extends TokenFragment implements IApiCallback, OnNotes
 
         Query query = Query.builder()
                 .setPath(path)
-//                .setAccessToken(mToken.getAccessToken())
                 .setSort("-datecreated")
                 .build();
 

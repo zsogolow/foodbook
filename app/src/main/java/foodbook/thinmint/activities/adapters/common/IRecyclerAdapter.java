@@ -1,4 +1,4 @@
-package foodbook.thinmint.activities.adapters;
+package foodbook.thinmint.activities.adapters.common;
 
 import java.util.List;
 

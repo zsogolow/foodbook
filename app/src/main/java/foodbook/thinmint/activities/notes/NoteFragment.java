@@ -29,7 +29,8 @@ import foodbook.thinmint.R;
 import foodbook.thinmint.activities.ActivityHelper;
 import foodbook.thinmint.activities.MainActivity;
 import foodbook.thinmint.activities.TokenFragment;
-import foodbook.thinmint.activities.adapters.CommentsRecyclerAdapter;
+import foodbook.thinmint.activities.adapters.comments.CommentsRecyclerAdapter;
+import foodbook.thinmint.activities.adapters.comments.IOnCommentClickListener;
 import foodbook.thinmint.api.Query;
 import foodbook.thinmint.api.WebAPIResult;
 import foodbook.thinmint.models.JsonHelper;
@@ -48,8 +49,7 @@ import foodbook.thinmint.tasks.PostAsyncTask;
  * Use the {@link NoteFragment#newInstance} factory method to
  * create an instance of this fragment.
  */
-public class NoteFragment extends TokenFragment implements IApiCallback,
-        CommentsRecyclerAdapter.ViewHolder.IOnCommentClickListener {
+public class NoteFragment extends TokenFragment implements IApiCallback, IOnCommentClickListener {
 
     private static final String ARG_NOTEID = "noteid";
 

@@ -1,4 +1,4 @@
-package foodbook.thinmint.activities.adapters;
+package foodbook.thinmint.activities.adapters.notes;
 
 import android.content.Context;
 import android.view.LayoutInflater;
