@@ -162,18 +162,37 @@ public class NotesRecyclerAdapter extends RecyclerView.Adapter<NotesRecyclerAdap
 
     @Override
     public void remove(long noteId) {
-        int indexToRemove = -1;
-        for (int i = 0; i < mNotes.size(); i++) {
-            if (mNotes.get(i).getId() == noteId) {
-                indexToRemove = i;
-                break;
-            }
-        }
+        int indexToRemove = indexOf(noteId);
 
         if (indexToRemove >= 0) {
             mNotes.remove(indexToRemove);
             notifyDataSetChanged();
         }
+    }
+
+    @Override
+    public void replace(Note item) {
+        int index = indexOf(item);
+        if (index >= 0) {
+            mNotes.set(index, item);
+        } else {
+            add(0, item);
+        }
+        notifyDataSetChanged();
+    }
+
+    protected int indexOf(long noteId) {
+        for (int i = 0; i < mNotes.size(); i++) {
+            if (mNotes.get(i).getId() == noteId) {
+                return i;
+            }
+        }
+
+        return -1;
+    }
+
+    protected int indexOf(Note note) {
+        return indexOf(note.getId());
     }
 }
 

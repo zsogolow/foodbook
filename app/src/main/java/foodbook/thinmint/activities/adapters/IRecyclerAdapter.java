@@ -16,4 +16,6 @@ public interface IRecyclerAdapter<T> {
     void add(int index, T item);
 
     void remove(long itemId);
+
+    void replace(T item);
 }

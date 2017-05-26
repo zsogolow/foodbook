@@ -152,5 +152,9 @@ public class CommentsRecyclerAdapter extends RecyclerView.Adapter<CommentsRecycl
             notifyDataSetChanged();
         }
     }
+
+    @Override
+    public void replace(Comment item) {
+    }
 }
 

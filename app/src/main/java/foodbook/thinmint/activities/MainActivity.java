@@ -4,10 +4,12 @@ import android.app.Activity;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.os.SystemClock;
 import android.preference.PreferenceManager;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentTransaction;
+import android.util.Log;
 import android.view.MenuInflater;
 import android.view.View;
 import android.support.design.widget.NavigationView;
@@ -38,8 +40,7 @@ import foodbook.thinmint.activities.users.UsersFragment;
 import foodbook.thinmint.constants.Constants;
 
 public class MainActivity extends TokenActivity implements
-        IApiCallback, NavigationView.OnNavigationItemSelectedListener,
-        DayFragment.OnDayFragmentDataListener, FeedFragment.OnFeedFragmentDataListener,
+        IApiCallback, NavigationView.OnNavigationItemSelectedListener, FeedFragment.OnFeedFragmentDataListener,
         UserNotesFragment.OnUserNotesFragmentDataListener, UserInfoFragment.OnUserInfoFragmentDataListener,
         UsersFragment.OnUsersFragmentDataListener {
 
@@ -50,15 +51,11 @@ public class MainActivity extends TokenActivity implements
     public static final DateFormat DATE_FORMAT_YEAR = new SimpleDateFormat("MMM d yyyy", Locale.US);
     public static final DateFormat TIME_FORMAT = new SimpleDateFormat("h:mm a", Locale.US);
 
-    private Date mCurrentDate;
-
-    private DayFragment mDayFragment;
     private FeedFragment mFeedFragment;
     private OnNotesListInteractionListener mCurrentFragment;
 
     private NavigationView mNavigationView;
     private DrawerLayout mDrawerLayout;
-    private Menu mMenu;
 
     private View mProgressView;
     private View mContentView;
@@ -72,10 +69,6 @@ public class MainActivity extends TokenActivity implements
 
         initToken();
         initUser();
-
-        if (mCurrentDate == null) {
-            mCurrentDate = new Date(System.currentTimeMillis());
-        }
 
         FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
         fab.setOnClickListener(new View.OnClickListener() {
@@ -110,20 +103,21 @@ public class MainActivity extends TokenActivity implements
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-        switch (requestCode) {
-            case RequestCodes.CREATE_NOTE_REQUEST_CODE:
-                if (resultCode == Activity.RESULT_OK) {
-                    long newId = data.getLongExtra(RequestCodes.CREATE_NOTE_EXTRA_ID, -1);
-                    mCurrentFragment.onNoteAdded(newId);
-                    break;
-                }
 
-            case RequestCodes.DELETE_NOTE_REQUEST_CODE:
+        switch (requestCode) {
+            case RequestCodes.NOTE_REQUEST_CODE:
                 if (resultCode == Activity.RESULT_OK) {
-                    long oldId = data.getLongExtra(RequestCodes.DELETE_NOTE_EXTRA_ID, -1);
-                    mCurrentFragment.onNoteDeleted(oldId);
-                    break;
+                    String action = data.getStringExtra(RequestCodes.NOTE_EXTRA_ACTION);
+                    long id = data.getLongExtra(RequestCodes.NOTE_EXTRA_ID, -1);
+                    if (action.equals(RequestCodes.COMMENT_NOTE_ACTION)) {
+                        mCurrentFragment.onCommentAdded(id, 0);
+                    } else if (action.equals(RequestCodes.DELETE_NOTE_ACTION)) {
+                        mCurrentFragment.onNoteDeleted(id);
+                    } else if (action.equals(RequestCodes.CREATE_NOTE_ACTION)) {
+                        mCurrentFragment.onNoteAdded(id);
+                    }
                 }
+                break;
         }
     }
 
@@ -147,32 +141,17 @@ public class MainActivity extends TokenActivity implements
         // Inflate the menu; this adds items to the action bar if it is present.
         MenuInflater inflater = getMenuInflater();
         inflater.inflate(R.menu.main, menu);
-
-        mMenu = menu;
-
-        toggleDayFragmentActions(true);
-
         return true;
     }
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        // Handle action bar item clicks here. The action bar will
-        // automatically handle clicks on the Home/Up button, so long
-        // as you specify a parent activity in AndroidManifest.xml.
         int id = item.getItemId();
 
         //noinspection SimplifiableIfStatement
         if (id == R.id.action_logout) {
             // User chose the "Settings" item, show the app settings UI...
-            logout();
-            return true;
-        } else if (id == R.id.action_go_to_today) {
-            mCurrentDate = new Date(System.currentTimeMillis());
-            selectDay(mCurrentDate);
-            return true;
-        } else if (id == R.id.action_date) {
-            showDatePicker();
+            ActivityHelper.logout(MainActivity.this);
             return true;
         }
 
@@ -186,14 +165,11 @@ public class MainActivity extends TokenActivity implements
 
         if (id == R.id.nav_calendar) {
 
-            setActionBarTitle(DATE_FORMAT.format(mCurrentDate));
-            toggleDayFragmentActions(true);
-            showDayFragment();
+            startDayActivity(new Date(System.currentTimeMillis()));
 
         } else if (id == R.id.nav_home) {
 
             setActionBarTitle("Feed");
-            toggleDayFragmentActions(false);
             showHomeFragment();
 
         } else if (id == R.id.nav_my_stuff) {
@@ -203,7 +179,6 @@ public class MainActivity extends TokenActivity implements
         } else if (id == R.id.nav_users) {
 
             setActionBarTitle("Users");
-            toggleDayFragmentActions(false);
             showUsersFragment();
 
         }
@@ -224,17 +199,10 @@ public class MainActivity extends TokenActivity implements
                 } else if (fragmentManager.getBackStackEntryCount() == 0) {
                     try {
                         FeedFragment feedFragment = (FeedFragment) fragmentManager.findFragmentByTag("FeedFragment");
-                        if (feedFragment  != null) {
+                        if (feedFragment != null) {
                             setActionBarTitle("Feed");
-                            toggleDayFragmentActions(false);
                             mNavigationView.getMenu().getItem(0).setChecked(true);
                         }
-//                        DayFragment dayFragment = (DayFragment) fragmentManager.findFragmentByTag("DayFragment");
-//                        if (dayFragment != null) {
-//                            setActionBarTitle(DATE_FORMAT.format(mCurrentDate));
-//                            toggleDayFragmentActions(true);
-//                            mNavigationView.getMenu().getItem(0).setChecked(true);
-//                        }
                     } catch (ClassCastException cce) {
                     }
                 }
@@ -244,27 +212,8 @@ public class MainActivity extends TokenActivity implements
         return listener;
     }
 
-    private void showDatePicker() {
-        DatePickerFragment newFragment = new DatePickerFragment();
-        newFragment.setDate(mCurrentDate);
-        newFragment.show(getSupportFragmentManager(), "datePicker");
-    }
-
-    private void toggleDayFragmentActions(boolean show) {
-        if (mMenu != null) {
-            MenuItem selectDay = mMenu.findItem(R.id.action_date);
-            MenuItem selectToday = mMenu.findItem(R.id.action_go_to_today);
-            selectDay.setVisible(show);
-            selectToday.setVisible(show);
-        }
-    }
-
-    private void logout() {
-        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
-        prefs.edit().putString(Constants.ACCESS_TOKEN_PREFERENCE_KEY, "").apply();
-        Intent loginActivity = new Intent(getApplicationContext(), LoginActivity.class);
-        startActivity(loginActivity);
-        finish();
+    private void startDayActivity(Date date) {
+        ActivityHelper.startDayActivity(MainActivity.this, date);
     }
 
     private void startCreateNoteActivity() {
@@ -288,22 +237,6 @@ public class MainActivity extends TokenActivity implements
         fragmentTransaction.commit();
     }
 
-    private void showDayFragment() {
-        FragmentManager fragmentManager = getSupportFragmentManager();
-        FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
-        fragmentTransaction.addToBackStack(null);
-
-        // Replace whatever is in the fragment_container view with this fragment,
-        // and add the transaction to the back stack
-        mDayFragment = DayFragment.newInstance(mCurrentDate);
-        fragmentTransaction.replace(R.id.fragment_container, mDayFragment, "DayFragment");
-
-        // Commit the transaction
-        fragmentTransaction.commit();
-
-        mCurrentFragment = mDayFragment;
-    }
-
     private void showHomeFragment() {
         FragmentManager fragmentManager = getSupportFragmentManager();
         FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
@@ -317,17 +250,6 @@ public class MainActivity extends TokenActivity implements
         fragmentTransaction.commit();
 
         mCurrentFragment = mFeedFragment;
-    }
-
-    @Override
-    public void onDayFragmentCreated(View view) {
-    }
-
-    @Override
-    public void selectDay(Date date) {
-        setActionBarTitle(DATE_FORMAT.format(date));
-        mDayFragment.setDate(date);
-        mCurrentDate = date;
     }
 
     @Override

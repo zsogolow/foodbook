@@ -115,5 +115,10 @@ public class UsersRecyclerAdapter extends RecyclerView.Adapter<UsersRecyclerAdap
             notifyDataSetChanged();
         }
     }
+
+    @Override
+    public void replace(User item) {
+
+    }
 }
 

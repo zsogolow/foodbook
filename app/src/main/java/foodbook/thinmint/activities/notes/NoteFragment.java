@@ -290,6 +290,7 @@ public class NoteFragment extends TokenFragment implements IApiCallback,
             if (result.isSuccess()) {
                 Comment addedComment = JsonHelper.getComment(mAddCommentCallback.getResult().getResult());
                 onCommentAdded(addedComment);
+                mListener.onCommentAdded(addedComment);
             }
         }
     }

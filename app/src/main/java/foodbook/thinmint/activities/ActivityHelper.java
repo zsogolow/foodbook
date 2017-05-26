@@ -7,7 +7,10 @@ import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.view.inputmethod.InputMethodManager;
 
+import java.util.Date;
+
 import foodbook.thinmint.activities.common.RequestCodes;
+import foodbook.thinmint.activities.day.DayActivity;
 import foodbook.thinmint.activities.notes.CreateNoteActivity;
 import foodbook.thinmint.activities.notes.NoteActivity;
 import foodbook.thinmint.activities.users.UserActivity;
@@ -38,7 +41,7 @@ public class ActivityHelper {
 
     public static void startCreateNoteActivityForResult(Activity activity) {
         Intent createNoteIntent = new Intent(activity, CreateNoteActivity.class);
-        activity.startActivityForResult(createNoteIntent, RequestCodes.CREATE_NOTE_REQUEST_CODE);
+        activity.startActivityForResult(createNoteIntent, RequestCodes.NOTE_REQUEST_CODE);
     }
 
     public static void startNoteActivity(Activity activity, long noteId) {
@@ -49,12 +52,19 @@ public class ActivityHelper {
         activity.startActivity(noteIntent);
     }
 
-    public static void startNoteActivityForResult(Activity activity, long noteId, int requestCode) {
+    public static void startDayActivity(Activity activity, Date date) {
+        Intent dayIntent = new Intent(activity, DayActivity.class);
+        Bundle bundle = new Bundle();
+        dayIntent.putExtras(bundle);
+        activity.startActivity(dayIntent);
+    }
+
+    public static void startNoteActivityForResult(Activity activity, long noteId) {
         Intent noteIntent = new Intent(activity, NoteActivity.class);
         Bundle bundle = new Bundle();
         bundle.putLong("note_id", noteId);
         noteIntent.putExtras(bundle);
-        activity.startActivityForResult(noteIntent, requestCode);
+        activity.startActivityForResult(noteIntent, RequestCodes.NOTE_REQUEST_CODE);
     }
 
     public static void startUserActivity(Activity activity, String userSubject, String username) {

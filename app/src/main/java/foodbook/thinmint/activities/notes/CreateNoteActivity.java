@@ -121,7 +121,8 @@ public class CreateNoteActivity extends TokenActivity implements IApiCallback {
 
     private void onNoteCreated(Note created) {
         Intent resultIntent = new Intent();
-        resultIntent.putExtra(RequestCodes.CREATE_NOTE_EXTRA_ID, created.getId());
+        resultIntent.putExtra(RequestCodes.NOTE_EXTRA_ACTION, RequestCodes.CREATE_NOTE_ACTION);
+        resultIntent.putExtra(RequestCodes.NOTE_EXTRA_ID, created.getId());
         setResult(Activity.RESULT_OK, resultIntent);
         finish();
     }

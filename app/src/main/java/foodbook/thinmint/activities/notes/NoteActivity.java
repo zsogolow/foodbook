@@ -129,12 +129,18 @@ public class NoteActivity extends TokenActivity implements NoteFragment.OnNoteFr
     @Override
     public void onNoteDeleted(long noteId) {
         Intent resultIntent = new Intent();
-        resultIntent.putExtra(RequestCodes.DELETE_NOTE_EXTRA_ID, noteId);
+        resultIntent.putExtra(RequestCodes.NOTE_EXTRA_ACTION, RequestCodes.DELETE_NOTE_ACTION);
+        resultIntent.putExtra(RequestCodes.NOTE_EXTRA_ID, noteId);
         setResult(Activity.RESULT_OK, resultIntent);
         finish();
     }
 
     @Override
     public void onCommentAdded(Comment comment) {
+        Intent resultIntent = new Intent();
+        resultIntent.putExtra(RequestCodes.NOTE_EXTRA_ACTION, RequestCodes.COMMENT_NOTE_ACTION);
+        resultIntent.putExtra(RequestCodes.NOTE_EXTRA_ID, comment.getNoteId());
+        resultIntent.putExtra(RequestCodes.NOTE_COMMENT_EXTRA_ID, comment.getId());
+        setResult(Activity.RESULT_OK, resultIntent);
     }
 }

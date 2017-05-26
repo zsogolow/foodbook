@@ -55,6 +55,9 @@ public class FeedFragment extends TokenFragment implements IApiCallback, OnNotes
     private NotesRecyclerAdapter mAdapter;
     private LinearLayoutManager mLayoutManager;
 
+    private GetAsyncTask mGetNoteTask;
+    private AsyncCallback<WebAPIResult> mGetNoteCallback;
+
     private GetAsyncTask mGetFeedTask;
     private AsyncCallback<WebAPIResult> mGetFeedCallback;
     private AsyncCallback<WebAPIResult> mLoadMoreCallback;
@@ -90,8 +93,10 @@ public class FeedFragment extends TokenFragment implements IApiCallback, OnNotes
         initToken();
         initUser();
 
-        mGetFeedCallback = new AsyncCallback<WebAPIResult>(this);
-        mLoadMoreCallback = new AsyncCallback<WebAPIResult>(this);
+        mGetNoteCallback = new AsyncCallback<>(this);
+
+        mGetFeedCallback = new AsyncCallback<>(this);
+        mLoadMoreCallback = new AsyncCallback<>(this);
 
         //mListener.showProgress(true);
     }
@@ -160,6 +165,11 @@ public class FeedFragment extends TokenFragment implements IApiCallback, OnNotes
     }
 
     @Override
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+    }
+
+    @Override
     public void onLikeNoteClicked(View caller) {
 //        TextView hiddenNoteIdTextView = (TextView) caller.findViewById(R.id.hidden_note_id);
 //        String noteId = hiddenNoteIdTextView.getText().toString();
@@ -170,14 +180,14 @@ public class FeedFragment extends TokenFragment implements IApiCallback, OnNotes
     public void onNoteClicked(View caller) {
         TextView hiddenNoteIdTextView = (TextView) caller.findViewById(R.id.hidden_note_id);
         String noteId = hiddenNoteIdTextView.getText().toString();
-        ActivityHelper.startNoteActivityForResult(getActivity(), Long.parseLong(noteId), RequestCodes.DELETE_NOTE_REQUEST_CODE);
+        ActivityHelper.startNoteActivityForResult(getActivity(), Long.parseLong(noteId));
     }
 
     @Override
     public void onCommentClicked(View caller) {
         TextView hiddenNoteIdTextView = (TextView) caller.findViewById(R.id.hidden_note_id);
         String noteId = hiddenNoteIdTextView.getText().toString();
-        ActivityHelper.startNoteActivityForResult(getActivity(), Long.parseLong(noteId), RequestCodes.DELETE_NOTE_REQUEST_CODE);
+        ActivityHelper.startNoteActivityForResult(getActivity(), Long.parseLong(noteId));
     }
 
     @Override
@@ -216,6 +226,11 @@ public class FeedFragment extends TokenFragment implements IApiCallback, OnNotes
         setLoading(false);
     }
 
+    private void onNoteRetrieved(Note note) {
+        mAdapter.replace(note);
+        setLoading(false);
+    }
+
     private void onLoadedMore(List<Note> notes) {
         mAdapter.addAll(notes);
     }
@@ -238,7 +253,14 @@ public class FeedFragment extends TokenFragment implements IApiCallback, OnNotes
 
     @Override
     public void onCommentAdded(long noteId, long commentId) {
+        mGetNoteTask = new GetAsyncTask(getContext(), mGetNoteCallback, mToken);
+        String path = "api/notes/" + noteId;
 
+        Query query = Query.builder()
+                .setPath(path)
+                .build();
+
+        mGetNoteTask.execute(query);
     }
 
     @Override
@@ -247,11 +269,14 @@ public class FeedFragment extends TokenFragment implements IApiCallback, OnNotes
             mGetFeedTask = null;
             List<Note> notes = JsonHelper.getNotes(mGetFeedCallback.getResult().getResult());
             onNotesRetrieved(notes);
-//            mListener.showProgress(false);
         } else if (cb.equals(mLoadMoreCallback)) {
             mGetFeedTask = null;
             List<Note> notes = JsonHelper.getNotes(mLoadMoreCallback.getResult().getResult());
             onLoadedMore(notes);
+        } else if (cb.equals(mGetNoteCallback)) {
+            mGetNoteTask = null;
+            Note note = JsonHelper.getNote(mGetNoteCallback.getResult().getResult());
+            onNoteRetrieved(note);
         }
     }
 

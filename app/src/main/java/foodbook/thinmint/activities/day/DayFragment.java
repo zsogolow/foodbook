@@ -168,14 +168,14 @@ public class DayFragment extends TokenFragment implements OnNotesListInteraction
     public void onNoteClicked(View caller) {
         TextView hiddenNoteIdTextView = (TextView) caller.findViewById(R.id.hidden_note_id);
         String noteId = hiddenNoteIdTextView.getText().toString();
-        ActivityHelper.startNoteActivityForResult(getActivity(), Long.parseLong(noteId), RequestCodes.DELETE_NOTE_REQUEST_CODE);
+        ActivityHelper.startNoteActivityForResult(getActivity(), Long.parseLong(noteId));
     }
 
     @Override
     public void onCommentClicked(View caller) {
         TextView hiddenNoteIdTextView = (TextView) caller.findViewById(R.id.hidden_note_id);
         String noteId = hiddenNoteIdTextView.getText().toString();
-        ActivityHelper.startNoteActivityForResult(getActivity(), Long.parseLong(noteId), RequestCodes.DELETE_NOTE_REQUEST_CODE);
+        ActivityHelper.startNoteActivityForResult(getActivity(), Long.parseLong(noteId));
     }
 
     @Override
