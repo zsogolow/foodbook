@@ -162,11 +162,6 @@ public class FeedFragment extends TokenFragment implements OnNotesListInteractio
     }
 
     @Override
-    public void onActivityResult(int requestCode, int resultCode, Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
-    }
-
-    @Override
     public void onLikeNoteClicked(View caller) {
 //        TextView hiddenNoteIdTextView = (TextView) caller.findViewById(R.id.hidden_note_id);
 //        String noteId = hiddenNoteIdTextView.getText().toString();
@@ -278,5 +273,6 @@ public class FeedFragment extends TokenFragment implements OnNotesListInteractio
 
     public interface OnFeedFragmentDataListener {
         void onFeedFragmentCreated(View view);
+        void onFeedLoaded();
     }
 }

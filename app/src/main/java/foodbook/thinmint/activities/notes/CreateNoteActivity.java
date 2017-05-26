@@ -1,13 +1,18 @@
 package foodbook.thinmint.activities.notes;
 
+import android.animation.Animator;
+import android.animation.AnimatorListenerAdapter;
+import android.annotation.TargetApi;
 import android.app.Activity;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.os.Build;
 import android.support.v7.app.AlertDialog;
 import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
+import android.view.View;
 import android.widget.EditText;
 import android.widget.TextView;
 
@@ -36,6 +41,12 @@ public class CreateNoteActivity extends TokenActivity implements IApiCallback {
 
     private EditText mNoteContents;
 
+    private Menu mMenu;
+
+
+    private View mProgressView;
+    private View mContentView;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -51,6 +62,9 @@ public class CreateNoteActivity extends TokenActivity implements IApiCallback {
 
         mNoteContents = (EditText) findViewById(R.id.edit_note_contents);
 
+        mContentView = findViewById(R.id.content_view);
+        mProgressView = findViewById(R.id.loading_progress);
+
         TextView dateText = (TextView) findViewById(R.id.date);
         dateText.setText(MainActivity.DATE_FORMAT.format(new Date(System.currentTimeMillis())));
 
@@ -62,6 +76,9 @@ public class CreateNoteActivity extends TokenActivity implements IApiCallback {
         // Inflate the menu; this adds items to the action bar if it is present.
         MenuInflater inflater = getMenuInflater();
         inflater.inflate(R.menu.create, menu);
+
+        mMenu = menu;
+
         return true;
     }
 
@@ -74,11 +91,18 @@ public class CreateNoteActivity extends TokenActivity implements IApiCallback {
 
         //noinspection SimplifiableIfStatement
         if (id == R.id.action_save) {
-            saveNote();
+            attemptCreateNote();
             return true;
         }
 
         return super.onOptionsItemSelected(item);
+    }
+
+    private void showSaveButton(boolean show) {
+        if (mMenu != null) {
+            MenuItem item = mMenu.getItem(0);
+            item.setVisible(show);
+        }
     }
 
     @Override
@@ -104,7 +128,10 @@ public class CreateNoteActivity extends TokenActivity implements IApiCallback {
                 .show();
     }
 
-    private void saveNote() {
+    private void attemptCreateNote() {
+        showSaveButton(false);
+        showProgress(true);
+
         Note note = new Note();
         note.setContent(mNoteContents.getText().toString());
         note.setDateCreated(new Date(System.currentTimeMillis()));
@@ -127,6 +154,10 @@ public class CreateNoteActivity extends TokenActivity implements IApiCallback {
         finish();
     }
 
+    private void onNoteCreatedFailed() {
+        showSaveButton(true);
+    }
+
     @Override
     public void callback(IAsyncCallback cb) {
         if (cb.equals(mAddNoteCallback)) {
@@ -135,7 +166,47 @@ public class CreateNoteActivity extends TokenActivity implements IApiCallback {
             if (result.isSuccess()) {
                 Note created = JsonHelper.getNote(result.getResult());
                 onNoteCreated(created);
+            } else {
+                onNoteCreatedFailed();
             }
+
+            showProgress(false);
+        }
+    }
+
+    /**
+     * Shows the progress UI and hides the login form.
+     */
+    @TargetApi(Build.VERSION_CODES.HONEYCOMB_MR2)
+    private void showProgress(final boolean show) {
+        // On Honeycomb MR2 we have the ViewPropertyAnimator APIs, which allow
+        // for very easy animations. If available, use these APIs to fade-in
+        // the progress spinner.
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB_MR2) {
+            int shortAnimTime = getResources().getInteger(android.R.integer.config_shortAnimTime);
+
+            mContentView.setVisibility(show ? View.GONE : View.VISIBLE);
+            mContentView.animate().setDuration(shortAnimTime).alpha(
+                    show ? 0 : 1).setListener(new AnimatorListenerAdapter() {
+                @Override
+                public void onAnimationEnd(Animator animation) {
+                    mContentView.setVisibility(show ? View.GONE : View.VISIBLE);
+                }
+            });
+
+            mProgressView.setVisibility(show ? View.VISIBLE : View.GONE);
+            mProgressView.animate().setDuration(shortAnimTime).alpha(
+                    show ? 1 : 0).setListener(new AnimatorListenerAdapter() {
+                @Override
+                public void onAnimationEnd(Animator animation) {
+                    mProgressView.setVisibility(show ? View.VISIBLE : View.GONE);
+                }
+            });
+        } else {
+            // The ViewPropertyAnimator APIs are not available, so simply show
+            // and hide the relevant UI components.
+            mProgressView.setVisibility(show ? View.VISIBLE : View.GONE);
+            mContentView.setVisibility(show ? View.GONE : View.VISIBLE);
         }
     }
 }

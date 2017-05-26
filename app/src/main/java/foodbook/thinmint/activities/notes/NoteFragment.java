@@ -7,6 +7,8 @@ import android.support.v4.app.Fragment;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -130,18 +132,32 @@ public class NoteFragment extends TokenFragment implements IApiCallback, IOnComm
 
         mAddCommentButton = (Button) inflated.findViewById(R.id.add_comment_button);
         mCommentText = (EditText) inflated.findViewById(R.id.comment_edit_text);
+
+        mCommentText.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+
+            }
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+                if (s.toString().length() > 0) {
+                    mAddCommentButton.setEnabled(true);
+                } else {
+                    mAddCommentButton.setEnabled(false);
+                }
+            }
+
+            @Override
+            public void afterTextChanged(Editable s) {
+
+            }
+        });
+
         mAddCommentButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss Z", Locale.US);
-                Map<String, Object> map = new HashMap<>();
-                map.put("noteid", mNoteId);
-                map.put("userid", mUserId);
-                map.put("text", mCommentText.getText().toString());
-                map.put("datecreated", dateFormat.format(new Date(System.currentTimeMillis())));
-                mAddCommentTask = new PostAsyncTask(getContext(), mAddCommentCallback, mToken, map);
-                mAddCommentTask.execute("api/comments");
-                ActivityHelper.hideSoftKeyboard(getActivity());
+                attemptAddComment();
             }
         });
 
@@ -264,6 +280,25 @@ public class NoteFragment extends TokenFragment implements IApiCallback, IOnComm
         mCommentText.setText("");
     }
 
+    private void onCommentFailed() {
+        setLoading(false);
+        mAddCommentButton.setEnabled(true);
+    }
+
+    private void attemptAddComment() {
+        setLoading(true);
+        mAddCommentButton.setEnabled(false);
+        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss Z", Locale.US);
+        Map<String, Object> map = new HashMap<>();
+        map.put("noteid", mNoteId);
+        map.put("userid", mUserId);
+        map.put("text", mCommentText.getText().toString());
+        map.put("datecreated", dateFormat.format(new Date(System.currentTimeMillis())));
+        mAddCommentTask = new PostAsyncTask(getContext(), mAddCommentCallback, mToken, map);
+        mAddCommentTask.execute("api/comments");
+        ActivityHelper.hideSoftKeyboard(getActivity());
+    }
+
     @Override
     public void onUserClicked(View caller) {
         TextView hiddenUserIdTextView = (TextView) caller.findViewById(R.id.hidden_user_id);
@@ -291,6 +326,8 @@ public class NoteFragment extends TokenFragment implements IApiCallback, IOnComm
                 Comment addedComment = JsonHelper.getComment(mAddCommentCallback.getResult().getResult());
                 onCommentAdded(addedComment);
                 mListener.onCommentAdded(addedComment);
+            } else {
+                onCommentFailed();
             }
         }
     }

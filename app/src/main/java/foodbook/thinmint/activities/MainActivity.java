@@ -1,8 +1,12 @@
 package foodbook.thinmint.activities;
 
+import android.animation.Animator;
+import android.animation.AnimatorListenerAdapter;
+import android.annotation.TargetApi;
 import android.app.Activity;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.SystemClock;
 import android.preference.PreferenceManager;
@@ -40,16 +44,11 @@ import foodbook.thinmint.activities.users.UsersFragment;
 import foodbook.thinmint.constants.Constants;
 
 public class MainActivity extends TokenActivity implements
-        IApiCallback, NavigationView.OnNavigationItemSelectedListener, FeedFragment.OnFeedFragmentDataListener,
+        NavigationView.OnNavigationItemSelectedListener, FeedFragment.OnFeedFragmentDataListener,
         UserNotesFragment.OnUserNotesFragmentDataListener, UserInfoFragment.OnUserInfoFragmentDataListener,
         UsersFragment.OnUsersFragmentDataListener {
 
     private static final String TAG = "MainActivity";
-
-    public static final DateFormat PARSABLE_DATE_FORMAT = DateFormat.getDateInstance();
-    public static final DateFormat DATE_FORMAT = new SimpleDateFormat("MMM d", Locale.US);
-    public static final DateFormat DATE_FORMAT_YEAR = new SimpleDateFormat("MMM d yyyy", Locale.US);
-    public static final DateFormat TIME_FORMAT = new SimpleDateFormat("h:mm a", Locale.US);
 
     private FeedFragment mFeedFragment;
     private OnNotesListInteractionListener mCurrentFragment;
@@ -257,6 +256,10 @@ public class MainActivity extends TokenActivity implements
     }
 
     @Override
+    public void onFeedLoaded() {
+    }
+
+    @Override
     public void onUserNotesFragmentCreated(View view) {
     }
 
@@ -269,6 +272,42 @@ public class MainActivity extends TokenActivity implements
     }
 
     @Override
-    public void callback(IAsyncCallback cb) {
+    public void onUsersLoaded() {
+    }
+
+    /**
+     * Shows the progress UI and hides the login form.
+     */
+    @TargetApi(Build.VERSION_CODES.HONEYCOMB_MR2)
+    private void showProgress(final boolean show) {
+        // On Honeycomb MR2 we have the ViewPropertyAnimator APIs, which allow
+        // for very easy animations. If available, use these APIs to fade-in
+        // the progress spinner.
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB_MR2) {
+            int shortAnimTime = getResources().getInteger(android.R.integer.config_shortAnimTime);
+
+            mContentView.setVisibility(show ? View.GONE : View.VISIBLE);
+            mContentView.animate().setDuration(shortAnimTime).alpha(
+                    show ? 0 : 1).setListener(new AnimatorListenerAdapter() {
+                @Override
+                public void onAnimationEnd(Animator animation) {
+                    mContentView.setVisibility(show ? View.GONE : View.VISIBLE);
+                }
+            });
+
+            mProgressView.setVisibility(show ? View.VISIBLE : View.GONE);
+            mProgressView.animate().setDuration(shortAnimTime).alpha(
+                    show ? 1 : 0).setListener(new AnimatorListenerAdapter() {
+                @Override
+                public void onAnimationEnd(Animator animation) {
+                    mProgressView.setVisibility(show ? View.VISIBLE : View.GONE);
+                }
+            });
+        } else {
+            // The ViewPropertyAnimator APIs are not available, so simply show
+            // and hide the relevant UI components.
+            mProgressView.setVisibility(show ? View.VISIBLE : View.GONE);
+            mContentView.setVisibility(show ? View.GONE : View.VISIBLE);
+        }
     }
 }

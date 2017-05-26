@@ -206,5 +206,6 @@ public class UsersFragment extends TokenFragment implements IApiCallback, IOnUse
 
     public interface OnUsersFragmentDataListener {
         void onUsersFragmentCreated(View view);
+        void onUsersLoaded();
     }
 }

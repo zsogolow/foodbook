@@ -5,6 +5,10 @@ import android.preference.PreferenceManager;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.Locale;
+
 import foodbook.thinmint.constants.Constants;
 import foodbook.thinmint.idsrv.Token;
 import foodbook.thinmint.idsrv.TokenHelper;
@@ -15,6 +19,12 @@ import foodbook.thinmint.models.domain.User;
  */
 
 public abstract class TokenActivity extends AppCompatActivity {
+
+    public static final DateFormat PARSABLE_DATE_FORMAT = DateFormat.getDateInstance();
+    public static final DateFormat DATE_FORMAT = new SimpleDateFormat("MMM d", Locale.US);
+    public static final DateFormat DATE_FORMAT_YEAR = new SimpleDateFormat("MMM d yyyy", Locale.US);
+    public static final DateFormat TIME_FORMAT = new SimpleDateFormat("h:mm a", Locale.US);
+
     protected Token mToken;
     protected String mUserSubject;
     protected String mUserName;
