@@ -20,8 +20,8 @@ import foodbook.thinmint.R;
 import foodbook.thinmint.activities.ActivityHelper;
 import foodbook.thinmint.activities.TokenFragment;
 import foodbook.thinmint.activities.adapters.EndlessRecyclerViewScrollListener;
-import foodbook.thinmint.activities.adapters.users.IOnUserClickListener;
-import foodbook.thinmint.activities.adapters.users.UsersRecyclerAdapter;
+import foodbook.thinmint.activities.adapters.users.list.IOnUsersListClickListener;
+import foodbook.thinmint.activities.adapters.users.list.UsersListRecyclerAdapter;
 import foodbook.thinmint.api.Query;
 import foodbook.thinmint.api.WebAPIResult;
 import foodbook.thinmint.models.JsonHelper;
@@ -37,7 +37,7 @@ import foodbook.thinmint.tasks.GetAsyncTask;
  * Use the {@link UsersFragment#newInstance} factory method to
  * create an instance of this fragment.
  */
-public class UsersFragment extends TokenFragment implements IApiCallback, IOnUserClickListener {
+public class UsersFragment extends TokenFragment implements IApiCallback, IOnUsersListClickListener {
     private static final String ARG_USERID = "userid";
 
     private String mUserId;
@@ -46,7 +46,7 @@ public class UsersFragment extends TokenFragment implements IApiCallback, IOnUse
 
     private RecyclerView mListView;
     private SwipeRefreshLayout mSwipeRefreshLayout;
-    private UsersRecyclerAdapter mAdapter;
+    private UsersListRecyclerAdapter mAdapter;
     private LinearLayoutManager mLayoutManager;
 
     private GetAsyncTask mGetUsersTask;
@@ -106,7 +106,7 @@ public class UsersFragment extends TokenFragment implements IApiCallback, IOnUse
         mLayoutManager = new LinearLayoutManager(getActivity());
         mListView.setLayoutManager(mLayoutManager);
 
-        mAdapter = new UsersRecyclerAdapter(new ArrayList<User>(), this);
+        mAdapter = new UsersListRecyclerAdapter(new ArrayList<User>(), this);
         mListView.setAdapter(mAdapter);
 
         mSwipeRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
@@ -183,7 +183,7 @@ public class UsersFragment extends TokenFragment implements IApiCallback, IOnUse
     }
 
     @Override
-    public void onUserClicked(View caller) {
+    public void onUserClick(View caller) {
         TextView hiddenUserSubjectTextView = (TextView) caller.findViewById(R.id.hidden_user_id);
         TextView usernameTextView = (TextView) caller.findViewById(R.id.user_name);
         String userSubject = hiddenUserSubjectTextView.getText().toString();

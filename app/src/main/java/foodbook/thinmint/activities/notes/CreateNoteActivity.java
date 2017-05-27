@@ -25,6 +25,7 @@ import java.util.Map;
 import foodbook.thinmint.IApiCallback;
 import foodbook.thinmint.IAsyncCallback;
 import foodbook.thinmint.R;
+import foodbook.thinmint.activities.ActivityHelper;
 import foodbook.thinmint.activities.MainActivity;
 import foodbook.thinmint.activities.TokenActivity;
 import foodbook.thinmint.activities.common.RequestCodes;

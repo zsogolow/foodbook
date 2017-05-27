@@ -13,8 +13,8 @@ import foodbook.thinmint.models.domain.EntityBase;
  * Created by Zachery.Sogolow on 5/26/2017.
  */
 
-public abstract class AbstractRecyclerAdapter<T extends EntityBase, C>
-        extends RecyclerView.Adapter<AbstractViewHolder<C>>
+public abstract class AbstractListRecyclerAdapter<T extends EntityBase, C>
+        extends RecyclerView.Adapter<AbstractListViewHolder<C>>
         implements IRecyclerAdapter<T> {
 
     protected static final DateFormat DATE_FORMAT = new SimpleDateFormat("MMM d", Locale.US);
@@ -24,7 +24,7 @@ public abstract class AbstractRecyclerAdapter<T extends EntityBase, C>
     protected List<T> mItems;
     protected C mListener;
 
-    protected AbstractRecyclerAdapter(List<T> items, C listener) {
+    protected AbstractListRecyclerAdapter(List<T> items, C listener) {
         mItems = items;
         mListener = listener;
     }

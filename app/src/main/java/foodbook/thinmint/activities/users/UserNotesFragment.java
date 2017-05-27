@@ -23,9 +23,9 @@ import foodbook.thinmint.R;
 import foodbook.thinmint.activities.ActivityHelper;
 import foodbook.thinmint.activities.TokenFragment;
 import foodbook.thinmint.activities.adapters.EndlessRecyclerViewScrollListener;
-import foodbook.thinmint.activities.adapters.notes.IOnNoteClickListener;
+import foodbook.thinmint.activities.adapters.notes.list.IOnNotesListClickListener;
 import foodbook.thinmint.activities.common.OnNotesListInteractionListener;
-import foodbook.thinmint.activities.adapters.notes.NotesRecyclerAdapter;
+import foodbook.thinmint.activities.adapters.notes.list.NotesListRecyclerAdapter;
 import foodbook.thinmint.api.Query;
 import foodbook.thinmint.api.WebAPIResult;
 import foodbook.thinmint.models.JsonHelper;
@@ -42,7 +42,7 @@ import foodbook.thinmint.tasks.GetAsyncTask;
  * create an instance of this fragment.
  */
 public class UserNotesFragment extends TokenFragment implements OnNotesListInteractionListener,
-        IOnNoteClickListener, IApiCallback {
+        IOnNotesListClickListener, IApiCallback {
     private static final String ARG_USERID = "userid";
 
     private String mUserId;
@@ -51,7 +51,7 @@ public class UserNotesFragment extends TokenFragment implements OnNotesListInter
 
     private RecyclerView mListView;
     private SwipeRefreshLayout mSwipeRefreshLayout;
-    private NotesRecyclerAdapter mAdapter;
+    private NotesListRecyclerAdapter mAdapter;
     private LinearLayoutManager mLayoutManager;
 
     private GetAsyncTask mGetNoteTask;
@@ -111,7 +111,7 @@ public class UserNotesFragment extends TokenFragment implements OnNotesListInter
         mLayoutManager = new LinearLayoutManager(getActivity());
         mListView.setLayoutManager(mLayoutManager);
 
-        mAdapter = new NotesRecyclerAdapter(new ArrayList<Note>(), this);
+        mAdapter = new NotesListRecyclerAdapter(new ArrayList<Note>(), this);
         mListView.setAdapter(mAdapter);
 
         mSwipeRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
@@ -173,28 +173,28 @@ public class UserNotesFragment extends TokenFragment implements OnNotesListInter
     }
 
     @Override
-    public void onLikeNoteClicked(View caller) {
+    public void onLikeNoteClick(View caller) {
 //        TextView hiddenNoteIdTextView = (TextView)caller.findViewById(R.id.hidden_note_id);
 //        String noteId = hiddenNoteIdTextView.getText().toString();
 //        ActivityHelper.startNoteActivityForResult(getActivity(), Long.parseLong(noteId));
     }
 
     @Override
-    public void onNoteClicked(View caller) {
+    public void onNoteClick(View caller) {
         TextView hiddenNoteIdTextView = (TextView) caller.findViewById(R.id.hidden_note_id);
         String noteId = hiddenNoteIdTextView.getText().toString();
-        ActivityHelper.startNoteActivityForResult(getActivity(), Long.parseLong(noteId));
+        ActivityHelper.startNoteActivityForResult(getActivity(), Long.parseLong(noteId), false);
     }
 
     @Override
-    public void onCommentClicked(View caller) {
+    public void onCommentClick(View caller) {
         TextView hiddenNoteIdTextView = (TextView) caller.findViewById(R.id.hidden_note_id);
         String noteId = hiddenNoteIdTextView.getText().toString();
-        ActivityHelper.startNoteActivityForResult(getActivity(), Long.parseLong(noteId));
+        ActivityHelper.startNoteActivityForResult(getActivity(), Long.parseLong(noteId), true);
     }
 
     @Override
-    public void onUserClicked(View caller) {
+    public void onUserClick(View caller) {
 //        TextView hiddenUserIdTextView = (TextView) caller.findViewById(R.id.hidden_user_id);
 //        TextView userNameTextView = (TextView) caller.findViewById(R.id.user_name);
 //        String userId = hiddenUserIdTextView.getText().toString();

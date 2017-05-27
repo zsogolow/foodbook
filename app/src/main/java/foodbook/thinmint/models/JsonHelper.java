@@ -61,6 +61,9 @@ public class JsonHelper {
         try {
             note = gson.fromJson(json, Note.class);
             updateDate(note);
+            for (Comment comment : note.getComments()) {
+                updateDate(comment);
+            }
         } catch (JsonSyntaxException jse) {
             note = null;
         }
@@ -72,8 +75,11 @@ public class JsonHelper {
         try {
             notes = gson.fromJson(json, new TypeToken<List<Note>>() {
             }.getType());
-            for (EntityBase base : notes) {
+            for (Note base : notes) {
                 updateDate(base);
+                for (Comment comment : base.getComments()) {
+                    updateDate(comment);
+                }
             }
         } catch (JsonSyntaxException jse) {
             notes = null;

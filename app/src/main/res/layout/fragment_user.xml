@@ -2,7 +2,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context="foodbook.thinmint.activities.users.UsersFragment">
+    tools:context="foodbook.thinmint.activities.users.UserFragment">
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -31,5 +31,16 @@
 
     </LinearLayout>
 
+    <TextView
+        android:id="@+id/hidden_user_id"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:visibility="gone" />
+
+    <TextView
+        android:id="@+id/hidden_note_id"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:visibility="gone" />
 
 </FrameLayout>

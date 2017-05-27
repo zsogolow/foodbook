@@ -1,7 +1,9 @@
-package foodbook.thinmint.activities.feed;
+package foodbook.thinmint.activities.users;
 
 import android.content.Context;
+import android.content.Intent;
 import android.os.Bundle;
+import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.widget.LinearLayoutManager;
@@ -12,7 +14,9 @@ import android.view.ViewGroup;
 import android.widget.TextView;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
+import java.util.Locale;
 
 import foodbook.thinmint.IApiCallback;
 import foodbook.thinmint.IAsyncCallback;
@@ -20,49 +24,53 @@ import foodbook.thinmint.R;
 import foodbook.thinmint.activities.ActivityHelper;
 import foodbook.thinmint.activities.TokenFragment;
 import foodbook.thinmint.activities.adapters.EndlessRecyclerViewScrollListener;
-import foodbook.thinmint.activities.adapters.notes.list.IOnNotesListClickListener;
-import foodbook.thinmint.activities.adapters.notes.list.NotesListRecyclerAdapter;
+import foodbook.thinmint.activities.adapters.users.item.IOnUserClickListener;
+import foodbook.thinmint.activities.adapters.users.item.UserRecyclerAdapter;
 import foodbook.thinmint.activities.common.OnNotesListInteractionListener;
 import foodbook.thinmint.api.Query;
 import foodbook.thinmint.api.WebAPIResult;
 import foodbook.thinmint.models.JsonHelper;
+import foodbook.thinmint.models.domain.EntityBase;
 import foodbook.thinmint.models.domain.Note;
+import foodbook.thinmint.models.domain.User;
+import foodbook.thinmint.models.views.ListItem;
+import foodbook.thinmint.models.views.ListItemTypes;
 import foodbook.thinmint.tasks.AsyncCallback;
 import foodbook.thinmint.tasks.GetAsyncTask;
 
 /**
  * A simple {@link Fragment} subclass.
  * Activities that contain this fragment must implement the
- * {@link OnFeedFragmentDataListener} interface
+ * {@link OnUserFragmentDataListener} interface
  * to handle interaction events.
- * Use the {@link FeedFragment#newInstance} factory method to
+ * Use the {@link UserFragment#newInstance} factory method to
  * create an instance of this fragment.
  */
-public class FeedFragment extends TokenFragment implements OnNotesListInteractionListener,
-        IOnNotesListClickListener, IApiCallback {
-    private static final String TAG = "FeedFragment";
+public class UserFragment extends TokenFragment implements OnNotesListInteractionListener,
+        IOnUserClickListener, IApiCallback {
+    private static final String ARG_USERID = "userid";
+    private static final String ARG_USERNAME = "username";
 
-    private static final String ARG_PARAM1 = "param1";
+    private String mCurrentUserId;
+    private String mCurrentUserName;
 
-    private String mParam1;
-
-    private OnFeedFragmentDataListener mListener;
+    private OnUserFragmentDataListener mListener;
 
     private RecyclerView mListView;
     private SwipeRefreshLayout mSwipeRefreshLayout;
-    private NotesListRecyclerAdapter mAdapter;
+    private UserRecyclerAdapter mAdapter;
     private LinearLayoutManager mLayoutManager;
 
     private GetAsyncTask mGetNoteTask;
     private AsyncCallback<WebAPIResult> mGetNoteCallback;
 
-    private GetAsyncTask mGetFeedTask;
-    private AsyncCallback<WebAPIResult> mGetFeedCallback;
+    private GetAsyncTask mGetMyNotesTask;
+    private AsyncCallback<WebAPIResult> mGetMyStuffCallback;
     private AsyncCallback<WebAPIResult> mLoadMoreCallback;
 
     private EndlessRecyclerViewScrollListener mScrollListener;
 
-    public FeedFragment() {
+    public UserFragment() {
         // Required empty public constructor
     }
 
@@ -70,13 +78,14 @@ public class FeedFragment extends TokenFragment implements OnNotesListInteractio
      * Use this factory method to create a new instance of
      * this fragment using the provided parameters.
      *
-     * @param param1 Parameter 1.
+     * @param userId Parameter 1.
      * @return A new instance of fragment FeedFragment.
      */
-    public static FeedFragment newInstance(String param1) {
-        FeedFragment fragment = new FeedFragment();
+    public static UserFragment newInstance(String userId, String userName) {
+        UserFragment fragment = new UserFragment();
         Bundle args = new Bundle();
-        args.putString(ARG_PARAM1, param1);
+        args.putString(ARG_USERID, userId);
+        args.putString(ARG_USERNAME, userName);
         fragment.setArguments(args);
         return fragment;
     }
@@ -85,72 +94,80 @@ public class FeedFragment extends TokenFragment implements OnNotesListInteractio
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         if (getArguments() != null) {
-            mParam1 = getArguments().getString(ARG_PARAM1);
+            mCurrentUserId = getArguments().getString(ARG_USERID);
+            mCurrentUserName = getArguments().getString(ARG_USERNAME);
         }
 
-        initToken();
         initUser();
+        initToken();
 
         mGetNoteCallback = new AsyncCallback<>(this);
 
-        mGetFeedCallback = new AsyncCallback<>(this);
-        mLoadMoreCallback = new AsyncCallback<>(this);
+        mGetMyStuffCallback = new AsyncCallback<WebAPIResult>(this);
+        mLoadMoreCallback = new AsyncCallback<WebAPIResult>(this);
     }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
-        View inflated = inflater.inflate(R.layout.fragment_home, container, false);
+        View inflated = inflater.inflate(R.layout.fragment_user, container, false);
 
-        mListView = (RecyclerView) inflated.findViewById(R.id.activity_main_listview);
-        mSwipeRefreshLayout = (SwipeRefreshLayout) inflated.findViewById(R.id.activity_main_swipe_refresh_layout);
+        mListView = (RecyclerView) inflated.findViewById(R.id.activity_user_listview);
+        mSwipeRefreshLayout = (SwipeRefreshLayout) inflated.findViewById(R.id.activity_user_swipe_refresh_layout);
 
         // use a linear layout manager
         mLayoutManager = new LinearLayoutManager(getActivity());
         mListView.setLayoutManager(mLayoutManager);
 
-        mAdapter = new NotesListRecyclerAdapter(new ArrayList<Note>(), this);
+        List<ListItem<EntityBase>> models = new ArrayList<>();
+        mAdapter = new UserRecyclerAdapter(models, this);
         mListView.setAdapter(mAdapter);
 
         mSwipeRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
             @Override
             public void onRefresh() {
-                refreshFeed();
+                refreshMyNotes();
             }
         });
 
-        mListener.onFeedFragmentCreated(inflated);
+        mListener.onUserFragmentCreated(inflated);
 
         mScrollListener = new EndlessRecyclerViewScrollListener(mLayoutManager) {
             @Override
             public void onLoadMore(int page, int totalItemsCount, RecyclerView view) {
+                String path = String.format(Locale.US, "api/users/%s/notes", mCurrentUserId);
+
                 Query query = Query.builder()
-                        .setPath("api/notes")
+                        .setPath(path)
 //                        .setAccessToken(mToken.getAccessToken())
                         .setSort("-datecreated")
                         .setPage(page + 1)
                         .build();
-                mGetFeedTask = new GetAsyncTask(getContext(), mLoadMoreCallback, mToken);
-                mGetFeedTask.execute(query);
+                mGetMyNotesTask = new GetAsyncTask(getContext(), mLoadMoreCallback, mToken);
+                mGetMyNotesTask.execute(query);
             }
         };
 
         mListView.addOnScrollListener(mScrollListener);
-
-        refreshFeed();
+        refreshMyNotes();
 
         return inflated;
     }
 
     @Override
+    public void onActivityCreated(@Nullable Bundle savedInstanceState) {
+        super.onActivityCreated(savedInstanceState);
+    }
+
+    @Override
     public void onAttach(Context context) {
         super.onAttach(context);
-        if (context instanceof OnFeedFragmentDataListener) {
-            mListener = (OnFeedFragmentDataListener) context;
+        if (context instanceof OnUserFragmentDataListener) {
+            mListener = (OnUserFragmentDataListener) context;
         } else {
             throw new RuntimeException(context.toString()
-                    + " must implement OnFeedFragmentDataListener");
+                    + " must implement OnUserNotesFragmentDataListener");
         }
     }
 
@@ -161,79 +178,79 @@ public class FeedFragment extends TokenFragment implements OnNotesListInteractio
     }
 
     @Override
-    public void onLikeNoteClick(View caller) {
-//        TextView hiddenNoteIdTextView = (TextView) caller.findViewById(R.id.hidden_note_id);
-//        String noteId = hiddenNoteIdTextView.getText().toString();
-//        ActivityHelper.startNoteActivityForResult(getActivity(), Long.parseLong(noteId));
-    }
-
-    @Override
-    public void onNoteClick(View caller) {
-        TextView hiddenNoteIdTextView = (TextView) caller.findViewById(R.id.hidden_note_id);
-        String noteId = hiddenNoteIdTextView.getText().toString();
-        ActivityHelper.startNoteActivityForResult(getActivity(), Long.parseLong(noteId), false);
-    }
-
-    @Override
-    public void onCommentClick(View caller) {
-        TextView hiddenNoteIdTextView = (TextView) caller.findViewById(R.id.hidden_note_id);
-        String noteId = hiddenNoteIdTextView.getText().toString();
-        ActivityHelper.startNoteActivityForResult(getActivity(), Long.parseLong(noteId), true);
-    }
-
-    @Override
-    public void onUserClick(View caller) {
-        TextView hiddenUserIdTextView = (TextView) caller.findViewById(R.id.hidden_user_id);
-        TextView userNameTextView = (TextView) caller.findViewById(R.id.user_name);
-        String userId = hiddenUserIdTextView.getText().toString();
-        String username = userNameTextView.getText().toString();
-        ActivityHelper.startUserActivity(getActivity(), userId, username);
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
     }
 
     private void setLoading(boolean isLoading) {
         mSwipeRefreshLayout.setRefreshing(isLoading);
     }
 
-    private void refreshFeed() {
+    @Override
+    public void onClick(View view) {
+        TextView hiddenNoteIdTextView = (TextView) view.findViewById(R.id.hidden_note_id);
+        String noteId = hiddenNoteIdTextView.getText().toString();
+        ActivityHelper.startNoteActivityForResult(getActivity(), Long.parseLong(noteId), false);
+    }
+
+    @Override
+    public void onCommentButtonClick(View view) {
+        TextView hiddenNoteIdTextView = (TextView) view.findViewById(R.id.hidden_note_id);
+        String noteId = hiddenNoteIdTextView.getText().toString();
+        ActivityHelper.startNoteActivityForResult(getActivity(), Long.parseLong(noteId), true);
+    }
+
+    private void refreshMyNotes() {
         setLoading(true);
+        mGetMyNotesTask = new GetAsyncTask(getContext(), mGetMyStuffCallback, mToken);
 
-        mScrollListener.resetState();
-
-        mGetFeedTask = new GetAsyncTask(getContext(), mGetFeedCallback, mToken);
-
-        String path = "api/notes";
+        String path = String.format(Locale.US, "api/users/%s/notes", mCurrentUserId);
 
         Query query = Query.builder()
                 .setPath(path)
                 .setSort("-datecreated")
                 .build();
 
-        mGetFeedTask.execute(query);
+        mGetMyNotesTask.execute(query);
     }
 
     private void onNotesRetrieved(List<Note> notes) {
-        mAdapter.swap(notes);
+        List<ListItem<EntityBase>> models = new ArrayList<>();
+        User user = new User();
+        user.setUsername(mCurrentUserName);
+        user.setSubject(mCurrentUserId);
+        user.setDateCreated(new Date());
+        models.add(new ListItem<EntityBase>(ListItemTypes.User, user));
+        for (Note note : notes) {
+            models.add(new ListItem<EntityBase>(ListItemTypes.Note, note));
+        }
+
+        mAdapter.swap(models);
         setLoading(false);
     }
 
     private void onNoteRetrieved(Note note) {
-        mAdapter.replace(note);
+        mAdapter.replace(new ListItem<EntityBase>(ListItemTypes.Note, note));
         setLoading(false);
     }
 
     private void onLoadedMore(List<Note> notes) {
-        mAdapter.addAll(notes);
+        List<ListItem<EntityBase>> models = new ArrayList<>();
+        for (Note note : notes) {
+            models.add(new ListItem<EntityBase>(ListItemTypes.Note, note));
+        }
+        mAdapter.addAll(models);
     }
 
     @Override
     public void onNoteAdded(Note note) {
-        mAdapter.add(0, note);
+        mAdapter.add(0, new ListItem<EntityBase>(ListItemTypes.Note, note));
         setLoading(false);
     }
 
     @Override
-    public void onNoteAdded(long noteid) {
-        refreshFeed();
+    public void onNoteAdded(long noteId) {
+        refreshMyNotes();
     }
 
     @Override
@@ -255,12 +272,12 @@ public class FeedFragment extends TokenFragment implements OnNotesListInteractio
 
     @Override
     public void callback(IAsyncCallback cb) {
-        if (cb.equals(mGetFeedCallback)) {
-            mGetFeedTask = null;
-            List<Note> notes = JsonHelper.getNotes(mGetFeedCallback.getResult().getResult());
+        if (cb.equals(mGetMyStuffCallback)) {
+            mGetMyNotesTask = null;
+            List<Note> notes = JsonHelper.getNotes(mGetMyStuffCallback.getResult().getResult());
             onNotesRetrieved(notes);
         } else if (cb.equals(mLoadMoreCallback)) {
-            mGetFeedTask = null;
+            mGetMyNotesTask = null;
             List<Note> notes = JsonHelper.getNotes(mLoadMoreCallback.getResult().getResult());
             onLoadedMore(notes);
         } else if (cb.equals(mGetNoteCallback)) {
@@ -270,8 +287,17 @@ public class FeedFragment extends TokenFragment implements OnNotesListInteractio
         }
     }
 
-    public interface OnFeedFragmentDataListener {
-        void onFeedFragmentCreated(View view);
-        void onFeedLoaded();
+    /**
+     * This interface must be implemented by activities that contain this
+     * fragment to allow an interaction in this fragment to be communicated
+     * to the activity and potentially other fragments contained in that
+     * activity.
+     * <p>
+     * See the Android Training lesson <a href=
+     * "http://developer.android.com/training/basics/fragments/communicating.html"
+     * >Communicating with Other Fragments</a> for more information.
+     */
+    public interface OnUserFragmentDataListener {
+        void onUserFragmentCreated(View view);
     }
 }

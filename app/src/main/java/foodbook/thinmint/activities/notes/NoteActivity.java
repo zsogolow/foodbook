@@ -37,9 +37,11 @@ public class NoteActivity extends TokenActivity implements NoteFragment.OnNoteFr
         Bundle bundle = getIntent().getExtras();
         long noteId = bundle.getLong("note_id");
 
+        boolean commentFlag = bundle.getBoolean("comment_flag");
+
         setActionBarTitle("Note");
 
-        showNoteFragment(noteId);
+        showNoteFragment(noteId, commentFlag);
     }
 
     @Override
@@ -100,13 +102,13 @@ public class NoteActivity extends TokenActivity implements NoteFragment.OnNoteFr
         }
     }
 
-    private void showNoteFragment(long noteId) {
+    private void showNoteFragment(long noteId, boolean commentFlag) {
         FragmentManager fragmentManager = getSupportFragmentManager();
         FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
 
         // Replace whatever is in the fragment_container view with this fragment,
         // and add the transaction to the back stack
-        mNoteFragment = NoteFragment.newInstance(noteId);
+        mNoteFragment = NoteFragment.newInstance(noteId, commentFlag);
         fragmentTransaction.replace(R.id.fragment_container, mNoteFragment, "Note");
 
         // Commit the transaction

@@ -11,8 +11,8 @@ import java.util.Date;
 import java.util.List;
 
 import foodbook.thinmint.R;
-import foodbook.thinmint.activities.adapters.common.AbstractRecyclerAdapter;
-import foodbook.thinmint.activities.adapters.common.AbstractViewHolder;
+import foodbook.thinmint.activities.adapters.common.AbstractListRecyclerAdapter;
+import foodbook.thinmint.activities.adapters.common.AbstractListViewHolder;
 import foodbook.thinmint.models.domain.Comment;
 import foodbook.thinmint.models.domain.User;
 
@@ -20,7 +20,7 @@ import foodbook.thinmint.models.domain.User;
  * Created by Zachery.Sogolow on 5/18/2017.
  */
 
-public class CommentsRecyclerAdapter extends AbstractRecyclerAdapter<Comment, IOnCommentClickListener> {
+public class CommentsRecyclerAdapter extends AbstractListRecyclerAdapter<Comment, IOnCommentClickListener> {
 
     // Provide a suitable constructor (depends on the kind of dataset)
     public CommentsRecyclerAdapter(List<Comment> comments, IOnCommentClickListener listener) {
@@ -40,7 +40,7 @@ public class CommentsRecyclerAdapter extends AbstractRecyclerAdapter<Comment, IO
 
     // Replace the contents of a view (invoked by the layout manager)
     @Override
-    public void onBindViewHolder(AbstractViewHolder<IOnCommentClickListener> holder, int position) {
+    public void onBindViewHolder(AbstractListViewHolder<IOnCommentClickListener> holder, int position) {
         long nowInMillis = System.currentTimeMillis();
         Date dateCreated = mItems.get(position).getDateCreated();
 

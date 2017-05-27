@@ -1,4 +1,4 @@
-package foodbook.thinmint.activities.adapters.notes;
+package foodbook.thinmint.activities.adapters.notes.list;
 
 import android.view.LayoutInflater;
 import android.view.ViewGroup;
@@ -11,35 +11,35 @@ import java.util.Date;
 import java.util.List;
 
 import foodbook.thinmint.R;
-import foodbook.thinmint.activities.adapters.common.AbstractRecyclerAdapter;
-import foodbook.thinmint.activities.adapters.common.AbstractViewHolder;
+import foodbook.thinmint.activities.adapters.common.AbstractListRecyclerAdapter;
+import foodbook.thinmint.activities.adapters.common.AbstractListViewHolder;
 import foodbook.thinmint.models.domain.Note;
 
 /**
  * Created by Zachery.Sogolow on 5/18/2017.
  */
 
-public class NotesRecyclerAdapter extends AbstractRecyclerAdapter<Note, IOnNoteClickListener> {
+public class NotesListRecyclerAdapter extends AbstractListRecyclerAdapter<Note, IOnNotesListClickListener> {
 
     // Provide a suitable constructor (depends on the kind of dataset)
-    public NotesRecyclerAdapter(List<Note> notes, IOnNoteClickListener listener) {
+    public NotesListRecyclerAdapter(List<Note> notes, IOnNotesListClickListener listener) {
         super(notes, listener);
     }
 
     // Create new views (invoked by the layout manager)
     @Override
-    public NotesViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
+    public NotesListViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
         // create a new view
         LinearLayout v = (LinearLayout) LayoutInflater.from(parent.getContext())
                 .inflate(R.layout.item_note, parent, false);
         // set the view's size, margins, paddings and layout parameters
-        NotesViewHolder vh = new NotesViewHolder(v, mListener);
+        NotesListViewHolder vh = new NotesListViewHolder(v, mListener);
         return vh;
     }
 
     // Replace the contents of a view (invoked by the layout manager)
     @Override
-    public void onBindViewHolder(AbstractViewHolder<IOnNoteClickListener> holder, int position) {
+    public void onBindViewHolder(AbstractListViewHolder<IOnNotesListClickListener> holder, int position) {
         // - get element from your dataset at this position
         // - replace the contents of the view with that element
 

@@ -2,26 +2,23 @@ package foodbook.thinmint.activities.notes;
 
 import android.content.Context;
 import android.os.Bundle;
+import android.os.Handler;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
-import android.text.Editable;
-import android.text.TextWatcher;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
 
-import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
@@ -29,15 +26,17 @@ import foodbook.thinmint.IApiCallback;
 import foodbook.thinmint.IAsyncCallback;
 import foodbook.thinmint.R;
 import foodbook.thinmint.activities.ActivityHelper;
-import foodbook.thinmint.activities.MainActivity;
 import foodbook.thinmint.activities.TokenFragment;
-import foodbook.thinmint.activities.adapters.comments.CommentsRecyclerAdapter;
-import foodbook.thinmint.activities.adapters.comments.IOnCommentClickListener;
+import foodbook.thinmint.activities.adapters.notes.item.IOnNoteClickListener;
+import foodbook.thinmint.activities.adapters.notes.item.NoteRecyclerAdapter;
 import foodbook.thinmint.api.Query;
 import foodbook.thinmint.api.WebAPIResult;
 import foodbook.thinmint.models.JsonHelper;
 import foodbook.thinmint.models.domain.Comment;
+import foodbook.thinmint.models.domain.EntityBase;
 import foodbook.thinmint.models.domain.Note;
+import foodbook.thinmint.models.views.ListItem;
+import foodbook.thinmint.models.views.ListItemTypes;
 import foodbook.thinmint.tasks.AsyncCallback;
 import foodbook.thinmint.tasks.GetAsyncTask;
 import foodbook.thinmint.tasks.DeleteAsyncTask;
@@ -51,26 +50,21 @@ import foodbook.thinmint.tasks.PostAsyncTask;
  * Use the {@link NoteFragment#newInstance} factory method to
  * create an instance of this fragment.
  */
-public class NoteFragment extends TokenFragment implements IApiCallback, IOnCommentClickListener {
+public class NoteFragment extends TokenFragment implements IApiCallback, IOnNoteClickListener {
 
     private static final String ARG_NOTEID = "noteid";
+    private static final String ARG_COMMENTFLAG = "commentflag";
 
     private long mNoteId;
+    private boolean mCommentFlag;
 
     private OnNoteFragmentDataListener mListener;
 
     private RecyclerView mListView;
     private SwipeRefreshLayout mSwipeRefreshLayout;
-    private CommentsRecyclerAdapter mAdapter;
+    private NoteRecyclerAdapter mAdapter;
     private LinearLayoutManager mLayoutManager;
 
-    private Button mAddCommentButton;
-    private EditText mCommentText;
-
-    private TextView mNoteContents;
-    private TextView mNoteUser;
-    private TextView mNoteDate;
-    private TextView mCommentsText;
     private TextView mHiddenUserSubject;
 
     private GetAsyncTask mGetNoteTask;
@@ -90,13 +84,14 @@ public class NoteFragment extends TokenFragment implements IApiCallback, IOnComm
      * Use this factory method to create a new instance of
      * this fragment using the provided parameters.
      *
-     * @param noteid Parameter 1.
+     * @param noteId Parameter 1.
      * @return A new instance of fragment FeedFragment.
      */
-    public static NoteFragment newInstance(long noteid) {
+    public static NoteFragment newInstance(long noteId, boolean commentFlag) {
         NoteFragment fragment = new NoteFragment();
         Bundle args = new Bundle();
-        args.putLong(ARG_NOTEID, noteid);
+        args.putLong(ARG_NOTEID, noteId);
+        args.putBoolean(ARG_COMMENTFLAG, commentFlag);
         fragment.setArguments(args);
         return fragment;
     }
@@ -106,14 +101,15 @@ public class NoteFragment extends TokenFragment implements IApiCallback, IOnComm
         super.onCreate(savedInstanceState);
         if (getArguments() != null) {
             mNoteId = getArguments().getLong(ARG_NOTEID);
+            mCommentFlag = getArguments().getBoolean(ARG_COMMENTFLAG);
         }
 
         initToken();
         initUser();
 
-        mGetNoteCallback = new AsyncCallback<WebAPIResult>(this);
-        mDeleteServiceCallback = new AsyncCallback<WebAPIResult>(this);
-        mAddCommentCallback = new AsyncCallback<WebAPIResult>(this);
+        mGetNoteCallback = new AsyncCallback<>(this);
+        mDeleteServiceCallback = new AsyncCallback<>(this);
+        mAddCommentCallback = new AsyncCallback<>(this);
     }
 
     @Override
@@ -130,57 +126,18 @@ public class NoteFragment extends TokenFragment implements IApiCallback, IOnComm
         mListView = (RecyclerView) inflated.findViewById(R.id.activity_main_listview);
         mSwipeRefreshLayout = (SwipeRefreshLayout) inflated.findViewById(R.id.activity_note_swipe_refresh_layout);
 
-        mAddCommentButton = (Button) inflated.findViewById(R.id.add_comment_button);
-        mCommentText = (EditText) inflated.findViewById(R.id.comment_edit_text);
-
-        mCommentText.addTextChangedListener(new TextWatcher() {
-            @Override
-            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
-
-            }
-
-            @Override
-            public void onTextChanged(CharSequence s, int start, int before, int count) {
-                if (s.toString().length() > 0) {
-                    mAddCommentButton.setEnabled(true);
-                } else {
-                    mAddCommentButton.setEnabled(false);
-                }
-            }
-
-            @Override
-            public void afterTextChanged(Editable s) {
-
-            }
-        });
-
-        mAddCommentButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                attemptAddComment();
-            }
-        });
-
-        mNoteContents = (TextView) inflated.findViewById(R.id.note_contents);
-        mNoteUser = (TextView) inflated.findViewById(R.id.note_user);
-        mNoteDate = (TextView) inflated.findViewById(R.id.note_date);
-        mCommentsText = (TextView) inflated.findViewById(R.id.note_comments);
         mHiddenUserSubject = (TextView) inflated.findViewById(R.id.hidden_user_id);
-
-        mNoteUser.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                String subject = mHiddenUserSubject.getText().toString();
-                String username = mNoteUser.getText().toString();
-                ActivityHelper.startUserActivity(getActivity(), subject, username);
-            }
-        });
 
         // use a linear layout manager
         mLayoutManager = new LinearLayoutManager(getActivity());
         mListView.setLayoutManager(mLayoutManager);
 
-        mAdapter = new CommentsRecyclerAdapter(new ArrayList<Comment>(), this);
+        List<ListItem<EntityBase>> models = new ArrayList<>();
+
+        models.add(new ListItem<>(ListItemTypes.Note, null));
+        models.add(new ListItem<>(ListItemTypes.AddComment, null));
+
+        mAdapter = new NoteRecyclerAdapter(models, this);
         mListView.setAdapter(mAdapter);
 
         mSwipeRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
@@ -231,7 +188,6 @@ public class NoteFragment extends TokenFragment implements IApiCallback, IOnComm
 
         Query query = Query.builder()
                 .setPath(path)
-//                .setAccessToken(mToken.getAccessToken())
                 .setSort("-datecreated")
                 .build();
 
@@ -240,30 +196,30 @@ public class NoteFragment extends TokenFragment implements IApiCallback, IOnComm
 
     private void onNoteRetrieved(Note note) {
         setLoading(false);
-        mNoteContents.setText(note.getContent());
-        mNoteUser.setText(note.getUser().getUsername());
 
-        long nowInMillis = System.currentTimeMillis();
-        Date dateCreated = note.getDateCreated();
-
-        Calendar now = Calendar.getInstance();
-        Calendar created = Calendar.getInstance();
-        now.setTime(new Date(nowInMillis));
-        created.setTime(dateCreated);
-
-        boolean sameDay = now.get(Calendar.YEAR) == created.get(Calendar.YEAR) &&
-                now.get(Calendar.DAY_OF_YEAR) == created.get(Calendar.DAY_OF_YEAR);
-        boolean sameYear = now.get(Calendar.YEAR) == created.get(Calendar.YEAR);
-
-        DateFormat dateFormat = sameYear ? MainActivity.DATE_FORMAT : MainActivity.DATE_FORMAT_YEAR;
-        String dateString = sameDay ? MainActivity.TIME_FORMAT.format(dateCreated)
-                : dateFormat.format(dateCreated) + " at " + MainActivity.TIME_FORMAT.format(dateCreated);
-
-        mNoteDate.setText(dateString);
-        mCommentsText.setText(note.getComments().size() + " comments");
         mHiddenUserSubject.setText(note.getUser().getSubject());
 
-        mAdapter.swap(note.getComments());
+        List<ListItem<EntityBase>> models = new ArrayList<>();
+
+        models.add(new ListItem<EntityBase>(ListItemTypes.Note, note));
+        models.add(new ListItem<EntityBase>(ListItemTypes.AddComment, null));
+        for (Comment comment : note.getComments()) {
+            models.add(new ListItem<EntityBase>(ListItemTypes.Comment, comment));
+        }
+
+        mAdapter.swap(models);
+
+        new Handler().postDelayed(new Runnable(){
+            @Override
+            public void run() {
+                if (mCommentFlag) {
+                    mCommentFlag = false;
+                    EditText editText = (EditText) mListView.findViewById(R.id.comment_edit_text);
+                    editText.requestFocus();
+                    ActivityHelper.showSoftKeyboard(getActivity());
+                }
+            }
+        }, 250);
     }
 
     private void onNoteDeleted(boolean success) {
@@ -274,25 +230,22 @@ public class NoteFragment extends TokenFragment implements IApiCallback, IOnComm
     }
 
     private void onCommentAdded(Comment comment) {
-        mAdapter.add(0, comment);
-        mCommentsText.setText(mAdapter.getItemCount() + " comments");
-        setLoading(false);
-        mCommentText.setText("");
+        mAdapter.add(2, new ListItem<EntityBase>(ListItemTypes.Comment, comment));
+        refreshNote();
     }
 
     private void onCommentFailed() {
         setLoading(false);
-        mAddCommentButton.setEnabled(true);
     }
 
-    private void attemptAddComment() {
+    @Override
+    public void onAddCommentClick(EditText editText) {
         setLoading(true);
-        mAddCommentButton.setEnabled(false);
         SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss Z", Locale.US);
         Map<String, Object> map = new HashMap<>();
         map.put("noteid", mNoteId);
         map.put("userid", mUserId);
-        map.put("text", mCommentText.getText().toString());
+        map.put("text", editText.getText().toString());
         map.put("datecreated", dateFormat.format(new Date(System.currentTimeMillis())));
         mAddCommentTask = new PostAsyncTask(getContext(), mAddCommentCallback, mToken, map);
         mAddCommentTask.execute("api/comments");
@@ -300,12 +253,33 @@ public class NoteFragment extends TokenFragment implements IApiCallback, IOnComm
     }
 
     @Override
-    public void onUserClicked(View caller) {
-        TextView hiddenUserIdTextView = (TextView) caller.findViewById(R.id.hidden_user_id);
-        TextView userNameTextView = (TextView) caller.findViewById(R.id.user_name);
+    public void onUserClick(View view) {
+        TextView hiddenUserIdTextView = (TextView) view.findViewById(R.id.hidden_user_id);
+        TextView userNameTextView = (TextView) view.findViewById(R.id.user_name);
         String userId = hiddenUserIdTextView.getText().toString();
         String username = userNameTextView.getText().toString();
         ActivityHelper.startUserActivity(getActivity(), userId, username);
+    }
+
+    @Override
+    public void onCommentButtonClick(View view) {
+        TextView hiddenUserIdTextView = (TextView) view.findViewById(R.id.hidden_user_id);
+        TextView userNameTextView = (TextView) view.findViewById(R.id.user_name);
+        String userId = hiddenUserIdTextView.getText().toString();
+        String username = userNameTextView.getText().toString();
+        EditText editText = (EditText) mListView.findViewById(R.id.comment_edit_text);
+        editText.requestFocus();
+        ActivityHelper.showSoftKeyboard(getActivity());
+    }
+
+    @Override
+    public void onLikeButtonClick(View view) {
+
+    }
+
+    @Override
+    public void onClick(View caller) {
+
     }
 
     @Override

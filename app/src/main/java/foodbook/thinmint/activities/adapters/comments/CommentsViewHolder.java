@@ -5,13 +5,13 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import foodbook.thinmint.R;
-import foodbook.thinmint.activities.adapters.common.AbstractViewHolder;
+import foodbook.thinmint.activities.adapters.common.AbstractListViewHolder;
 
 /**
  * Created by Zachery.Sogolow on 5/26/2017.
  */
 
-public class CommentsViewHolder extends AbstractViewHolder<IOnCommentClickListener> {
+public class CommentsViewHolder extends AbstractListViewHolder<IOnCommentClickListener> {
 
     private TextView mUserName;
 

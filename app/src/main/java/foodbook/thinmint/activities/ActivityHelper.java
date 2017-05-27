@@ -14,6 +14,7 @@ import foodbook.thinmint.activities.day.DayActivity;
 import foodbook.thinmint.activities.notes.CreateNoteActivity;
 import foodbook.thinmint.activities.notes.NoteActivity;
 import foodbook.thinmint.activities.users.UserActivity;
+import foodbook.thinmint.activities.users.UserActivity2;
 import foodbook.thinmint.constants.Constants;
 
 /**
@@ -59,16 +60,17 @@ public class ActivityHelper {
         activity.startActivity(dayIntent);
     }
 
-    public static void startNoteActivityForResult(Activity activity, long noteId) {
+    public static void startNoteActivityForResult(Activity activity, long noteId, boolean commentFlag) {
         Intent noteIntent = new Intent(activity, NoteActivity.class);
         Bundle bundle = new Bundle();
         bundle.putLong("note_id", noteId);
+        bundle.putBoolean("comment_flag", commentFlag);
         noteIntent.putExtras(bundle);
         activity.startActivityForResult(noteIntent, RequestCodes.NOTE_REQUEST_CODE);
     }
 
     public static void startUserActivity(Activity activity, String userSubject, String username) {
-        Intent userIntent = new Intent(activity, UserActivity.class);
+        Intent userIntent = new Intent(activity, UserActivity2.class);
         Bundle bundle = new Bundle();
         bundle.putString("user_subject", userSubject);
         bundle.putString("user_name", username);
@@ -90,5 +92,12 @@ public class ActivityHelper {
                         Activity.INPUT_METHOD_SERVICE);
         inputMethodManager.hideSoftInputFromWindow(
                 activity.getCurrentFocus().getWindowToken(), 0);
+    }
+
+    public static void showSoftKeyboard(Activity activity) {
+        InputMethodManager inputMethodManager =
+                (InputMethodManager) activity.getSystemService(
+                        Activity.INPUT_METHOD_SERVICE);
+        inputMethodManager.showSoftInput(activity.getCurrentFocus(), 0);
     }
 }
