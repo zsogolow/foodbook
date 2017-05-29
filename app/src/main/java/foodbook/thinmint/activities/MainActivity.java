@@ -29,13 +29,10 @@ import foodbook.thinmint.activities.common.OnNotesListInteractionListener;
 import foodbook.thinmint.activities.common.RequestCodes;
 import foodbook.thinmint.activities.common.TokenActivity;
 import foodbook.thinmint.activities.feed.FeedFragment;
-import foodbook.thinmint.activities.users.UserNotesFragment;
-import foodbook.thinmint.activities.users.UserInfoFragment;
 import foodbook.thinmint.activities.users.UsersFragment;
 
 public class MainActivity extends TokenActivity implements
         NavigationView.OnNavigationItemSelectedListener, FeedFragment.OnFeedFragmentDataListener,
-        UserNotesFragment.OnUserNotesFragmentDataListener, UserInfoFragment.OnUserInfoFragmentDataListener,
         UsersFragment.OnUsersFragmentDataListener {
 
     private static final String TAG = "MainActivity";
@@ -99,13 +96,13 @@ public class MainActivity extends TokenActivity implements
                     String action = data.getStringExtra(RequestCodes.NOTE_EXTRA_ACTION);
                     long id = data.getLongExtra(RequestCodes.NOTE_EXTRA_ID, -1);
                     if (action.equals(RequestCodes.COMMENT_NOTE_ACTION)) {
-                        mCurrentFragment.onCommentAdded(id, 0);
+                        mCurrentFragment.onCommentAdded(id);
                     } else if (action.equals(RequestCodes.DELETE_NOTE_ACTION)) {
                         mCurrentFragment.onNoteDeleted(id);
                     } else if (action.equals(RequestCodes.CREATE_NOTE_ACTION)) {
                         mCurrentFragment.onNoteAdded(id);
                     } else if (action.equals(RequestCodes.LIKE_NOTE_ACTION)) {
-                        mCurrentFragment.onLikeAdded(id, 0);
+                        mCurrentFragment.onLikeAdded(id);
                     }
                 }
                 break;
@@ -248,23 +245,7 @@ public class MainActivity extends TokenActivity implements
     }
 
     @Override
-    public void onFeedLoaded() {
-    }
-
-    @Override
-    public void onUserNotesFragmentCreated(View view) {
-    }
-
-    @Override
-    public void onUserInfoFragmentCreated(View view) {
-    }
-
-    @Override
     public void onUsersFragmentCreated(View view) {
-    }
-
-    @Override
-    public void onUsersLoaded() {
     }
 
     /**

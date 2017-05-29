@@ -28,6 +28,7 @@ import foodbook.thinmint.models.JsonHelper;
 import foodbook.thinmint.models.domain.User;
 import foodbook.thinmint.tasks.AsyncCallback;
 import foodbook.thinmint.tasks.GetAsyncTask;
+import foodbook.thinmint.tasks.TasksHelper;
 
 /**
  * A simple {@link Fragment} subclass.
@@ -121,14 +122,7 @@ public class UsersFragment extends TokenFragment implements IApiCallback, IOnUse
         mScrollListener = new EndlessRecyclerViewScrollListener(mLayoutManager) {
             @Override
             public void onLoadMore(int page, int totalItemsCount, RecyclerView view) {
-                Query query = Query.builder()
-                        .setPath("api/users")
-//                        .setAccessToken(mToken.getAccessToken())
-                        .setSort("username")
-                        .setPage(page + 1)
-                        .build();
-                mGetUsersTask = new GetAsyncTask(getContext(), mLoadMoreCallback, mToken);
-                mGetUsersTask.execute(query);
+                TasksHelper.getUsers(getContext(), mLoadMoreCallback, mToken, page + 1, "");
             }
         };
 
@@ -160,17 +154,7 @@ public class UsersFragment extends TokenFragment implements IApiCallback, IOnUse
 
     private void refreshUsers() {
         setLoading(true);
-        mGetUsersTask = new GetAsyncTask(getContext(), mGetUsersCallback, mToken);
-
-        String path = "api/users";
-
-        Query query = Query.builder()
-                .setPath(path)
-//                .setAccessToken(mToken.getAccessToken())
-                .setSort("username")
-                .build();
-
-        mGetUsersTask.execute(query);
+        TasksHelper.getUsers(getContext(), mLoadMoreCallback, mToken, 1, "");
     }
 
     private void onUsersRetrieved(List<User> users) {
@@ -206,6 +190,5 @@ public class UsersFragment extends TokenFragment implements IApiCallback, IOnUse
 
     public interface OnUsersFragmentDataListener {
         void onUsersFragmentCreated(View view);
-        void onUsersLoaded();
     }
 }

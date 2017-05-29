@@ -14,13 +14,8 @@ import android.view.ViewGroup;
 import android.widget.EditText;
 import android.widget.TextView;
 
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Date;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Locale;
-import java.util.Map;
 
 import foodbook.thinmint.IApiCallback;
 import foodbook.thinmint.IAsyncCallback;
@@ -29,7 +24,6 @@ import foodbook.thinmint.activities.common.ActivityHelper;
 import foodbook.thinmint.activities.common.TokenFragment;
 import foodbook.thinmint.activities.adapters.notes.item.IOnNoteClickListener;
 import foodbook.thinmint.activities.adapters.notes.item.NoteRecyclerAdapter;
-import foodbook.thinmint.api.Query;
 import foodbook.thinmint.api.WebAPIResult;
 import foodbook.thinmint.models.JsonHelper;
 import foodbook.thinmint.models.domain.Comment;
@@ -39,9 +33,7 @@ import foodbook.thinmint.models.domain.Note;
 import foodbook.thinmint.models.views.ListItem;
 import foodbook.thinmint.models.views.ListItemTypes;
 import foodbook.thinmint.tasks.AsyncCallback;
-import foodbook.thinmint.tasks.GetAsyncTask;
-import foodbook.thinmint.tasks.DeleteAsyncTask;
-import foodbook.thinmint.tasks.PostAsyncTask;
+import foodbook.thinmint.tasks.TasksHelper;
 
 /**
  * A simple {@link Fragment} subclass.
@@ -68,20 +60,11 @@ public class NoteFragment extends TokenFragment implements IApiCallback, IOnNote
 
     private TextView mHiddenUserSubject;
 
-    private GetAsyncTask mGetNoteTask;
     private AsyncCallback<WebAPIResult> mGetNoteCallback;
-
-    private DeleteAsyncTask mDeleteServiceAsyncTask;
-    private AsyncCallback<WebAPIResult> mDeleteServiceCallback;
-
-    private PostAsyncTask mAddCommentTask;
+    private AsyncCallback<WebAPIResult> mDeleteNoteCallback;
     private AsyncCallback<WebAPIResult> mAddCommentCallback;
-
-    private PostAsyncTask mAddLikeTask;
-    private AsyncCallback<WebAPIResult> mAddLikeCallback;
-
-    private DeleteAsyncTask mRemoveUnlikeTask;
-    private AsyncCallback<WebAPIResult> mRemoveUnlikeCallback;
+    private AsyncCallback<WebAPIResult> mLikeCallback;
+    private AsyncCallback<WebAPIResult> mUnlikeCallback;
 
     public NoteFragment() {
         // Required empty public constructor
@@ -115,10 +98,10 @@ public class NoteFragment extends TokenFragment implements IApiCallback, IOnNote
         initUser();
 
         mGetNoteCallback = new AsyncCallback<>(this);
-        mDeleteServiceCallback = new AsyncCallback<>(this);
+        mDeleteNoteCallback = new AsyncCallback<>(this);
         mAddCommentCallback = new AsyncCallback<>(this);
-        mAddLikeCallback = new AsyncCallback<>(this);
-        mRemoveUnlikeCallback = new AsyncCallback<>(this);
+        mLikeCallback = new AsyncCallback<>(this);
+        mUnlikeCallback = new AsyncCallback<>(this);
     }
 
     @Override
@@ -191,16 +174,7 @@ public class NoteFragment extends TokenFragment implements IApiCallback, IOnNote
 
     private void refreshNote() {
         setLoading(true);
-        mGetNoteTask = new GetAsyncTask(getContext(), mGetNoteCallback, mToken);
-
-        String path = String.format(Locale.US, "api/notes/%d", mNoteId);
-
-        Query query = Query.builder()
-                .setPath(path)
-                .setSort("-datecreated")
-                .build();
-
-        mGetNoteTask.execute(query);
+        TasksHelper.getNote(getContext(), mGetNoteCallback, mToken, mNoteId);
     }
 
     private void onNoteRetrieved(Note note) {
@@ -243,7 +217,7 @@ public class NoteFragment extends TokenFragment implements IApiCallback, IOnNote
         refreshNote();
     }
 
-    private void onLikeAdded(Like like) {
+    private void onLikeChanged() {
         refreshNote();
     }
 
@@ -254,14 +228,8 @@ public class NoteFragment extends TokenFragment implements IApiCallback, IOnNote
     @Override
     public void onAddCommentClick(EditText editText) {
         setLoading(true);
-        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss Z", Locale.US);
-        Map<String, Object> map = new HashMap<>();
-        map.put("noteid", mNoteId);
-        map.put("userid", mUserId);
-        map.put("text", editText.getText().toString());
-        map.put("datecreated", dateFormat.format(new Date(System.currentTimeMillis())));
-        mAddCommentTask = new PostAsyncTask(getContext(), mAddCommentCallback, mToken, map);
-        mAddCommentTask.execute("api/comments");
+        String comment = editText.getText().toString();
+        TasksHelper.addComment(getContext(), mAddCommentCallback, mToken, mNoteId, mUserId, comment);
         ActivityHelper.hideSoftKeyboard(getActivity());
     }
 
@@ -287,14 +255,10 @@ public class NoteFragment extends TokenFragment implements IApiCallback, IOnNote
 
     @Override
     public void onLikeButtonClick(View view) {
+        TextView hiddenNoteIdTextView = (TextView) view.findViewById(R.id.hidden_note_id);
+        long noteId = Long.parseLong(hiddenNoteIdTextView.getText().toString());
         setLoading(true);
-        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss Z", Locale.US);
-        Map<String, Object> map = new HashMap<>();
-        map.put("noteid", mNoteId);
-        map.put("userid", mUserId);
-        map.put("datecreated", dateFormat.format(new Date(System.currentTimeMillis())));
-        mAddLikeTask = new PostAsyncTask(getContext(), mAddLikeCallback, mToken, map);
-        mAddLikeTask.execute("api/likes");
+        TasksHelper.likeNote(getContext(), mLikeCallback, mToken, noteId, mUserId);
     }
 
 
@@ -302,13 +266,8 @@ public class NoteFragment extends TokenFragment implements IApiCallback, IOnNote
     public void onUnlikeButtonClick(View view) {
         TextView hiddenNoteIdTextView = (TextView) view.findViewById(R.id.hidden_note_id);
         long noteId = Long.parseLong(hiddenNoteIdTextView.getText().toString());
-
         setLoading(true);
-        mRemoveUnlikeTask = new DeleteAsyncTask(getContext(), mRemoveUnlikeCallback, mToken);
-        Query query = Query.builder()
-                .setPath(String.format(Locale.US, "api/notes/%d/likes/%d", noteId, mUserId))
-                .build();
-        mRemoveUnlikeTask.execute(query);
+        TasksHelper.unlikeNote(getContext(), mUnlikeCallback, mToken, noteId, mUserId);
     }
 
     @Override
@@ -319,16 +278,13 @@ public class NoteFragment extends TokenFragment implements IApiCallback, IOnNote
     @Override
     public void callback(IAsyncCallback cb) {
         if (cb.equals(mGetNoteCallback)) {
-            mGetNoteTask = null;
             Note note = JsonHelper.getNote(mGetNoteCallback.getResult().getResult());
             onNoteRetrieved(note);
             mListener.onNoteRetrieved(note);
-        } else if (cb.equals(mDeleteServiceCallback)) {
-            mDeleteServiceAsyncTask = null;
-            boolean success = mDeleteServiceCallback.getResult().isSuccess();
+        } else if (cb.equals(mDeleteNoteCallback)) {
+            boolean success = mDeleteNoteCallback.getResult().isSuccess();
             onNoteDeleted(success);
         } else if (cb.equals(mAddCommentCallback)) {
-            mAddCommentTask = null;
             WebAPIResult result = mAddCommentCallback.getResult();
             if (result.isSuccess()) {
                 Comment addedComment = JsonHelper.getComment(mAddCommentCallback.getResult().getResult());
@@ -337,29 +293,24 @@ public class NoteFragment extends TokenFragment implements IApiCallback, IOnNote
             } else {
                 onCommentFailed();
             }
-        } else if (cb.equals(mAddLikeCallback)) {
-            WebAPIResult result = mAddLikeCallback.getResult();
+        } else if (cb.equals(mLikeCallback)) {
+            WebAPIResult result = mLikeCallback.getResult();
             if (result.isSuccess()) {
-                Like addedLike = JsonHelper.getLike(mAddLikeCallback.getResult().getResult());
-                onLikeAdded(addedLike);
+                Like addedLike = JsonHelper.getLike(mLikeCallback.getResult().getResult());
+                onLikeChanged();
                 mListener.onLikeAdded(addedLike);
             }
-        } else if (cb.equals(mRemoveUnlikeCallback)) {
-            mRemoveUnlikeTask = null;
-            WebAPIResult result = mRemoveUnlikeCallback.getResult();
+        } else if (cb.equals(mUnlikeCallback)) {
+            WebAPIResult result = mUnlikeCallback.getResult();
             if (result.isSuccess()) {
-                onLikeAdded(null);
+                onLikeChanged();
             }
         }
     }
 
     public void deleteNote() {
         setLoading(true);
-        mDeleteServiceAsyncTask = new DeleteAsyncTask(getContext(), mDeleteServiceCallback, mToken);
-        Query query = Query.builder()
-                .setPath("api/notes/" + mNoteId)
-                .build();
-        mDeleteServiceAsyncTask.execute(query);
+        TasksHelper.deleteNote(getContext(), mDeleteNoteCallback, mToken, mNoteId);
     }
 
     public interface OnNoteFragmentDataListener {

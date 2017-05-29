@@ -11,11 +11,9 @@ import java.util.Date;
 
 import foodbook.thinmint.activities.LoginActivity;
 import foodbook.thinmint.activities.MainActivity;
-import foodbook.thinmint.activities.common.RequestCodes;
 import foodbook.thinmint.activities.day.DayActivity;
 import foodbook.thinmint.activities.notes.CreateNoteActivity;
 import foodbook.thinmint.activities.notes.NoteActivity;
-import foodbook.thinmint.activities.users.UserActivity;
 import foodbook.thinmint.activities.users.UserActivity2;
 import foodbook.thinmint.constants.Constants;
 
@@ -106,5 +104,15 @@ public class ActivityHelper {
     public static long getCurrentUserId(Activity activity) {
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(activity);
         return prefs.getLong(Constants.USER_ID, -1);
+    }
+
+    public static long getCurrentUserSubject(Activity activity) {
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(activity);
+        return prefs.getLong(Constants.USER_SUBJECT, -1);
+    }
+
+    public static long getCurrentUserName(Activity activity) {
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(activity);
+        return prefs.getLong(Constants.USER_NAME, -1);
     }
 }

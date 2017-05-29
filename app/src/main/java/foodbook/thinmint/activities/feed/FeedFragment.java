@@ -11,13 +11,8 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Date;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Locale;
-import java.util.Map;
 
 import foodbook.thinmint.IApiCallback;
 import foodbook.thinmint.IAsyncCallback;
@@ -28,15 +23,12 @@ import foodbook.thinmint.activities.adapters.EndlessRecyclerViewScrollListener;
 import foodbook.thinmint.activities.adapters.notes.list.IOnNotesListClickListener;
 import foodbook.thinmint.activities.adapters.notes.list.NotesListRecyclerAdapter;
 import foodbook.thinmint.activities.common.OnNotesListInteractionListener;
-import foodbook.thinmint.api.Query;
 import foodbook.thinmint.api.WebAPIResult;
 import foodbook.thinmint.models.JsonHelper;
 import foodbook.thinmint.models.domain.Like;
 import foodbook.thinmint.models.domain.Note;
 import foodbook.thinmint.tasks.AsyncCallback;
-import foodbook.thinmint.tasks.DeleteAsyncTask;
-import foodbook.thinmint.tasks.GetAsyncTask;
-import foodbook.thinmint.tasks.PostAsyncTask;
+import foodbook.thinmint.tasks.TasksHelper;
 
 /**
  * A simple {@link Fragment} subclass.
@@ -61,18 +53,11 @@ public class FeedFragment extends TokenFragment implements OnNotesListInteractio
     private NotesListRecyclerAdapter mAdapter;
     private LinearLayoutManager mLayoutManager;
 
-    private GetAsyncTask mGetNoteTask;
     private AsyncCallback<WebAPIResult> mGetNoteCallback;
-
-    private GetAsyncTask mGetFeedTask;
     private AsyncCallback<WebAPIResult> mGetFeedCallback;
     private AsyncCallback<WebAPIResult> mLoadMoreCallback;
-
-    private PostAsyncTask mAddLikeTask;
-    private AsyncCallback<WebAPIResult> mAddLikeCallback;
-
-    private DeleteAsyncTask mRemoveUnlikeTask;
-    private AsyncCallback<WebAPIResult> mRemoveUnlikeCallback;
+    private AsyncCallback<WebAPIResult> mLikeCallback;
+    private AsyncCallback<WebAPIResult> mUnlikeCallback;
     private long mLastNoteId;
 
     private EndlessRecyclerViewScrollListener mScrollListener;
@@ -110,8 +95,8 @@ public class FeedFragment extends TokenFragment implements OnNotesListInteractio
 
         mGetFeedCallback = new AsyncCallback<>(this);
         mLoadMoreCallback = new AsyncCallback<>(this);
-        mAddLikeCallback = new AsyncCallback<>(this);
-        mRemoveUnlikeCallback = new AsyncCallback<>(this);
+        mLikeCallback = new AsyncCallback<>(this);
+        mUnlikeCallback = new AsyncCallback<>(this);
     }
 
     @Override
@@ -142,14 +127,7 @@ public class FeedFragment extends TokenFragment implements OnNotesListInteractio
         mScrollListener = new EndlessRecyclerViewScrollListener(mLayoutManager) {
             @Override
             public void onLoadMore(int page, int totalItemsCount, RecyclerView view) {
-                Query query = Query.builder()
-                        .setPath("api/notes")
-//                        .setAccessToken(mToken.getAccessToken())
-                        .setSort("-datecreated")
-                        .setPage(page + 1)
-                        .build();
-                mGetFeedTask = new GetAsyncTask(getContext(), mLoadMoreCallback, mToken);
-                mGetFeedTask.execute(query);
+                TasksHelper.getNotes(getContext(), mLoadMoreCallback, mToken, page + 1, "");
             }
         };
 
@@ -181,15 +159,8 @@ public class FeedFragment extends TokenFragment implements OnNotesListInteractio
     public void onLikeNoteClick(View caller) {
         TextView hiddenNoteIdTextView = (TextView) caller.findViewById(R.id.hidden_note_id);
         long noteId = Long.parseLong(hiddenNoteIdTextView.getText().toString());
-
+        TasksHelper.likeNote(getContext(), mLikeCallback, mToken, noteId, mUserId);
         setLoading(true);
-        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss Z", Locale.US);
-        Map<String, Object> map = new HashMap<>();
-        map.put("noteid", noteId);
-        map.put("userid", mUserId);
-        map.put("datecreated", dateFormat.format(new Date(System.currentTimeMillis())));
-        mAddLikeTask = new PostAsyncTask(getContext(), mAddLikeCallback, mToken, map);
-        mAddLikeTask.execute("api/likes");
     }
 
     @Override
@@ -198,11 +169,7 @@ public class FeedFragment extends TokenFragment implements OnNotesListInteractio
         long noteId = Long.parseLong(hiddenNoteIdTextView.getText().toString());
         mLastNoteId = noteId;
         setLoading(true);
-        mRemoveUnlikeTask = new DeleteAsyncTask(getContext(), mRemoveUnlikeCallback, mToken);
-        Query query = Query.builder()
-                .setPath(String.format(Locale.US, "api/notes/%d/likes/%d", noteId, mUserId))
-                .build();
-        mRemoveUnlikeTask.execute(query);
+        TasksHelper.unlikeNote(getContext(), mUnlikeCallback, mToken, noteId, mUserId);
     }
 
     @Override
@@ -234,19 +201,8 @@ public class FeedFragment extends TokenFragment implements OnNotesListInteractio
 
     private void refreshFeed() {
         setLoading(true);
-
         mScrollListener.resetState();
-
-        mGetFeedTask = new GetAsyncTask(getContext(), mGetFeedCallback, mToken);
-
-        String path = "api/notes";
-
-        Query query = Query.builder()
-                .setPath(path)
-                .setSort("-datecreated")
-                .build();
-
-        mGetFeedTask.execute(query);
+        TasksHelper.getNotes(getContext(), mGetFeedCallback, mToken, 1, "");
     }
 
     private void onNotesRetrieved(List<Note> notes) {
@@ -264,13 +220,7 @@ public class FeedFragment extends TokenFragment implements OnNotesListInteractio
     }
 
     @Override
-    public void onNoteAdded(Note note) {
-        mAdapter.add(0, note);
-        setLoading(false);
-    }
-
-    @Override
-    public void onNoteAdded(long noteid) {
+    public void onNoteAdded(long noteId) {
         refreshFeed();
     }
 
@@ -280,60 +230,41 @@ public class FeedFragment extends TokenFragment implements OnNotesListInteractio
     }
 
     @Override
-    public void onCommentAdded(long noteId, long commentId) {
-        mGetNoteTask = new GetAsyncTask(getContext(), mGetNoteCallback, mToken);
-        String path = "api/notes/" + noteId;
-
-        Query query = Query.builder()
-                .setPath(path)
-                .build();
-
-        mGetNoteTask.execute(query);
+    public void onCommentAdded(long noteId) {
+        TasksHelper.getNote(getContext(), mGetNoteCallback, mToken, noteId);
     }
 
     @Override
-    public void onLikeAdded(long noteId, long likeId) {
-        mGetNoteTask = new GetAsyncTask(getContext(), mGetNoteCallback, mToken);
-        String path = "api/notes/" + noteId;
-
-        Query query = Query.builder()
-                .setPath(path)
-                .build();
-
-        mGetNoteTask.execute(query);
+    public void onLikeAdded(long noteId) {
+        TasksHelper.getNote(getContext(), mGetNoteCallback, mToken, noteId);
     }
 
     @Override
     public void callback(IAsyncCallback cb) {
         if (cb.equals(mGetFeedCallback)) {
-            mGetFeedTask = null;
             List<Note> notes = JsonHelper.getNotes(mGetFeedCallback.getResult().getResult());
             onNotesRetrieved(notes);
         } else if (cb.equals(mLoadMoreCallback)) {
-            mGetFeedTask = null;
             List<Note> notes = JsonHelper.getNotes(mLoadMoreCallback.getResult().getResult());
             onLoadedMore(notes);
         } else if (cb.equals(mGetNoteCallback)) {
-            mGetNoteTask = null;
             Note note = JsonHelper.getNote(mGetNoteCallback.getResult().getResult());
             onNoteRetrieved(note);
-        } else if (cb.equals(mAddLikeCallback)) {
-            WebAPIResult result = mAddLikeCallback.getResult();
+        } else if (cb.equals(mLikeCallback)) {
+            WebAPIResult result = mLikeCallback.getResult();
             if (result.isSuccess()) {
-                Like addedLike = JsonHelper.getLike(mAddLikeCallback.getResult().getResult());
-                onLikeAdded(addedLike.getNoteId(), addedLike.getId());
+                Like addedLike = JsonHelper.getLike(mLikeCallback.getResult().getResult());
+                onLikeAdded(addedLike.getNoteId());
             }
-        } else if (cb.equals(mRemoveUnlikeCallback)) {
-            mRemoveUnlikeTask = null;
-            WebAPIResult result = mRemoveUnlikeCallback.getResult();
+        } else if (cb.equals(mUnlikeCallback)) {
+            WebAPIResult result = mUnlikeCallback.getResult();
             if (result.isSuccess()) {
-                onLikeAdded(mLastNoteId, 0);
+                onLikeAdded(mLastNoteId);
             }
         }
     }
 
     public interface OnFeedFragmentDataListener {
         void onFeedFragmentCreated(View view);
-        void onFeedLoaded();
     }
 }

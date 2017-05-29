@@ -1,4 +1,4 @@
-package foodbook.thinmint.activities.users;
+package foodbook.thinmint.activities.unused;
 
 import android.content.Context;
 import android.content.Intent;
@@ -13,13 +13,8 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Date;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Locale;
-import java.util.Map;
 
 import foodbook.thinmint.IApiCallback;
 import foodbook.thinmint.IAsyncCallback;
@@ -30,15 +25,12 @@ import foodbook.thinmint.activities.adapters.EndlessRecyclerViewScrollListener;
 import foodbook.thinmint.activities.adapters.notes.list.IOnNotesListClickListener;
 import foodbook.thinmint.activities.common.OnNotesListInteractionListener;
 import foodbook.thinmint.activities.adapters.notes.list.NotesListRecyclerAdapter;
-import foodbook.thinmint.api.Query;
 import foodbook.thinmint.api.WebAPIResult;
 import foodbook.thinmint.models.JsonHelper;
 import foodbook.thinmint.models.domain.Like;
 import foodbook.thinmint.models.domain.Note;
 import foodbook.thinmint.tasks.AsyncCallback;
-import foodbook.thinmint.tasks.DeleteAsyncTask;
-import foodbook.thinmint.tasks.GetAsyncTask;
-import foodbook.thinmint.tasks.PostAsyncTask;
+import foodbook.thinmint.tasks.TasksHelper;
 
 /**
  * A simple {@link Fragment} subclass.
@@ -52,7 +44,7 @@ public class UserNotesFragment extends TokenFragment implements OnNotesListInter
         IOnNotesListClickListener, IApiCallback {
     private static final String ARG_USERID = "userid";
 
-    private String mUserId;
+    private String mCurrentUserSubject;
 
     private OnUserNotesFragmentDataListener mListener;
 
@@ -61,18 +53,12 @@ public class UserNotesFragment extends TokenFragment implements OnNotesListInter
     private NotesListRecyclerAdapter mAdapter;
     private LinearLayoutManager mLayoutManager;
 
-    private GetAsyncTask mGetNoteTask;
     private AsyncCallback<WebAPIResult> mGetNoteCallback;
 
-    private GetAsyncTask mGetMyNotesTask;
     private AsyncCallback<WebAPIResult> mGetMyStuffCallback;
     private AsyncCallback<WebAPIResult> mLoadMoreCallback;
-
-    private PostAsyncTask mAddLikeTask;
-    private AsyncCallback<WebAPIResult> mAddLikeCallback;
-
-    private DeleteAsyncTask mRemoveUnlikeTask;
-    private AsyncCallback<WebAPIResult> mRemoveUnlikeCallback;
+    private AsyncCallback<WebAPIResult> mLikeCallback;
+    private AsyncCallback<WebAPIResult> mUnlikeCallback;
     private long mLastNoteId;
 
     private EndlessRecyclerViewScrollListener mScrollListener;
@@ -100,7 +86,7 @@ public class UserNotesFragment extends TokenFragment implements OnNotesListInter
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         if (getArguments() != null) {
-            mUserId = getArguments().getString(ARG_USERID);
+            mCurrentUserSubject = getArguments().getString(ARG_USERID);
         }
 
         initUser();
@@ -108,10 +94,10 @@ public class UserNotesFragment extends TokenFragment implements OnNotesListInter
 
         mGetNoteCallback = new AsyncCallback<>(this);
 
-        mGetMyStuffCallback = new AsyncCallback<WebAPIResult>(this);
-        mLoadMoreCallback = new AsyncCallback<WebAPIResult>(this);
-        mAddLikeCallback = new AsyncCallback<>(this);
-        mRemoveUnlikeCallback = new AsyncCallback<>(this);
+        mGetMyStuffCallback = new AsyncCallback<>(this);
+        mLoadMoreCallback = new AsyncCallback<>(this);
+        mLikeCallback = new AsyncCallback<>(this);
+        mUnlikeCallback = new AsyncCallback<>(this);
     }
 
     @Override
@@ -142,16 +128,7 @@ public class UserNotesFragment extends TokenFragment implements OnNotesListInter
         mScrollListener = new EndlessRecyclerViewScrollListener(mLayoutManager) {
             @Override
             public void onLoadMore(int page, int totalItemsCount, RecyclerView view) {
-                String path = String.format(Locale.US, "api/users/%s/notes", mUserId);
-
-                Query query = Query.builder()
-                        .setPath(path)
-//                        .setAccessToken(mToken.getAccessToken())
-                        .setSort("-datecreated")
-                        .setPage(page + 1)
-                        .build();
-                mGetMyNotesTask = new GetAsyncTask(getContext(), mLoadMoreCallback, mToken);
-                mGetMyNotesTask.execute(query);
+                TasksHelper.getNotes(getContext(), mLoadMoreCallback, mToken, mCurrentUserSubject, page + 1, "");
             }
         };
 
@@ -192,15 +169,8 @@ public class UserNotesFragment extends TokenFragment implements OnNotesListInter
     public void onLikeNoteClick(View caller) {
         TextView hiddenNoteIdTextView = (TextView) caller.findViewById(R.id.hidden_note_id);
         long noteId = Long.parseLong(hiddenNoteIdTextView.getText().toString());
-
+        TasksHelper.likeNote(getContext(), mLikeCallback, mToken, noteId, mUserId);
         setLoading(true);
-        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss Z", Locale.US);
-        Map<String, Object> map = new HashMap<>();
-        map.put("noteid", noteId);
-        map.put("userid", mUserId);
-        map.put("datecreated", dateFormat.format(new Date(System.currentTimeMillis())));
-        mAddLikeTask = new PostAsyncTask(getContext(), mAddLikeCallback, mToken, map);
-        mAddLikeTask.execute("api/likes");
     }
 
     @Override
@@ -209,11 +179,7 @@ public class UserNotesFragment extends TokenFragment implements OnNotesListInter
         long noteId = Long.parseLong(hiddenNoteIdTextView.getText().toString());
         mLastNoteId = noteId;
         setLoading(true);
-        mRemoveUnlikeTask = new DeleteAsyncTask(getContext(), mRemoveUnlikeCallback, mToken);
-        Query query = Query.builder()
-                .setPath(String.format(Locale.US, "api/notes/%d/likes/%d", noteId, mUserId))
-                .build();
-        mRemoveUnlikeTask.execute(query);
+        TasksHelper.unlikeNote(getContext(), mUnlikeCallback, mToken, noteId, mUserId);
     }
 
     @Override
@@ -245,17 +211,8 @@ public class UserNotesFragment extends TokenFragment implements OnNotesListInter
 
     private void refreshMyNotes() {
         setLoading(true);
-        mGetMyNotesTask = new GetAsyncTask(getContext(), mGetMyStuffCallback, mToken);
-
-        String path = String.format(Locale.US, "api/users/%s/notes", mUserId);
-
-        Query query = Query.builder()
-                .setPath(path)
-//                .setAccessToken(mToken.getAccessToken())
-                .setSort("-datecreated")
-                .build();
-
-        mGetMyNotesTask.execute(query);
+        mScrollListener.resetState();
+        TasksHelper.getNotes(getContext(), mGetMyStuffCallback, mToken, mCurrentUserSubject, 1, "");
     }
 
     private void onNotesRetrieved(List<Note> notes) {
@@ -273,12 +230,6 @@ public class UserNotesFragment extends TokenFragment implements OnNotesListInter
     }
 
     @Override
-    public void onNoteAdded(Note note) {
-        mAdapter.add(0, note);
-        setLoading(false);
-    }
-
-    @Override
     public void onNoteAdded(long noteId) {
         refreshMyNotes();
     }
@@ -289,54 +240,36 @@ public class UserNotesFragment extends TokenFragment implements OnNotesListInter
     }
 
     @Override
-    public void onCommentAdded(long noteId, long commentId) {
-        mGetNoteTask = new GetAsyncTask(getContext(), mGetNoteCallback, mToken);
-        String path = "api/notes/" + noteId;
-
-        Query query = Query.builder()
-                .setPath(path)
-                .build();
-
-        mGetNoteTask.execute(query);
+    public void onCommentAdded(long noteId) {
+        TasksHelper.getNote(getContext(), mGetNoteCallback, mToken, noteId);
     }
 
     @Override
-    public void onLikeAdded(long noteId, long likeId) {
-        mGetNoteTask = new GetAsyncTask(getContext(), mGetNoteCallback, mToken);
-        String path = "api/notes/" + noteId;
-
-        Query query = Query.builder()
-                .setPath(path)
-                .build();
-
-        mGetNoteTask.execute(query);
+    public void onLikeAdded(long noteId) {
+        TasksHelper.getNote(getContext(), mGetNoteCallback, mToken, noteId);
     }
 
     @Override
     public void callback(IAsyncCallback cb) {
         if (cb.equals(mGetMyStuffCallback)) {
-            mGetMyNotesTask = null;
             List<Note> notes = JsonHelper.getNotes(mGetMyStuffCallback.getResult().getResult());
             onNotesRetrieved(notes);
         } else if (cb.equals(mLoadMoreCallback)) {
-            mGetMyNotesTask = null;
             List<Note> notes = JsonHelper.getNotes(mLoadMoreCallback.getResult().getResult());
             onLoadedMore(notes);
         } else if (cb.equals(mGetNoteCallback)) {
-            mGetNoteTask = null;
             Note note = JsonHelper.getNote(mGetNoteCallback.getResult().getResult());
             onNoteRetrieved(note);
-        }  else if (cb.equals(mAddLikeCallback)) {
-            WebAPIResult result = mAddLikeCallback.getResult();
+        } else if (cb.equals(mLikeCallback)) {
+            WebAPIResult result = mLikeCallback.getResult();
             if (result.isSuccess()) {
-                Like addedLike = JsonHelper.getLike(mAddLikeCallback.getResult().getResult());
-                onLikeAdded(addedLike.getNoteId(), addedLike.getId());
+                Like addedLike = JsonHelper.getLike(mLikeCallback.getResult().getResult());
+                onLikeAdded(addedLike.getNoteId());
             }
-        } else if (cb.equals(mRemoveUnlikeCallback)) {
-            mRemoveUnlikeTask = null;
-            WebAPIResult result = mRemoveUnlikeCallback.getResult();
+        } else if (cb.equals(mUnlikeCallback)) {
+            WebAPIResult result = mUnlikeCallback.getResult();
             if (result.isSuccess()) {
-                onLikeAdded(mLastNoteId, 0);
+                onLikeAdded(mLastNoteId);
             }
         }
     }

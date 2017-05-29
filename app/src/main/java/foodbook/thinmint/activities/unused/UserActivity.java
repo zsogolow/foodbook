@@ -1,4 +1,4 @@
-package foodbook.thinmint.activities.users;
+package foodbook.thinmint.activities.unused;
 
 import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
@@ -78,11 +78,13 @@ public class UserActivity extends TokenActivity implements
                     String action = data.getStringExtra(RequestCodes.NOTE_EXTRA_ACTION);
                     long id = data.getLongExtra(RequestCodes.NOTE_EXTRA_ID, -1);
                     if (action.equals(RequestCodes.COMMENT_NOTE_ACTION)) {
-                        notesFragment.onCommentAdded(id, 0);
+                        notesFragment.onCommentAdded(id);
                     } else if (action.equals(RequestCodes.DELETE_NOTE_ACTION)) {
                         notesFragment.onNoteDeleted(id);
                     } else if (action.equals(RequestCodes.CREATE_NOTE_ACTION)) {
                         notesFragment.onNoteAdded(id);
+                    } else if (action.equals(RequestCodes.LIKE_NOTE_ACTION)) {
+                        notesFragment.onLikeAdded(id);
                     }
                 }
                 break;

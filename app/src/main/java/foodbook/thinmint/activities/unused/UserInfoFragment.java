@@ -1,4 +1,4 @@
-package foodbook.thinmint.activities.users;
+package foodbook.thinmint.activities.unused;
 
 import android.content.Context;
 import android.os.Bundle;
