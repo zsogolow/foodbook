@@ -13,8 +13,8 @@ import android.view.MenuItem;
 import android.view.View;
 
 import foodbook.thinmint.R;
-import foodbook.thinmint.activities.ActivityHelper;
-import foodbook.thinmint.activities.TokenActivity;
+import foodbook.thinmint.activities.common.ActivityHelper;
+import foodbook.thinmint.activities.common.TokenActivity;
 import foodbook.thinmint.activities.common.RequestCodes;
 import foodbook.thinmint.models.domain.Comment;
 import foodbook.thinmint.models.domain.Like;

@@ -18,14 +18,17 @@ public class UserViewHolder extends AbstractItemViewHolder<IOnUserClickListener>
     private TextView mUserNameView;
     private Button mAddCommentButton;
     private Button mAddLikeButton;
+    private Button mUnlikeButton;
 
     public UserViewHolder(LinearLayout v, IOnUserClickListener listener, ListItemTypes type) {
         super(v, listener);
         if (type == ListItemTypes.Note) {
             mAddCommentButton = (Button) mLinearLayout.findViewById(R.id.comment_button);
             mAddLikeButton = (Button) mLinearLayout.findViewById(R.id.like_button);
+            mUnlikeButton = (Button) mLinearLayout.findViewById(R.id.un_like_button);
             mAddCommentButton.setOnClickListener(this);
             mAddLikeButton.setOnClickListener(this);
+            mUnlikeButton.setOnClickListener(this);
             mLinearLayout.setOnClickListener(this);
         } else if (type == ListItemTypes.Comment) {
             mUserNameView = (TextView) mLinearLayout.findViewById(R.id.user_name);
@@ -39,6 +42,8 @@ public class UserViewHolder extends AbstractItemViewHolder<IOnUserClickListener>
             mOnClickListener.onCommentButtonClick(mLinearLayout);
         } else if (v.equals(mAddLikeButton)) {
             mOnClickListener.onLikeButtonClick(mLinearLayout);
+        } else if (v.equals(mUnlikeButton)) {
+            mOnClickListener.onUnlikeButtonClick(mLinearLayout);
         } else {
             mOnClickListener.onClick(mLinearLayout);
         }

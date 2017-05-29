@@ -29,6 +29,7 @@ import java.util.Date;
 import java.util.Locale;
 
 import foodbook.thinmint.R;
+import foodbook.thinmint.activities.common.ActivityHelper;
 import foodbook.thinmint.api.Query;
 import foodbook.thinmint.api.WebAPIConnect;
 import foodbook.thinmint.api.WebAPIResult;

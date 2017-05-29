@@ -1,4 +1,4 @@
-package foodbook.thinmint.activities;
+package foodbook.thinmint.activities.common;
 
 import android.app.Activity;
 import android.content.Intent;
@@ -9,6 +9,8 @@ import android.view.inputmethod.InputMethodManager;
 
 import java.util.Date;
 
+import foodbook.thinmint.activities.LoginActivity;
+import foodbook.thinmint.activities.MainActivity;
 import foodbook.thinmint.activities.common.RequestCodes;
 import foodbook.thinmint.activities.day.DayActivity;
 import foodbook.thinmint.activities.notes.CreateNoteActivity;

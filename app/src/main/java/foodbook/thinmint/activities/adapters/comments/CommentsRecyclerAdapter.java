@@ -12,7 +12,6 @@ import java.util.Date;
 import java.util.List;
 
 import foodbook.thinmint.R;
-import foodbook.thinmint.activities.ActivityHelper;
 import foodbook.thinmint.activities.adapters.common.AbstractListRecyclerAdapter;
 import foodbook.thinmint.activities.adapters.common.AbstractListViewHolder;
 import foodbook.thinmint.models.domain.Comment;

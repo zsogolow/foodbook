@@ -19,11 +19,9 @@ import android.view.MenuItem;
 import android.view.View;
 
 import foodbook.thinmint.R;
-import foodbook.thinmint.activities.ActivityHelper;
-import foodbook.thinmint.activities.TokenActivity;
+import foodbook.thinmint.activities.common.ActivityHelper;
+import foodbook.thinmint.activities.common.TokenActivity;
 import foodbook.thinmint.activities.common.RequestCodes;
-import foodbook.thinmint.activities.feed.FeedFragment;
-import foodbook.thinmint.activities.notes.NoteActivity;
 
 public class UserActivity extends TokenActivity implements
         UserInfoFragment.OnUserInfoFragmentDataListener,

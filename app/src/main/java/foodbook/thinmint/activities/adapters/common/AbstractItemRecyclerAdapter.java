@@ -12,7 +12,7 @@ import java.util.Date;
 import java.util.List;
 
 import foodbook.thinmint.R;
-import foodbook.thinmint.activities.ActivityHelper;
+import foodbook.thinmint.activities.common.ActivityHelper;
 import foodbook.thinmint.models.domain.Comment;
 import foodbook.thinmint.models.domain.EntityBase;
 import foodbook.thinmint.models.domain.Like;

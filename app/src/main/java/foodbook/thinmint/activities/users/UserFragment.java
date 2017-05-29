@@ -1,7 +1,6 @@
 package foodbook.thinmint.activities.users;
 
 import android.content.Context;
-import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
@@ -24,8 +23,8 @@ import java.util.Map;
 import foodbook.thinmint.IApiCallback;
 import foodbook.thinmint.IAsyncCallback;
 import foodbook.thinmint.R;
-import foodbook.thinmint.activities.ActivityHelper;
-import foodbook.thinmint.activities.TokenFragment;
+import foodbook.thinmint.activities.common.ActivityHelper;
+import foodbook.thinmint.activities.common.TokenFragment;
 import foodbook.thinmint.activities.adapters.EndlessRecyclerViewScrollListener;
 import foodbook.thinmint.activities.adapters.users.item.IOnUserClickListener;
 import foodbook.thinmint.activities.adapters.users.item.UserRecyclerAdapter;
@@ -40,6 +39,7 @@ import foodbook.thinmint.models.domain.User;
 import foodbook.thinmint.models.views.ListItem;
 import foodbook.thinmint.models.views.ListItemTypes;
 import foodbook.thinmint.tasks.AsyncCallback;
+import foodbook.thinmint.tasks.DeleteAsyncTask;
 import foodbook.thinmint.tasks.GetAsyncTask;
 import foodbook.thinmint.tasks.PostAsyncTask;
 
@@ -76,6 +76,10 @@ public class UserFragment extends TokenFragment implements OnNotesListInteractio
     private PostAsyncTask mAddLikeTask;
     private AsyncCallback<WebAPIResult> mAddLikeCallback;
 
+    private DeleteAsyncTask mRemoveUnlikeTask;
+    private AsyncCallback<WebAPIResult> mRemoveUnlikeCallback;
+    private long mLastNoteId;
+
     private EndlessRecyclerViewScrollListener mScrollListener;
 
     public UserFragment() {
@@ -111,9 +115,10 @@ public class UserFragment extends TokenFragment implements OnNotesListInteractio
 
         mGetNoteCallback = new AsyncCallback<>(this);
 
-        mGetMyStuffCallback = new AsyncCallback<WebAPIResult>(this);
-        mLoadMoreCallback = new AsyncCallback<WebAPIResult>(this);
+        mGetMyStuffCallback = new AsyncCallback<>(this);
+        mLoadMoreCallback = new AsyncCallback<>(this);
         mAddLikeCallback = new AsyncCallback<>(this);
+        mRemoveUnlikeCallback = new AsyncCallback<>(this);
     }
 
     @Override
@@ -219,6 +224,19 @@ public class UserFragment extends TokenFragment implements OnNotesListInteractio
         mAddLikeTask.execute("api/likes");
     }
 
+    @Override
+    public void onUnlikeButtonClick(View view) {
+        TextView hiddenNoteIdTextView = (TextView) view.findViewById(R.id.hidden_note_id);
+        long noteId = Long.parseLong(hiddenNoteIdTextView.getText().toString());
+        mLastNoteId = noteId;
+        setLoading(true);
+        mRemoveUnlikeTask = new DeleteAsyncTask(getContext(), mRemoveUnlikeCallback, mToken);
+        Query query = Query.builder()
+                .setPath(String.format(Locale.US, "api/notes/%d/likes/%d", noteId, mUserId))
+                .build();
+        mRemoveUnlikeTask.execute(query);
+    }
+
     private void refreshMyNotes() {
         setLoading(true);
         mGetMyNotesTask = new GetAsyncTask(getContext(), mGetMyStuffCallback, mToken);
@@ -320,6 +338,12 @@ public class UserFragment extends TokenFragment implements OnNotesListInteractio
             if (result.isSuccess()) {
                 Like addedLike = JsonHelper.getLike(mAddLikeCallback.getResult().getResult());
                 onLikeAdded(addedLike.getNoteId(), addedLike.getId());
+            }
+        } else if (cb.equals(mRemoveUnlikeCallback)) {
+            mRemoveUnlikeTask = null;
+            WebAPIResult result = mRemoveUnlikeCallback.getResult();
+            if (result.isSuccess()) {
+                onLikeAdded(mLastNoteId, 0);
             }
         }
     }

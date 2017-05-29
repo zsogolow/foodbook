@@ -5,15 +5,11 @@ import android.animation.AnimatorListenerAdapter;
 import android.annotation.TargetApi;
 import android.app.Activity;
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.os.Build;
 import android.os.Bundle;
-import android.os.SystemClock;
-import android.preference.PreferenceManager;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentTransaction;
-import android.util.Log;
 import android.view.MenuInflater;
 import android.view.View;
 import android.support.design.widget.NavigationView;
@@ -25,23 +21,17 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.TextView;
 
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
 import java.util.Date;
-import java.util.Locale;
 
-import foodbook.thinmint.IApiCallback;
-import foodbook.thinmint.IAsyncCallback;
 import foodbook.thinmint.R;
+import foodbook.thinmint.activities.common.ActivityHelper;
 import foodbook.thinmint.activities.common.OnNotesListInteractionListener;
 import foodbook.thinmint.activities.common.RequestCodes;
-import foodbook.thinmint.activities.day.DatePickerFragment;
-import foodbook.thinmint.activities.day.DayFragment;
+import foodbook.thinmint.activities.common.TokenActivity;
 import foodbook.thinmint.activities.feed.FeedFragment;
 import foodbook.thinmint.activities.users.UserNotesFragment;
 import foodbook.thinmint.activities.users.UserInfoFragment;
 import foodbook.thinmint.activities.users.UsersFragment;
-import foodbook.thinmint.constants.Constants;
 
 public class MainActivity extends TokenActivity implements
         NavigationView.OnNavigationItemSelectedListener, FeedFragment.OnFeedFragmentDataListener,

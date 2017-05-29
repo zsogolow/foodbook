@@ -24,9 +24,9 @@ import java.util.Map;
 import foodbook.thinmint.IApiCallback;
 import foodbook.thinmint.IAsyncCallback;
 import foodbook.thinmint.R;
-import foodbook.thinmint.activities.ActivityHelper;
+import foodbook.thinmint.activities.common.ActivityHelper;
 import foodbook.thinmint.activities.MainActivity;
-import foodbook.thinmint.activities.TokenFragment;
+import foodbook.thinmint.activities.common.TokenFragment;
 import foodbook.thinmint.activities.adapters.EndlessRecyclerViewScrollListener;
 import foodbook.thinmint.activities.adapters.notes.list.IOnNotesListClickListener;
 import foodbook.thinmint.activities.common.OnNotesListInteractionListener;
@@ -179,17 +179,7 @@ public class DayFragment extends TokenFragment implements OnNotesListInteraction
 
     @Override
     public void onLikeNoteClick(View caller) {
-        TextView hiddenNoteIdTextView = (TextView) caller.findViewById(R.id.hidden_note_id);
-        long noteId = Long.parseLong(hiddenNoteIdTextView.getText().toString());
 
-        setLoading(true);
-        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss Z", Locale.US);
-        Map<String, Object> map = new HashMap<>();
-        map.put("noteid", noteId);
-        map.put("userid", mUserId);
-        map.put("datecreated", dateFormat.format(new Date(System.currentTimeMillis())));
-        mAddLikeTask = new PostAsyncTask(getContext(), mAddLikeCallback, mToken, map);
-        mAddLikeTask.execute("api/likes");
     }
 
     @Override

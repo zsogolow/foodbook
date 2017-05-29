@@ -1,4 +1,4 @@
-package foodbook.thinmint.activities;
+package foodbook.thinmint.activities.common;
 
 import android.content.SharedPreferences;
 import android.preference.PreferenceManager;

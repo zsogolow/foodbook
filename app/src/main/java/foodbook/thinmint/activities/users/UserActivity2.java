@@ -1,11 +1,9 @@
 package foodbook.thinmint.activities.users;
 
 import android.app.Activity;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentTransaction;
-import android.support.v7.app.AlertDialog;
 import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -13,11 +11,9 @@ import android.view.MenuItem;
 import android.view.View;
 
 import foodbook.thinmint.R;
-import foodbook.thinmint.activities.ActivityHelper;
-import foodbook.thinmint.activities.TokenActivity;
+import foodbook.thinmint.activities.common.ActivityHelper;
+import foodbook.thinmint.activities.common.TokenActivity;
 import foodbook.thinmint.activities.common.RequestCodes;
-import foodbook.thinmint.models.domain.Comment;
-import foodbook.thinmint.models.domain.Note;
 
 public class UserActivity2 extends TokenActivity implements UserFragment.OnUserFragmentDataListener {
 
