@@ -1,5 +1,6 @@
 package foodbook.thinmint.activities.adapters.comments;
 
+import android.app.Activity;
 import android.view.LayoutInflater;
 import android.view.ViewGroup;
 import android.widget.LinearLayout;
@@ -11,6 +12,7 @@ import java.util.Date;
 import java.util.List;
 
 import foodbook.thinmint.R;
+import foodbook.thinmint.activities.ActivityHelper;
 import foodbook.thinmint.activities.adapters.common.AbstractListRecyclerAdapter;
 import foodbook.thinmint.activities.adapters.common.AbstractListViewHolder;
 import foodbook.thinmint.models.domain.Comment;
@@ -23,8 +25,8 @@ import foodbook.thinmint.models.domain.User;
 public class CommentsRecyclerAdapter extends AbstractListRecyclerAdapter<Comment, IOnCommentClickListener> {
 
     // Provide a suitable constructor (depends on the kind of dataset)
-    public CommentsRecyclerAdapter(List<Comment> comments, IOnCommentClickListener listener) {
-        super(comments, listener);
+    public CommentsRecyclerAdapter(List<Comment> comments, IOnCommentClickListener listener, Activity activity) {
+        super(comments, listener, activity);
     }
 
     // Create new views (invoked by the layout manager)

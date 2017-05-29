@@ -1,5 +1,6 @@
 package foodbook.thinmint.activities.adapters.common;
 
+import android.app.Activity;
 import android.support.v7.widget.RecyclerView;
 
 import java.text.DateFormat;
@@ -23,10 +24,12 @@ public abstract class AbstractListRecyclerAdapter<T extends EntityBase, C>
 
     protected List<T> mItems;
     protected C mListener;
+    protected Activity mActivity;
 
-    protected AbstractListRecyclerAdapter(List<T> items, C listener) {
+    protected AbstractListRecyclerAdapter(List<T> items, C listener, Activity activity) {
         mItems = items;
         mListener = listener;
+        mActivity = activity;
     }
 
     @Override

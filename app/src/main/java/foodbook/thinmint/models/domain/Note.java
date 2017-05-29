@@ -22,6 +22,9 @@ public class Note extends EntityBase {
     @SerializedName("comments")
     private List<Comment> mComments;
 
+    @SerializedName("likes")
+    private List<Like> mLikes;
+
     public Note() {
         super();
     }
@@ -56,5 +59,13 @@ public class Note extends EntityBase {
 
     public void setComments(List<Comment> comments) {
         this.mComments = comments;
+    }
+
+    public List<Like> getLikes() {
+        return mLikes;
+    }
+
+    public void setLikes(List<Like> likes) {
+        this.mLikes = likes;
     }
 }

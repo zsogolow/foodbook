@@ -14,24 +14,27 @@ import foodbook.thinmint.activities.adapters.common.AbstractListViewHolder;
 
 public class NotesListViewHolder extends AbstractListViewHolder<IOnNotesListClickListener> {
 
-    private Button mLikeButton;
-    private Button mCommentButton;
     private TextView mUserName;
     private TextView mNoteComments;
+    private Button mLikeButton;
+    private Button mCommentButton;
+    private Button mUnlikeButton;
 
     public NotesListViewHolder(LinearLayout v, IOnNotesListClickListener listener) {
         super(v, listener);
 
-        mLikeButton = (Button) mLinearLayout.findViewById(R.id.like_button);
-        mCommentButton = (Button) mLinearLayout.findViewById(R.id.comment_button);
         mUserName = (TextView) mLinearLayout.findViewById(R.id.user_name);
         mNoteComments = (TextView) mLinearLayout.findViewById(R.id.note_comments);
+        mLikeButton = (Button) mLinearLayout.findViewById(R.id.like_button);
+        mCommentButton = (Button) mLinearLayout.findViewById(R.id.comment_button);
+        mUnlikeButton = (Button) mLinearLayout.findViewById(R.id.un_like_button);
 
-        mLikeButton.setOnClickListener(this);
-        mCommentButton.setOnClickListener(this);
         mUserName.setOnClickListener(this);
         mNoteComments.setOnClickListener(this);
         mLinearLayout.setOnClickListener(this);
+        mLikeButton.setOnClickListener(this);
+        mCommentButton.setOnClickListener(this);
+        mUnlikeButton.setOnClickListener(this);
     }
 
     @Override
@@ -42,6 +45,8 @@ public class NotesListViewHolder extends AbstractListViewHolder<IOnNotesListClic
             mOnClickListener.onCommentClick(mLinearLayout);
         } else if (v.equals(mUserName)) {
             mOnClickListener.onUserClick(mLinearLayout);
+        } else if (v.equals(mUnlikeButton)) {
+            mOnClickListener.onUnlikeButtonClick(mLinearLayout);
         } else {
             mOnClickListener.onNoteClick(mLinearLayout);
         }

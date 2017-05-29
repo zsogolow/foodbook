@@ -106,7 +106,7 @@ public class UsersFragment extends TokenFragment implements IApiCallback, IOnUse
         mLayoutManager = new LinearLayoutManager(getActivity());
         mListView.setLayoutManager(mLayoutManager);
 
-        mAdapter = new UsersListRecyclerAdapter(new ArrayList<User>(), this);
+        mAdapter = new UsersListRecyclerAdapter(new ArrayList<User>(), this, getActivity());
         mListView.setAdapter(mAdapter);
 
         mSwipeRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {

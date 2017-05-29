@@ -10,4 +10,5 @@ import android.widget.EditText;
 public interface IOnUserClickListener {
     void onClick(View view);
     void onCommentButtonClick(View view);
+    void onLikeButtonClick(View view);
 }

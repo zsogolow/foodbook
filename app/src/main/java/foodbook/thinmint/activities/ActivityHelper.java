@@ -100,4 +100,9 @@ public class ActivityHelper {
                         Activity.INPUT_METHOD_SERVICE);
         inputMethodManager.showSoftInput(activity.getCurrentFocus(), 0);
     }
+
+    public static long getCurrentUserId(Activity activity) {
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(activity);
+        return prefs.getLong(Constants.USER_ID, -1);
+    }
 }

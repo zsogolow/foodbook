@@ -9,9 +9,12 @@ import android.view.View;
 public interface IOnNotesListClickListener {
     void onNoteClick(View caller);
 
-    void onLikeNoteClick(View caller);
-
     void onCommentClick(View caller);
 
     void onUserClick(View caller);
+
+    void onLikeNoteClick(View caller);
+
+    void onUnlikeButtonClick(View view);
+
 }

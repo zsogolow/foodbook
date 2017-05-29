@@ -10,8 +10,14 @@ import android.widget.EditText;
 
 public interface IOnNoteClickListener {
     void onClick(View view);
+
     void onAddCommentClick(EditText editText);
+
     void onUserClick(View view);
+
     void onCommentButtonClick(View view);
+
     void onLikeButtonClick(View view);
+
+    void onUnlikeButtonClick(View view);
 }

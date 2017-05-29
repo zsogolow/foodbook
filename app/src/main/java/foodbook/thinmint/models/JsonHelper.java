@@ -13,6 +13,7 @@ import java.util.TimeZone;
 
 import foodbook.thinmint.models.domain.Comment;
 import foodbook.thinmint.models.domain.EntityBase;
+import foodbook.thinmint.models.domain.Like;
 import foodbook.thinmint.models.domain.Note;
 import foodbook.thinmint.models.domain.User;
 
@@ -99,6 +100,16 @@ public class JsonHelper {
         return comment;
     }
 
+    public static Like getLike(String json) {
+        Like like;
+        try {
+            like = gson.fromJson(json, Like.class);
+            updateDate(like);
+        } catch (JsonSyntaxException jse) {
+            like = null;
+        }
+        return like;
+    }
 
     public static List<Comment> getComments(String json) {
         List<Comment> comments;

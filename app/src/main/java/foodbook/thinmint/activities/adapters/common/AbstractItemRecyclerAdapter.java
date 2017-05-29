@@ -1,5 +1,7 @@
 package foodbook.thinmint.activities.adapters.common;
 
+import android.app.Activity;
+import android.view.View;
 import android.view.ViewGroup;
 import android.widget.EditText;
 import android.widget.TextView;
@@ -10,8 +12,10 @@ import java.util.Date;
 import java.util.List;
 
 import foodbook.thinmint.R;
+import foodbook.thinmint.activities.ActivityHelper;
 import foodbook.thinmint.models.domain.Comment;
 import foodbook.thinmint.models.domain.EntityBase;
+import foodbook.thinmint.models.domain.Like;
 import foodbook.thinmint.models.domain.Note;
 import foodbook.thinmint.models.domain.User;
 import foodbook.thinmint.models.views.ListItem;
@@ -25,8 +29,8 @@ public abstract class AbstractItemRecyclerAdapter<T>
         extends AbstractListRecyclerAdapter<ListItem<EntityBase>, T>
         implements IRecyclerAdapter<ListItem<EntityBase>> {
 
-    public AbstractItemRecyclerAdapter(List<ListItem<EntityBase>> items, T listener) {
-        super(items, listener);
+    public AbstractItemRecyclerAdapter(List<ListItem<EntityBase>> items, T listener, Activity activity) {
+        super(items, listener, activity);
     }
 
     @Override
@@ -66,6 +70,25 @@ public abstract class AbstractItemRecyclerAdapter<T>
                         .setText(dateString);
             } else if (type == ListItemTypes.Note) {
                 Note note = (Note) listItem.getItem();
+
+                long userId = ActivityHelper.getCurrentUserId(mActivity);
+
+                boolean hasLiked = false;
+                for (Like like : note.getLikes()) {
+                    if (like.getUserId() == userId) {
+                        hasLiked = true;
+                        break;
+                    }
+                }
+
+                if (hasLiked) {
+                    holder.mLinearLayout.findViewById(R.id.like_button).setVisibility(View.GONE);
+                    holder.mLinearLayout.findViewById(R.id.un_like_button).setVisibility(View.VISIBLE);
+                } else {
+                    holder.mLinearLayout.findViewById(R.id.like_button).setVisibility(View.VISIBLE);
+                    holder.mLinearLayout.findViewById(R.id.un_like_button).setVisibility(View.GONE);
+                }
+
                 ((TextView) holder.mLinearLayout.findViewById(R.id.hidden_user_id))
                         .setText(note.getUser().getSubject());
                 ((TextView) holder.mLinearLayout.findViewById(R.id.hidden_note_id))
@@ -78,6 +101,8 @@ public abstract class AbstractItemRecyclerAdapter<T>
                         .setText(note.getContent());
                 ((TextView) holder.mLinearLayout.findViewById(R.id.note_comments))
                         .setText(note.getComments().size() + " comments");
+                ((TextView) holder.mLinearLayout.findViewById(R.id.note_likes))
+                        .setText(note.getLikes().size() + " likes");
             } else if (type == ListItemTypes.User) {
                 User user = (User) listItem.getItem();
                 ((TextView) holder.mLinearLayout.findViewById(R.id.user_name))

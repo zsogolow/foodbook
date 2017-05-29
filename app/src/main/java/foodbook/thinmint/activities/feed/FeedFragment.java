@@ -11,8 +11,13 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
+import java.util.Map;
 
 import foodbook.thinmint.IApiCallback;
 import foodbook.thinmint.IAsyncCallback;
@@ -26,9 +31,12 @@ import foodbook.thinmint.activities.common.OnNotesListInteractionListener;
 import foodbook.thinmint.api.Query;
 import foodbook.thinmint.api.WebAPIResult;
 import foodbook.thinmint.models.JsonHelper;
+import foodbook.thinmint.models.domain.Like;
 import foodbook.thinmint.models.domain.Note;
 import foodbook.thinmint.tasks.AsyncCallback;
+import foodbook.thinmint.tasks.DeleteAsyncTask;
 import foodbook.thinmint.tasks.GetAsyncTask;
+import foodbook.thinmint.tasks.PostAsyncTask;
 
 /**
  * A simple {@link Fragment} subclass.
@@ -59,6 +67,13 @@ public class FeedFragment extends TokenFragment implements OnNotesListInteractio
     private GetAsyncTask mGetFeedTask;
     private AsyncCallback<WebAPIResult> mGetFeedCallback;
     private AsyncCallback<WebAPIResult> mLoadMoreCallback;
+
+    private PostAsyncTask mAddLikeTask;
+    private AsyncCallback<WebAPIResult> mAddLikeCallback;
+
+    private DeleteAsyncTask mRemoveUnlikeTask;
+    private AsyncCallback<WebAPIResult> mRemoveUnlikeCallback;
+    private long mLastNoteId;
 
     private EndlessRecyclerViewScrollListener mScrollListener;
 
@@ -95,6 +110,8 @@ public class FeedFragment extends TokenFragment implements OnNotesListInteractio
 
         mGetFeedCallback = new AsyncCallback<>(this);
         mLoadMoreCallback = new AsyncCallback<>(this);
+        mAddLikeCallback = new AsyncCallback<>(this);
+        mRemoveUnlikeCallback = new AsyncCallback<>(this);
     }
 
     @Override
@@ -110,7 +127,7 @@ public class FeedFragment extends TokenFragment implements OnNotesListInteractio
         mLayoutManager = new LinearLayoutManager(getActivity());
         mListView.setLayoutManager(mLayoutManager);
 
-        mAdapter = new NotesListRecyclerAdapter(new ArrayList<Note>(), this);
+        mAdapter = new NotesListRecyclerAdapter(new ArrayList<Note>(), this, getActivity());
         mListView.setAdapter(mAdapter);
 
         mSwipeRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
@@ -162,9 +179,30 @@ public class FeedFragment extends TokenFragment implements OnNotesListInteractio
 
     @Override
     public void onLikeNoteClick(View caller) {
-//        TextView hiddenNoteIdTextView = (TextView) caller.findViewById(R.id.hidden_note_id);
-//        String noteId = hiddenNoteIdTextView.getText().toString();
-//        ActivityHelper.startNoteActivityForResult(getActivity(), Long.parseLong(noteId));
+        TextView hiddenNoteIdTextView = (TextView) caller.findViewById(R.id.hidden_note_id);
+        long noteId = Long.parseLong(hiddenNoteIdTextView.getText().toString());
+
+        setLoading(true);
+        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss Z", Locale.US);
+        Map<String, Object> map = new HashMap<>();
+        map.put("noteid", noteId);
+        map.put("userid", mUserId);
+        map.put("datecreated", dateFormat.format(new Date(System.currentTimeMillis())));
+        mAddLikeTask = new PostAsyncTask(getContext(), mAddLikeCallback, mToken, map);
+        mAddLikeTask.execute("api/likes");
+    }
+
+    @Override
+    public void onUnlikeButtonClick(View view) {
+        TextView hiddenNoteIdTextView = (TextView) view.findViewById(R.id.hidden_note_id);
+        long noteId = Long.parseLong(hiddenNoteIdTextView.getText().toString());
+        mLastNoteId = noteId;
+        setLoading(true);
+        mRemoveUnlikeTask = new DeleteAsyncTask(getContext(), mRemoveUnlikeCallback, mToken);
+        Query query = Query.builder()
+                .setPath(String.format(Locale.US, "api/notes/%d/likes/%d", noteId, mUserId))
+                .build();
+        mRemoveUnlikeTask.execute(query);
     }
 
     @Override
@@ -254,6 +292,18 @@ public class FeedFragment extends TokenFragment implements OnNotesListInteractio
     }
 
     @Override
+    public void onLikeAdded(long noteId, long likeId) {
+        mGetNoteTask = new GetAsyncTask(getContext(), mGetNoteCallback, mToken);
+        String path = "api/notes/" + noteId;
+
+        Query query = Query.builder()
+                .setPath(path)
+                .build();
+
+        mGetNoteTask.execute(query);
+    }
+
+    @Override
     public void callback(IAsyncCallback cb) {
         if (cb.equals(mGetFeedCallback)) {
             mGetFeedTask = null;
@@ -267,6 +317,18 @@ public class FeedFragment extends TokenFragment implements OnNotesListInteractio
             mGetNoteTask = null;
             Note note = JsonHelper.getNote(mGetNoteCallback.getResult().getResult());
             onNoteRetrieved(note);
+        } else if (cb.equals(mAddLikeCallback)) {
+            WebAPIResult result = mAddLikeCallback.getResult();
+            if (result.isSuccess()) {
+                Like addedLike = JsonHelper.getLike(mAddLikeCallback.getResult().getResult());
+                onLikeAdded(addedLike.getNoteId(), addedLike.getId());
+            }
+        } else if (cb.equals(mRemoveUnlikeCallback)) {
+            mRemoveUnlikeTask = null;
+            WebAPIResult result = mRemoveUnlikeCallback.getResult();
+            if (result.isSuccess()) {
+                onLikeAdded(mLastNoteId, 0);
+            }
         }
     }
 

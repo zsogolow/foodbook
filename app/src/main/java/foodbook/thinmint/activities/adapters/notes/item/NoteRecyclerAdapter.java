@@ -1,5 +1,6 @@
 package foodbook.thinmint.activities.adapters.notes.item;
 
+import android.app.Activity;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.view.LayoutInflater;
@@ -24,8 +25,8 @@ import foodbook.thinmint.models.views.ListItemTypes;
 
 public class NoteRecyclerAdapter extends AbstractItemRecyclerAdapter<IOnNoteClickListener> {
 
-    public NoteRecyclerAdapter(List<ListItem<EntityBase>> items, IOnNoteClickListener listener) {
-        super(items, listener);
+    public NoteRecyclerAdapter(List<ListItem<EntityBase>> items, IOnNoteClickListener listener, Activity activity) {
+        super(items, listener, activity);
     }
 
     @Override

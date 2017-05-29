@@ -34,6 +34,7 @@ import foodbook.thinmint.api.WebAPIResult;
 import foodbook.thinmint.models.JsonHelper;
 import foodbook.thinmint.models.domain.Comment;
 import foodbook.thinmint.models.domain.EntityBase;
+import foodbook.thinmint.models.domain.Like;
 import foodbook.thinmint.models.domain.Note;
 import foodbook.thinmint.models.views.ListItem;
 import foodbook.thinmint.models.views.ListItemTypes;
@@ -76,6 +77,12 @@ public class NoteFragment extends TokenFragment implements IApiCallback, IOnNote
     private PostAsyncTask mAddCommentTask;
     private AsyncCallback<WebAPIResult> mAddCommentCallback;
 
+    private PostAsyncTask mAddLikeTask;
+    private AsyncCallback<WebAPIResult> mAddLikeCallback;
+
+    private DeleteAsyncTask mRemoveUnlikeTask;
+    private AsyncCallback<WebAPIResult> mRemoveUnlikeCallback;
+
     public NoteFragment() {
         // Required empty public constructor
     }
@@ -110,6 +117,8 @@ public class NoteFragment extends TokenFragment implements IApiCallback, IOnNote
         mGetNoteCallback = new AsyncCallback<>(this);
         mDeleteServiceCallback = new AsyncCallback<>(this);
         mAddCommentCallback = new AsyncCallback<>(this);
+        mAddLikeCallback = new AsyncCallback<>(this);
+        mRemoveUnlikeCallback = new AsyncCallback<>(this);
     }
 
     @Override
@@ -137,7 +146,7 @@ public class NoteFragment extends TokenFragment implements IApiCallback, IOnNote
         models.add(new ListItem<>(ListItemTypes.Note, null));
         models.add(new ListItem<>(ListItemTypes.AddComment, null));
 
-        mAdapter = new NoteRecyclerAdapter(models, this);
+        mAdapter = new NoteRecyclerAdapter(models, this, getActivity());
         mListView.setAdapter(mAdapter);
 
         mSwipeRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
@@ -209,7 +218,7 @@ public class NoteFragment extends TokenFragment implements IApiCallback, IOnNote
 
         mAdapter.swap(models);
 
-        new Handler().postDelayed(new Runnable(){
+        new Handler().postDelayed(new Runnable() {
             @Override
             public void run() {
                 if (mCommentFlag) {
@@ -231,6 +240,10 @@ public class NoteFragment extends TokenFragment implements IApiCallback, IOnNote
 
     private void onCommentAdded(Comment comment) {
         mAdapter.add(2, new ListItem<EntityBase>(ListItemTypes.Comment, comment));
+        refreshNote();
+    }
+
+    private void onLikeAdded(Like like) {
         refreshNote();
     }
 
@@ -274,7 +287,28 @@ public class NoteFragment extends TokenFragment implements IApiCallback, IOnNote
 
     @Override
     public void onLikeButtonClick(View view) {
+        setLoading(true);
+        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss Z", Locale.US);
+        Map<String, Object> map = new HashMap<>();
+        map.put("noteid", mNoteId);
+        map.put("userid", mUserId);
+        map.put("datecreated", dateFormat.format(new Date(System.currentTimeMillis())));
+        mAddLikeTask = new PostAsyncTask(getContext(), mAddLikeCallback, mToken, map);
+        mAddLikeTask.execute("api/likes");
+    }
 
+
+    @Override
+    public void onUnlikeButtonClick(View view) {
+        TextView hiddenNoteIdTextView = (TextView) view.findViewById(R.id.hidden_note_id);
+        long noteId = Long.parseLong(hiddenNoteIdTextView.getText().toString());
+
+        setLoading(true);
+        mRemoveUnlikeTask = new DeleteAsyncTask(getContext(), mRemoveUnlikeCallback, mToken);
+        Query query = Query.builder()
+                .setPath(String.format(Locale.US, "api/notes/%d/likes/%d", noteId, mUserId))
+                .build();
+        mRemoveUnlikeTask.execute(query);
     }
 
     @Override
@@ -303,6 +337,19 @@ public class NoteFragment extends TokenFragment implements IApiCallback, IOnNote
             } else {
                 onCommentFailed();
             }
+        } else if (cb.equals(mAddLikeCallback)) {
+            WebAPIResult result = mAddLikeCallback.getResult();
+            if (result.isSuccess()) {
+                Like addedLike = JsonHelper.getLike(mAddLikeCallback.getResult().getResult());
+                onLikeAdded(addedLike);
+                mListener.onLikeAdded(addedLike);
+            }
+        } else if (cb.equals(mRemoveUnlikeCallback)) {
+            mRemoveUnlikeTask = null;
+            WebAPIResult result = mRemoveUnlikeCallback.getResult();
+            if (result.isSuccess()) {
+                onLikeAdded(null);
+            }
         }
     }
 
@@ -323,5 +370,7 @@ public class NoteFragment extends TokenFragment implements IApiCallback, IOnNote
         void onNoteDeleted(long noteId);
 
         void onCommentAdded(Comment comment);
+
+        void onLikeAdded(Like like);
     }
 }

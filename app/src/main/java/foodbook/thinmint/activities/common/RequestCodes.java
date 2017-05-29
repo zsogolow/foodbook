@@ -16,6 +16,7 @@ public class RequestCodes {
 
     public static final String NOTE_EXTRA_ID = "note_id";
     public static final String NOTE_COMMENT_EXTRA_ID = "note_comment_id";
+    public static final String NOTE_LIKE_EXTRA_ID = "note_like_id";
     public static final String NOTE_EXTRA_ACTION = "note_action";
     public static final String CREATE_NOTE_EXTRA_ID = "created_note_id";
     public static final String DELETE_NOTE_EXTRA_ID = "deleted_note_id";

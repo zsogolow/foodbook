@@ -1,9 +1,11 @@
 package foodbook.thinmint.activities.adapters.users.item;
 
+import android.app.Activity;
 import android.view.LayoutInflater;
 import android.view.ViewGroup;
 import android.widget.LinearLayout;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import foodbook.thinmint.R;
@@ -19,8 +21,8 @@ import foodbook.thinmint.models.views.ListItemTypes;
 
 public class UserRecyclerAdapter extends AbstractItemRecyclerAdapter<IOnUserClickListener> {
 
-    public UserRecyclerAdapter(List<ListItem<EntityBase>> items, IOnUserClickListener listener) {
-        super(items, listener);
+    public UserRecyclerAdapter(List<ListItem<EntityBase>> items, IOnUserClickListener listener, Activity activity) {
+        super(items, listener, activity);
     }
 
     @Override

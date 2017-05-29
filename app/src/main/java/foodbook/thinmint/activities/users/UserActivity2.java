@@ -60,6 +60,8 @@ public class UserActivity2 extends TokenActivity implements UserFragment.OnUserF
                         mUserFragment.onNoteDeleted(id);
                     } else if (action.equals(RequestCodes.CREATE_NOTE_ACTION)) {
                         mUserFragment.onNoteAdded(id);
+                    } else if (action.equals(RequestCodes.LIKE_NOTE_ACTION)) {
+                        mUserFragment.onLikeAdded(id, 0);
                     }
                 }
                 break;

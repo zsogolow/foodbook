@@ -13,9 +13,11 @@ import android.view.MenuItem;
 import android.view.View;
 
 import foodbook.thinmint.R;
+import foodbook.thinmint.activities.ActivityHelper;
 import foodbook.thinmint.activities.TokenActivity;
 import foodbook.thinmint.activities.common.RequestCodes;
 import foodbook.thinmint.models.domain.Comment;
+import foodbook.thinmint.models.domain.Like;
 import foodbook.thinmint.models.domain.Note;
 
 public class NoteActivity extends TokenActivity implements NoteFragment.OnNoteFragmentDataListener {
@@ -73,6 +75,9 @@ public class NoteActivity extends TokenActivity implements NoteFragment.OnNoteFr
             attemptDelete();
             return true;
         } else if (id == R.id.action_save) {
+            return true;
+        } else if (id == R.id.action_logout) {
+            ActivityHelper.logout(NoteActivity.this);
             return true;
         }
 
@@ -143,6 +148,15 @@ public class NoteActivity extends TokenActivity implements NoteFragment.OnNoteFr
         resultIntent.putExtra(RequestCodes.NOTE_EXTRA_ACTION, RequestCodes.COMMENT_NOTE_ACTION);
         resultIntent.putExtra(RequestCodes.NOTE_EXTRA_ID, comment.getNoteId());
         resultIntent.putExtra(RequestCodes.NOTE_COMMENT_EXTRA_ID, comment.getId());
+        setResult(Activity.RESULT_OK, resultIntent);
+    }
+
+    @Override
+    public void onLikeAdded(Like like) {
+        Intent resultIntent = new Intent();
+        resultIntent.putExtra(RequestCodes.NOTE_EXTRA_ACTION, RequestCodes.LIKE_NOTE_ACTION);
+        resultIntent.putExtra(RequestCodes.NOTE_EXTRA_ID, like.getNoteId());
+        resultIntent.putExtra(RequestCodes.NOTE_LIKE_EXTRA_ID, like.getId());
         setResult(Activity.RESULT_OK, resultIntent);
     }
 }

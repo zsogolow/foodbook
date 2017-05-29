@@ -1,6 +1,8 @@
 package foodbook.thinmint.activities.adapters.notes.list;
 
+import android.app.Activity;
 import android.view.LayoutInflater;
+import android.view.View;
 import android.view.ViewGroup;
 import android.widget.LinearLayout;
 import android.widget.TextView;
@@ -11,8 +13,10 @@ import java.util.Date;
 import java.util.List;
 
 import foodbook.thinmint.R;
+import foodbook.thinmint.activities.ActivityHelper;
 import foodbook.thinmint.activities.adapters.common.AbstractListRecyclerAdapter;
 import foodbook.thinmint.activities.adapters.common.AbstractListViewHolder;
+import foodbook.thinmint.models.domain.Like;
 import foodbook.thinmint.models.domain.Note;
 
 /**
@@ -22,8 +26,8 @@ import foodbook.thinmint.models.domain.Note;
 public class NotesListRecyclerAdapter extends AbstractListRecyclerAdapter<Note, IOnNotesListClickListener> {
 
     // Provide a suitable constructor (depends on the kind of dataset)
-    public NotesListRecyclerAdapter(List<Note> notes, IOnNotesListClickListener listener) {
-        super(notes, listener);
+    public NotesListRecyclerAdapter(List<Note> notes, IOnNotesListClickListener listener, Activity activity) {
+        super(notes, listener, activity);
     }
 
     // Create new views (invoked by the layout manager)
@@ -32,6 +36,7 @@ public class NotesListRecyclerAdapter extends AbstractListRecyclerAdapter<Note, 
         // create a new view
         LinearLayout v = (LinearLayout) LayoutInflater.from(parent.getContext())
                 .inflate(R.layout.item_note, parent, false);
+
         // set the view's size, margins, paddings and layout parameters
         NotesListViewHolder vh = new NotesListViewHolder(v, mListener);
         return vh;
@@ -42,6 +47,24 @@ public class NotesListRecyclerAdapter extends AbstractListRecyclerAdapter<Note, 
     public void onBindViewHolder(AbstractListViewHolder<IOnNotesListClickListener> holder, int position) {
         // - get element from your dataset at this position
         // - replace the contents of the view with that element
+        Note note = mItems.get(position);
+        long userId = ActivityHelper.getCurrentUserId(mActivity);
+
+        boolean hasLiked = false;
+        for (Like like : note.getLikes()) {
+            if (like.getUserId() == userId) {
+                hasLiked = true;
+                break;
+            }
+        }
+
+        if (hasLiked) {
+            holder.mLinearLayout.findViewById(R.id.like_button).setVisibility(View.GONE);
+            holder.mLinearLayout.findViewById(R.id.un_like_button).setVisibility(View.VISIBLE);
+        } else {
+            holder.mLinearLayout.findViewById(R.id.like_button).setVisibility(View.VISIBLE);
+            holder.mLinearLayout.findViewById(R.id.un_like_button).setVisibility(View.GONE);
+        }
 
         long nowInMillis = System.currentTimeMillis();
         Date dateCreated = mItems.get(position).getDateCreated();
@@ -71,6 +94,8 @@ public class NotesListRecyclerAdapter extends AbstractListRecyclerAdapter<Note, 
                 .setText(mItems.get(position).getContent());
         ((TextView) holder.mLinearLayout.findViewById(R.id.note_comments))
                 .setText(mItems.get(position).getComments().size() + " comments");
+        ((TextView) holder.mLinearLayout.findViewById(R.id.note_likes))
+                .setText(mItems.get(position).getLikes().size() + " likes");
     }
 }
 

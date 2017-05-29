@@ -114,6 +114,8 @@ public class MainActivity extends TokenActivity implements
                         mCurrentFragment.onNoteDeleted(id);
                     } else if (action.equals(RequestCodes.CREATE_NOTE_ACTION)) {
                         mCurrentFragment.onNoteAdded(id);
+                    } else if (action.equals(RequestCodes.LIKE_NOTE_ACTION)) {
+                        mCurrentFragment.onLikeAdded(id, 0);
                     }
                 }
                 break;

@@ -1,10 +1,12 @@
 package foodbook.thinmint.activities.adapters.users.list;
 
+import android.app.Activity;
 import android.view.LayoutInflater;
 import android.view.ViewGroup;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import foodbook.thinmint.R;
@@ -19,8 +21,8 @@ import foodbook.thinmint.models.domain.User;
 public class UsersListRecyclerAdapter extends AbstractListRecyclerAdapter<User, IOnUsersListClickListener> {
 
     // Provide a suitable constructor (depends on the kind of dataset)
-    public UsersListRecyclerAdapter(List<User> users, IOnUsersListClickListener listener) {
-        super(users, listener);
+    public UsersListRecyclerAdapter(List<User> users, IOnUsersListClickListener listener, Activity activity) {
+        super(users, listener, activity);
     }
 
     // Create new views (invoked by the layout manager)
