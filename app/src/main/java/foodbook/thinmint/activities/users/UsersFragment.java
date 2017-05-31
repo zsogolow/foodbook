@@ -22,7 +22,6 @@ import foodbook.thinmint.activities.common.TokenFragment;
 import foodbook.thinmint.activities.adapters.EndlessRecyclerViewScrollListener;
 import foodbook.thinmint.activities.adapters.users.list.IOnUsersListClickListener;
 import foodbook.thinmint.activities.adapters.users.list.UsersListRecyclerAdapter;
-import foodbook.thinmint.api.Query;
 import foodbook.thinmint.api.WebAPIResult;
 import foodbook.thinmint.models.JsonHelper;
 import foodbook.thinmint.models.domain.User;
@@ -38,7 +37,7 @@ import foodbook.thinmint.tasks.TasksHelper;
  * Use the {@link UsersFragment#newInstance} factory method to
  * create an instance of this fragment.
  */
-public class UsersFragment extends TokenFragment implements IApiCallback, IOnUsersListClickListener {
+public class UsersFragment extends TokenFragment implements IOnUsersListClickListener {
     private static final String ARG_USERID = "userid";
 
     private String mUserId;
@@ -90,11 +89,6 @@ public class UsersFragment extends TokenFragment implements IApiCallback, IOnUse
     }
 
     @Override
-    public void onResume() {
-        super.onResume();
-    }
-
-    @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
@@ -113,7 +107,7 @@ public class UsersFragment extends TokenFragment implements IApiCallback, IOnUse
         mSwipeRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
             @Override
             public void onRefresh() {
-                refreshUsers();
+                refreshFragment();
             }
         });
 
@@ -122,11 +116,9 @@ public class UsersFragment extends TokenFragment implements IApiCallback, IOnUse
         mScrollListener = new EndlessRecyclerViewScrollListener(mLayoutManager) {
             @Override
             public void onLoadMore(int page, int totalItemsCount, RecyclerView view) {
-                TasksHelper.getUsers(getContext(), mLoadMoreCallback, mToken, page + 1, "");
+                mRunningTask = TasksHelper.getUsers(getContext(), mLoadMoreCallback, mToken, page + 1, "");
             }
         };
-
-        refreshUsers();
 
         return inflated;
     }
@@ -148,16 +140,34 @@ public class UsersFragment extends TokenFragment implements IApiCallback, IOnUse
         mListener = null;
     }
 
+    @Override
+    public void onStart() {
+        super.onStart();
+
+        refreshFragment();
+    }
+
+    @Override
+    public void onStop() {
+        super.onStop();
+
+        if (mRunningTask != null) {
+            mRunningTask.cancel(true);
+        }
+    }
+
     private void setLoading(boolean isLoading) {
         mSwipeRefreshLayout.setRefreshing(isLoading);
     }
 
-    private void refreshUsers() {
+    @Override
+    protected void refreshFragment() {
         setLoading(true);
-        TasksHelper.getUsers(getContext(), mLoadMoreCallback, mToken, 1, "");
+        mRunningTask = TasksHelper.getUsers(getContext(), mGetUsersCallback, mToken, 1, "");
     }
 
     private void onUsersRetrieved(List<User> users) {
+        mScrollListener.resetState();
         mAdapter.swap(users);
         setLoading(false);
     }
@@ -177,6 +187,8 @@ public class UsersFragment extends TokenFragment implements IApiCallback, IOnUse
 
     @Override
     public void callback(IAsyncCallback cb) {
+        super.callback(cb);
+
         if (cb.equals(mGetUsersCallback)) {
             mGetUsersTask = null;
             List<User> users = JsonHelper.getUsers(mGetUsersCallback.getResult().getResult());

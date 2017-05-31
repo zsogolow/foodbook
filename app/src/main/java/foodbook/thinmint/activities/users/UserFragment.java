@@ -45,7 +45,7 @@ import foodbook.thinmint.tasks.TasksHelper;
  * create an instance of this fragment.
  */
 public class UserFragment extends TokenFragment implements OnNotesListInteractionListener,
-        IOnUserClickListener, IApiCallback {
+        IOnUserClickListener {
     private static final String ARG_USERID = "userid";
     private static final String ARG_USERNAME = "username";
 
@@ -127,7 +127,7 @@ public class UserFragment extends TokenFragment implements OnNotesListInteractio
         mSwipeRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
             @Override
             public void onRefresh() {
-                refreshMyNotes();
+                refreshFragment();
             }
         });
 
@@ -136,12 +136,11 @@ public class UserFragment extends TokenFragment implements OnNotesListInteractio
         mScrollListener = new EndlessRecyclerViewScrollListener(mLayoutManager) {
             @Override
             public void onLoadMore(int page, int totalItemsCount, RecyclerView view) {
-                TasksHelper.getNotes(getContext(), mLoadMoreCallback, mToken, mCurrentUserId, page + 1, "");
+                mRunningTask = TasksHelper.getNotes(getContext(), mLoadMoreCallback, mToken, mCurrentUserId, page + 1, "");
             }
         };
 
         mListView.addOnScrollListener(mScrollListener);
-        refreshMyNotes();
 
         return inflated;
     }
@@ -166,6 +165,22 @@ public class UserFragment extends TokenFragment implements OnNotesListInteractio
     public void onDetach() {
         super.onDetach();
         mListener = null;
+    }
+
+    @Override
+    public void onStart() {
+        super.onStart();
+
+        refreshFragment();
+    }
+
+    @Override
+    public void onStop() {
+        super.onStop();
+
+        if (mRunningTask != null) {
+            mRunningTask.cancel(true);
+        }
     }
 
     private void setLoading(boolean isLoading) {
@@ -203,10 +218,11 @@ public class UserFragment extends TokenFragment implements OnNotesListInteractio
         TasksHelper.unlikeNote(getContext(), mUnlikeCallback, mToken, noteId, mUserId);
     }
 
-    private void refreshMyNotes() {
+    @Override
+    protected void refreshFragment() {
         setLoading(true);
         mScrollListener.resetState();
-        TasksHelper.getNotes(getContext(), mGetMyNotesCallback, mToken, mCurrentUserId, 1, "");
+        mRunningTask = TasksHelper.getNotes(getContext(), mGetMyNotesCallback, mToken, mCurrentUserId, 1, "");
     }
 
     private void onNotesRetrieved(List<Note> notes) {
@@ -239,7 +255,7 @@ public class UserFragment extends TokenFragment implements OnNotesListInteractio
 
     @Override
     public void onNoteAdded(long noteId) {
-        refreshMyNotes();
+        refreshFragment();
     }
 
     @Override
@@ -249,16 +265,18 @@ public class UserFragment extends TokenFragment implements OnNotesListInteractio
 
     @Override
     public void onCommentAdded(long noteId) {
-        TasksHelper.getNote(getContext(), mGetNoteCallback, mToken, noteId);
+        mRunningTask = TasksHelper.getNote(getContext(), mGetNoteCallback, mToken, noteId);
     }
 
     @Override
     public void onLikeAdded(long noteId) {
-        TasksHelper.getNote(getContext(), mGetNoteCallback, mToken, noteId);
+        mRunningTask = TasksHelper.getNote(getContext(), mGetNoteCallback, mToken, noteId);
     }
 
     @Override
     public void callback(IAsyncCallback cb) {
+        super.callback(cb);
+
         if (cb.equals(mGetMyNotesCallback)) {
             List<Note> notes = JsonHelper.getNotes(mGetMyNotesCallback.getResult().getResult());
             onNotesRetrieved(notes);

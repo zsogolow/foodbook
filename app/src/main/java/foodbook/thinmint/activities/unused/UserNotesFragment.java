@@ -41,7 +41,7 @@ import foodbook.thinmint.tasks.TasksHelper;
  * create an instance of this fragment.
  */
 public class UserNotesFragment extends TokenFragment implements OnNotesListInteractionListener,
-        IOnNotesListClickListener, IApiCallback {
+        IOnNotesListClickListener {
     private static final String ARG_USERID = "userid";
 
     private String mCurrentUserSubject;
@@ -54,7 +54,6 @@ public class UserNotesFragment extends TokenFragment implements OnNotesListInter
     private LinearLayoutManager mLayoutManager;
 
     private AsyncCallback<WebAPIResult> mGetNoteCallback;
-
     private AsyncCallback<WebAPIResult> mGetMyStuffCallback;
     private AsyncCallback<WebAPIResult> mLoadMoreCallback;
     private AsyncCallback<WebAPIResult> mLikeCallback;
@@ -119,7 +118,7 @@ public class UserNotesFragment extends TokenFragment implements OnNotesListInter
         mSwipeRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
             @Override
             public void onRefresh() {
-                refreshMyNotes();
+                refreshFragment();
             }
         });
 
@@ -128,12 +127,12 @@ public class UserNotesFragment extends TokenFragment implements OnNotesListInter
         mScrollListener = new EndlessRecyclerViewScrollListener(mLayoutManager) {
             @Override
             public void onLoadMore(int page, int totalItemsCount, RecyclerView view) {
-                TasksHelper.getNotes(getContext(), mLoadMoreCallback, mToken, mCurrentUserSubject, page + 1, "");
+                mRunningTask = TasksHelper.getNotes(getContext(), mLoadMoreCallback, mToken, mCurrentUserSubject, page + 1, "");
             }
         };
 
         mListView.addOnScrollListener(mScrollListener);
-        refreshMyNotes();
+        refreshFragment();
 
         return inflated;
     }
@@ -163,6 +162,22 @@ public class UserNotesFragment extends TokenFragment implements OnNotesListInter
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
+    }
+
+    @Override
+    public void onStart() {
+        super.onStart();
+
+        refreshFragment();
+    }
+
+    @Override
+    public void onStop() {
+        super.onStop();
+
+        if (mRunningTask != null) {
+            mRunningTask.cancel(true);
+        }
     }
 
     @Override
@@ -209,10 +224,11 @@ public class UserNotesFragment extends TokenFragment implements OnNotesListInter
         mSwipeRefreshLayout.setRefreshing(isLoading);
     }
 
-    private void refreshMyNotes() {
+    @Override
+    protected void refreshFragment() {
         setLoading(true);
         mScrollListener.resetState();
-        TasksHelper.getNotes(getContext(), mGetMyStuffCallback, mToken, mCurrentUserSubject, 1, "");
+        mRunningTask = TasksHelper.getNotes(getContext(), mGetMyStuffCallback, mToken, mCurrentUserSubject, 1, "");
     }
 
     private void onNotesRetrieved(List<Note> notes) {
@@ -231,7 +247,7 @@ public class UserNotesFragment extends TokenFragment implements OnNotesListInter
 
     @Override
     public void onNoteAdded(long noteId) {
-        refreshMyNotes();
+        refreshFragment();
     }
 
     @Override
@@ -241,16 +257,18 @@ public class UserNotesFragment extends TokenFragment implements OnNotesListInter
 
     @Override
     public void onCommentAdded(long noteId) {
-        TasksHelper.getNote(getContext(), mGetNoteCallback, mToken, noteId);
+        mRunningTask = TasksHelper.getNote(getContext(), mGetNoteCallback, mToken, noteId);
     }
 
     @Override
     public void onLikeAdded(long noteId) {
-        TasksHelper.getNote(getContext(), mGetNoteCallback, mToken, noteId);
+        mRunningTask = TasksHelper.getNote(getContext(), mGetNoteCallback, mToken, noteId);
     }
 
     @Override
     public void callback(IAsyncCallback cb) {
+        super.callback(cb);
+
         if (cb.equals(mGetMyStuffCallback)) {
             List<Note> notes = JsonHelper.getNotes(mGetMyStuffCallback.getResult().getResult());
             onNotesRetrieved(notes);

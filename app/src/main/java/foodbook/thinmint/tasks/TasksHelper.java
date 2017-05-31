@@ -1,6 +1,7 @@
 package foodbook.thinmint.tasks;
 
 import android.content.Context;
+import android.os.AsyncTask;
 import android.support.v7.widget.Toolbar;
 import android.widget.TextView;
 
@@ -21,7 +22,7 @@ import foodbook.thinmint.idsrv.Token;
  */
 
 public class TasksHelper {
-    public static void likeNote(Context context, AsyncCallback<WebAPIResult> callback, Token token, long noteId, long userId) {
+    public static AsyncTask likeNote(Context context, AsyncCallback<WebAPIResult> callback, Token token, long noteId, long userId) {
         SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss Z", Locale.US);
         Map<String, Object> map = new HashMap<>();
         map.put("noteid", noteId);
@@ -29,17 +30,19 @@ public class TasksHelper {
         map.put("datecreated", dateFormat.format(new Date(System.currentTimeMillis())));
         PostAsyncTask task = new PostAsyncTask(context, callback, token, map);
         task.execute("api/likes");
+        return task;
     }
 
-    public static void unlikeNote(Context context, AsyncCallback<WebAPIResult> callback, Token token, long noteId, long userId) {
+    public static AsyncTask unlikeNote(Context context, AsyncCallback<WebAPIResult> callback, Token token, long noteId, long userId) {
         DeleteAsyncTask task = new DeleteAsyncTask(context, callback, token);
         Query query = Query.builder()
                 .setPath(String.format(Locale.US, "api/notes/%d/likes/%d", noteId, userId))
                 .build();
         task.execute(query);
+        return task;
     }
 
-    public static void getNote(Context context, AsyncCallback<WebAPIResult> callback, Token token, long noteId) {
+    public static AsyncTask getNote(Context context, AsyncCallback<WebAPIResult> callback, Token token, long noteId) {
         GetAsyncTask task = new GetAsyncTask(context, callback, token);
         String path = "api/notes/" + noteId;
 
@@ -48,17 +51,19 @@ public class TasksHelper {
                 .build();
 
         task.execute(query);
+        return task;
     }
 
-    public static void deleteNote(Context context, AsyncCallback<WebAPIResult> callback, Token token, long noteId) {
+    public static AsyncTask deleteNote(Context context, AsyncCallback<WebAPIResult> callback, Token token, long noteId) {
         DeleteAsyncTask task = new DeleteAsyncTask(context, callback, token);
         Query query = Query.builder()
                 .setPath("api/notes/" + noteId)
                 .build();
         task.execute(query);
+        return task;
     }
 
-    public static void getNotes(Context context, AsyncCallback<WebAPIResult> callback, Token token,
+    public static AsyncTask getNotes(Context context, AsyncCallback<WebAPIResult> callback, Token token,
                                 String userSubject, int page, String filter) {
         String path = String.format(Locale.US, "api/users/%s/notes", userSubject);
 
@@ -71,9 +76,10 @@ public class TasksHelper {
 
         GetAsyncTask task = new GetAsyncTask(context, callback, token);
         task.execute(query);
+        return task;
     }
 
-    public static void getNotes(Context context, AsyncCallback<WebAPIResult> callback, Token token,
+    public static AsyncTask getNotes(Context context, AsyncCallback<WebAPIResult> callback, Token token,
                                 int page, String filter) {
         String path = "api/notes";
 
@@ -86,9 +92,10 @@ public class TasksHelper {
 
         GetAsyncTask task = new GetAsyncTask(context, callback, token);
         task.execute(query);
+        return task;
     }
 
-    public static void addComment(Context context, AsyncCallback<WebAPIResult> callback, Token token,
+    public static AsyncTask addComment(Context context, AsyncCallback<WebAPIResult> callback, Token token,
                                   long noteId, long userId, String comment) {
         SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss Z", Locale.US);
         Map<String, Object> map = new HashMap<>();
@@ -98,9 +105,10 @@ public class TasksHelper {
         map.put("datecreated", dateFormat.format(new Date(System.currentTimeMillis())));
         PostAsyncTask task = new PostAsyncTask(context, callback, token, map);
         task.execute("api/comments");
+        return task;
     }
 
-    public static void getUsers(Context context, AsyncCallback<WebAPIResult> callback, Token token,
+    public static AsyncTask getUsers(Context context, AsyncCallback<WebAPIResult> callback, Token token,
                                 int page, String filter) {
         Query query = Query.builder()
                 .setPath("api/users")
@@ -111,5 +119,6 @@ public class TasksHelper {
 
         GetAsyncTask task = new GetAsyncTask(context, callback, token);
         task.execute(query);
+        return task;
     }
 }

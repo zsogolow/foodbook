@@ -1,6 +1,7 @@
 package foodbook.thinmint.activities.feed;
 
 import android.content.Context;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v4.widget.SwipeRefreshLayout;
@@ -39,7 +40,7 @@ import foodbook.thinmint.tasks.TasksHelper;
  * create an instance of this fragment.
  */
 public class FeedFragment extends TokenFragment implements OnNotesListInteractionListener,
-        IOnNotesListClickListener, IApiCallback {
+        IOnNotesListClickListener {
     private static final String TAG = "FeedFragment";
 
     private static final String ARG_PARAM1 = "param1";
@@ -92,7 +93,6 @@ public class FeedFragment extends TokenFragment implements OnNotesListInteractio
         initUser();
 
         mGetNoteCallback = new AsyncCallback<>(this);
-
         mGetFeedCallback = new AsyncCallback<>(this);
         mLoadMoreCallback = new AsyncCallback<>(this);
         mLikeCallback = new AsyncCallback<>(this);
@@ -118,7 +118,7 @@ public class FeedFragment extends TokenFragment implements OnNotesListInteractio
         mSwipeRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
             @Override
             public void onRefresh() {
-                refreshFeed();
+                refreshFragment();
             }
         });
 
@@ -127,13 +127,11 @@ public class FeedFragment extends TokenFragment implements OnNotesListInteractio
         mScrollListener = new EndlessRecyclerViewScrollListener(mLayoutManager) {
             @Override
             public void onLoadMore(int page, int totalItemsCount, RecyclerView view) {
-                TasksHelper.getNotes(getContext(), mLoadMoreCallback, mToken, page + 1, "");
+                mRunningTask = TasksHelper.getNotes(getContext(), mLoadMoreCallback, mToken, page + 1, "");
             }
         };
 
         mListView.addOnScrollListener(mScrollListener);
-
-        refreshFeed();
 
         return inflated;
     }
@@ -156,10 +154,26 @@ public class FeedFragment extends TokenFragment implements OnNotesListInteractio
     }
 
     @Override
+    public void onStart() {
+        super.onStart();
+
+        refreshFragment();
+    }
+
+    @Override
+    public void onStop() {
+        super.onStop();
+
+        if (mRunningTask != null) {
+            mRunningTask.cancel(true);
+        }
+    }
+
+    @Override
     public void onLikeNoteClick(View caller) {
         TextView hiddenNoteIdTextView = (TextView) caller.findViewById(R.id.hidden_note_id);
         long noteId = Long.parseLong(hiddenNoteIdTextView.getText().toString());
-        TasksHelper.likeNote(getContext(), mLikeCallback, mToken, noteId, mUserId);
+        mRunningTask = TasksHelper.likeNote(getContext(), mLikeCallback, mToken, noteId, mUserId);
         setLoading(true);
     }
 
@@ -169,7 +183,7 @@ public class FeedFragment extends TokenFragment implements OnNotesListInteractio
         long noteId = Long.parseLong(hiddenNoteIdTextView.getText().toString());
         mLastNoteId = noteId;
         setLoading(true);
-        TasksHelper.unlikeNote(getContext(), mUnlikeCallback, mToken, noteId, mUserId);
+        mRunningTask = TasksHelper.unlikeNote(getContext(), mUnlikeCallback, mToken, noteId, mUserId);
     }
 
     @Override
@@ -199,10 +213,11 @@ public class FeedFragment extends TokenFragment implements OnNotesListInteractio
         mSwipeRefreshLayout.setRefreshing(isLoading);
     }
 
-    private void refreshFeed() {
+    @Override
+    protected void refreshFragment() {
         setLoading(true);
         mScrollListener.resetState();
-        TasksHelper.getNotes(getContext(), mGetFeedCallback, mToken, 1, "");
+        mRunningTask = TasksHelper.getNotes(getContext(), mGetFeedCallback, mToken, 1, "");
     }
 
     private void onNotesRetrieved(List<Note> notes) {
@@ -221,7 +236,7 @@ public class FeedFragment extends TokenFragment implements OnNotesListInteractio
 
     @Override
     public void onNoteAdded(long noteId) {
-        refreshFeed();
+        refreshFragment();
     }
 
     @Override
@@ -231,16 +246,18 @@ public class FeedFragment extends TokenFragment implements OnNotesListInteractio
 
     @Override
     public void onCommentAdded(long noteId) {
-        TasksHelper.getNote(getContext(), mGetNoteCallback, mToken, noteId);
+        mRunningTask = TasksHelper.getNote(getContext(), mGetNoteCallback, mToken, noteId);
     }
 
     @Override
     public void onLikeAdded(long noteId) {
-        TasksHelper.getNote(getContext(), mGetNoteCallback, mToken, noteId);
+        mRunningTask = TasksHelper.getNote(getContext(), mGetNoteCallback, mToken, noteId);
     }
 
     @Override
     public void callback(IAsyncCallback cb) {
+        super.callback(cb);
+
         if (cb.equals(mGetFeedCallback)) {
             List<Note> notes = JsonHelper.getNotes(mGetFeedCallback.getResult().getResult());
             onNotesRetrieved(notes);

@@ -43,7 +43,7 @@ import foodbook.thinmint.tasks.TasksHelper;
  * Use the {@link NoteFragment#newInstance} factory method to
  * create an instance of this fragment.
  */
-public class NoteFragment extends TokenFragment implements IApiCallback, IOnNoteClickListener {
+public class NoteFragment extends TokenFragment implements IOnNoteClickListener {
 
     private static final String ARG_NOTEID = "noteid";
     private static final String ARG_COMMENTFLAG = "commentflag";
@@ -105,11 +105,6 @@ public class NoteFragment extends TokenFragment implements IApiCallback, IOnNote
     }
 
     @Override
-    public void onResume() {
-        super.onResume();
-    }
-
-    @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
@@ -135,13 +130,11 @@ public class NoteFragment extends TokenFragment implements IApiCallback, IOnNote
         mSwipeRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
             @Override
             public void onRefresh() {
-                refreshNote();
+                refreshFragment();
             }
         });
 
         mListener.onNoteFragmentCreated(inflated);
-
-        refreshNote();
 
         return inflated;
     }
@@ -168,13 +161,30 @@ public class NoteFragment extends TokenFragment implements IApiCallback, IOnNote
         mListener = null;
     }
 
+    @Override
+    public void onStart() {
+        super.onStart();
+
+        refreshFragment();
+    }
+
+    @Override
+    public void onStop() {
+        super.onStop();
+
+        if (mRunningTask != null) {
+            mRunningTask.cancel(true);
+        }
+    }
+
     private void setLoading(boolean isLoading) {
         mSwipeRefreshLayout.setRefreshing(isLoading);
     }
 
-    private void refreshNote() {
+    @Override
+    protected void refreshFragment() {
         setLoading(true);
-        TasksHelper.getNote(getContext(), mGetNoteCallback, mToken, mNoteId);
+        mRunningTask = TasksHelper.getNote(getContext(), mGetNoteCallback, mToken, mNoteId);
     }
 
     private void onNoteRetrieved(Note note) {
@@ -214,15 +224,20 @@ public class NoteFragment extends TokenFragment implements IApiCallback, IOnNote
 
     private void onCommentAdded(Comment comment) {
         mAdapter.add(2, new ListItem<EntityBase>(ListItemTypes.Comment, comment));
-        refreshNote();
+        refreshFragment();
     }
 
     private void onLikeChanged() {
-        refreshNote();
+        refreshFragment();
     }
 
     private void onCommentFailed() {
         setLoading(false);
+    }
+
+    public void deleteNote() {
+        setLoading(true);
+        TasksHelper.deleteNote(getContext(), mDeleteNoteCallback, mToken, mNoteId);
     }
 
     @Override
@@ -277,6 +292,8 @@ public class NoteFragment extends TokenFragment implements IApiCallback, IOnNote
 
     @Override
     public void callback(IAsyncCallback cb) {
+        super.callback(cb);
+
         if (cb.equals(mGetNoteCallback)) {
             Note note = JsonHelper.getNote(mGetNoteCallback.getResult().getResult());
             onNoteRetrieved(note);
@@ -306,11 +323,6 @@ public class NoteFragment extends TokenFragment implements IApiCallback, IOnNote
                 onLikeChanged();
             }
         }
-    }
-
-    public void deleteNote() {
-        setLoading(true);
-        TasksHelper.deleteNote(getContext(), mDeleteNoteCallback, mToken, mNoteId);
     }
 
     public interface OnNoteFragmentDataListener {

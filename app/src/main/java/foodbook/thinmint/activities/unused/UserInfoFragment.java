@@ -30,7 +30,7 @@ import foodbook.thinmint.tasks.GetAsyncTask;
  * Use the {@link UserInfoFragment#newInstance} factory method to
  * create an instance of this fragment.
  */
-public class UserInfoFragment extends TokenFragment implements IApiCallback {
+public class UserInfoFragment extends TokenFragment {
     private static final String ARG_USERID = "userid";
 
     private String mUserId;
@@ -73,12 +73,7 @@ public class UserInfoFragment extends TokenFragment implements IApiCallback {
         initToken();
         initUser();
 
-        mGetUserCallback = new AsyncCallback<WebAPIResult>(this);
-    }
-
-    @Override
-    public void onResume() {
-        super.onResume();
+        mGetUserCallback = new AsyncCallback<>(this);
     }
 
     @Override
@@ -94,11 +89,9 @@ public class UserInfoFragment extends TokenFragment implements IApiCallback {
         mSwipeRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
             @Override
             public void onRefresh() {
-                refreshUser();
+                refreshFragment();
             }
         });
-
-        refreshUser();
 
         return inflated;
     }
@@ -120,11 +113,28 @@ public class UserInfoFragment extends TokenFragment implements IApiCallback {
         mListener = null;
     }
 
+    @Override
+    public void onStart() {
+        super.onStart();
+
+        refreshFragment();
+    }
+
+    @Override
+    public void onStop() {
+        super.onStop();
+
+        if (mRunningTask != null) {
+            mRunningTask.cancel(true);
+        }
+    }
+
     private void setLoading(boolean isLoading) {
         mSwipeRefreshLayout.setRefreshing(isLoading);
     }
 
-    private void refreshUser() {
+    @Override
+    protected void refreshFragment() {
         setLoading(true);
         mGetUserTask = new GetAsyncTask(getContext(), mGetUserCallback, mToken);
 
@@ -132,7 +142,6 @@ public class UserInfoFragment extends TokenFragment implements IApiCallback {
 
         Query query = Query.builder()
                 .setPath(path)
-//                .setAccessToken(mToken.getAccessToken())
                 .build();
 
         mGetUserTask.execute(query);
@@ -145,6 +154,8 @@ public class UserInfoFragment extends TokenFragment implements IApiCallback {
 
     @Override
     public void callback(IAsyncCallback cb) {
+        super.callback(cb);
+
         if (cb.equals(mGetUserCallback)) {
             mGetUserTask = null;
             User user = JsonHelper.getUser(mGetUserCallback.getResult().getResult());

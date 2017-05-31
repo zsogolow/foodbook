@@ -36,7 +36,7 @@ import foodbook.thinmint.tasks.AsyncCallback;
 import foodbook.thinmint.tasks.TasksHelper;
 
 public class DayFragment extends TokenFragment implements OnNotesListInteractionListener,
-        IOnNotesListClickListener, IApiCallback {
+        IOnNotesListClickListener {
     private static final String ARG_DATE = "date";
 
     private Date mCurrentDate;
@@ -109,7 +109,7 @@ public class DayFragment extends TokenFragment implements OnNotesListInteraction
         mSwipeRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
             @Override
             public void onRefresh() {
-                refreshList();
+                refreshFragment();
             }
         });
 
@@ -123,11 +123,9 @@ public class DayFragment extends TokenFragment implements OnNotesListInteraction
                 String rawQuery = String.format(Locale.US, "((DateCreated Ge %d-%d-%d 00:00:00 -0700) And (DateCreated Le %d-%d-%d 23:59:59 -0700))",
                         calendar.get(Calendar.YEAR), calendar.get(Calendar.MONTH) + 1, calendar.get(Calendar.DAY_OF_MONTH),
                         calendar.get(Calendar.YEAR), calendar.get(Calendar.MONTH) + 1, calendar.get(Calendar.DAY_OF_MONTH));
-                TasksHelper.getNotes(getContext(), mLoadMoreCallback, mToken, mUserSubject, page + 1, rawQuery);
+                mRunningTask = TasksHelper.getNotes(getContext(), mLoadMoreCallback, mToken, mUserSubject, page + 1, rawQuery);
             }
         };
-
-        refreshList();
 
         return inflated;
     }
@@ -150,6 +148,22 @@ public class DayFragment extends TokenFragment implements OnNotesListInteraction
     public void onDetach() {
         super.onDetach();
         mListener = null;
+    }
+
+    @Override
+    public void onStart() {
+        super.onStart();
+
+        refreshFragment();
+    }
+
+    @Override
+    public void onStop() {
+        super.onStop();
+
+        if (mRunningTask != null) {
+            mRunningTask.cancel(true);
+        }
     }
 
     @Override
@@ -191,8 +205,8 @@ public class DayFragment extends TokenFragment implements OnNotesListInteraction
         String username = userNameTextView.getText().toString();
         ActivityHelper.startUserActivity(getActivity(), userId, username);
     }
-
-    private void refreshList() {
+    @Override
+    protected void refreshFragment() {
         setLoading(true);
         mScrollListener.resetState();
         Calendar calendar = Calendar.getInstance();
@@ -200,7 +214,7 @@ public class DayFragment extends TokenFragment implements OnNotesListInteraction
         String rawQuery = String.format(Locale.US, "((DateCreated Ge %d-%d-%d 00:00:00 -0700) And (DateCreated Le %d-%d-%d 23:59:59 -0700))",
                 calendar.get(Calendar.YEAR), calendar.get(Calendar.MONTH) + 1, calendar.get(Calendar.DAY_OF_MONTH),
                 calendar.get(Calendar.YEAR), calendar.get(Calendar.MONTH) + 1, calendar.get(Calendar.DAY_OF_MONTH));
-        TasksHelper.getNotes(getContext(), mGetNotesCallback, mToken, mUserSubject, 1, rawQuery);
+        mRunningTask = TasksHelper.getNotes(getContext(), mGetNotesCallback, mToken, mUserSubject, 1, rawQuery);
     }
 
     private void setLoading(boolean isLoading) {
@@ -223,7 +237,7 @@ public class DayFragment extends TokenFragment implements OnNotesListInteraction
 
     @Override
     public void onNoteAdded(long noteId) {
-        refreshList();
+        refreshFragment();
     }
 
     @Override
@@ -233,16 +247,18 @@ public class DayFragment extends TokenFragment implements OnNotesListInteraction
 
     @Override
     public void onCommentAdded(long noteId) {
-        TasksHelper.getNote(getContext(), mGetNoteCallback, mToken, noteId);
+        mRunningTask = TasksHelper.getNote(getContext(), mGetNoteCallback, mToken, noteId);
     }
 
     @Override
     public void onLikeAdded(long noteId) {
-        TasksHelper.getNote(getContext(), mGetNoteCallback, mToken, noteId);
+        mRunningTask = TasksHelper.getNote(getContext(), mGetNoteCallback, mToken, noteId);
     }
 
     @Override
     public void callback(IAsyncCallback cb) {
+        super.callback(cb);
+
         if (cb.equals(mGetNotesCallback)) {
             List<Note> notes = JsonHelper.getNotes(mGetNotesCallback.getResult().getResult());
             onNotesRetrieved(notes);
@@ -268,7 +284,7 @@ public class DayFragment extends TokenFragment implements OnNotesListInteraction
 
     public void setDate(Date date) {
         mCurrentDate = date;
-        refreshList();
+        refreshFragment();
     }
 
     public interface OnDayFragmentDataListener {
