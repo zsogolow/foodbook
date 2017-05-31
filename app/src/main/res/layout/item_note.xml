@@ -30,7 +30,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="match_parent"
                     android:layout_marginRight="@dimen/text_margin"
-                    android:src="@drawable/cake" />
+                    android:src="@drawable/food_apple" />
 
                 <LinearLayout
                     android:layout_width="match_parent"
